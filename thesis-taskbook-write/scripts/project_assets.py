@@ -21,7 +21,7 @@ SCHEMA = 1
 ASSET_DIR = 'project-assets'
 WORK_BASE = ('.skill-tmp', 'thesis-taskbook-write')
 MARKER = '.owned-by-thesis-taskbook-write'
-KINDS = ('references', 'facts', 'schedule', 'project')
+KINDS = ('references', 'facts', 'schedule', 'progress', 'project')
 REQUIRED_REF = ('id', 'citation', 'source_url', 'source_type', 'verified')
 RUN_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$')
 
@@ -97,13 +97,13 @@ def init(args):
             raise ValueError('该目录已有其他项目资产；不可改用新 project_id 覆盖')
         print(f'EXISTS: {base}（未覆盖任何文件）')
         return
-    if any((base / f'{k}.json').exists() for k in ('references', 'facts', 'schedule')):
+    if any((base / f'{k}.json').exists() for k in ('references', 'facts', 'schedule', 'progress')):
         raise ValueError('发现无项目标识的共享资产，拒绝自动初始化以免覆盖')
     timestamp = now()
     atomic_json(path, {'schema_version': SCHEMA, 'project_id': args.project_id,
                        'name': args.name, 'metadata': {}, 'created_at': timestamp,
                        'updated_at': timestamp})
-    for kind in ('references', 'facts'):
+    for kind in ('references', 'facts', 'progress'):
         atomic_json(base / f'{kind}.json', {'schema_version': SCHEMA,
                                           'project_id': args.project_id, 'items': [],
                                           'updated_at': timestamp})
@@ -135,6 +135,13 @@ def check_records(kind, items):
             url = urlparse(item['source_url'])
             if url.scheme not in ('http', 'https') or not url.netloc:
                 raise ValueError(f'文献 {item["id"]} 来源 URL 不合法')
+        elif kind == 'progress':
+            if item.get('status') not in ('draft', 'confirmed'):
+                raise ValueError('进度状态只能是 draft/confirmed')
+            if not item.get('as_of') or not item.get('source') or not item.get('description'):
+                raise ValueError('进度记录必须有日期、来源和事实描述，不能把计划冒充已完成情况')
+            if item.get('category') not in ('completed', 'in_progress', 'pending', 'risk', 'next_step'):
+                raise ValueError('不支持的进度类别')
         elif kind == 'facts':
             if not item.get('statement') or not item.get('source'):
                 raise ValueError(f'技术事实 {item["id"]} 缺少 statement/source')
@@ -178,10 +185,12 @@ def merge(args):
     kind = args.kind
     path = base / f'{kind}.json'
     with exclusive(base):
+        if kind == 'progress' and not path.exists():
+            atomic_json(path, {'schema_version':SCHEMA,'project_id':project['project_id'],'items':[], 'updated_at':now()})
         previous = load(path)
         if previous.get('project_id') != project['project_id'] or previous.get('schema_version') != SCHEMA:
             raise ValueError('资产版本/项目 ID 不一致')
-        if kind in ('references', 'facts'):
+        if kind in ('references', 'facts', 'progress'):
             new_items = incoming.get('items')
             check_records(kind, new_items)
             old = previous.get('items', [])
@@ -352,10 +361,12 @@ def status(args):
     refs = load(base / 'references.json')['items']
     facts = load(base / 'facts.json')['items']
     plan = load(base / 'schedule.json')['plan']
+    progress_path = base / 'progress.json'
+    progress = load(progress_path).get('items',[]) if progress_path.exists() else []
     print(json.dumps({'project_id': project['project_id'], 'name': project['name'],
                       'asset_dir': str(base), 'references': len(refs),
                       'verified_references': sum(r.get('verified') is True for r in refs),
-                      'facts': len(facts), 'schedule': None if plan is None else {
+                      'facts': len(facts), 'progress':len(progress), 'schedule': None if plan is None else {
                           'id': plan['id'], 'total_weeks': plan['total_weeks'],
                           'status': plan['status'], 'stages': len(plan['stages'])}},
                      ensure_ascii=False, indent=2))

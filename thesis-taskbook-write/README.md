@@ -1,6 +1,6 @@
 # thesis-taskbook-write｜毕业设计任务书编写 + 项目资产共管
 
-这是一个给 Claude Code / Codex 等可操作本地文件的可安装 Skill。它只根据真实技术资料编写学校官方 Word **任务书**；不写开题报告。**V1.1 新增项目级共享资产和执行后清理中间文件**，以便今后其他 Skill 共享同一项目的参考文献、技术事实和周计划。
+这是一个给 Claude Code / Codex 等可操作本地文件的可安装 Skill，当前版本 **V1.2**。它只根据真实技术资料编写学校官方 Word **任务书**；不写开题报告。**V1.1 新增项目级共享资产和执行后清理中间文件**，以便今后其他 Skill 共享同一项目的参考文献、技术事实和周计划。
 
 ## 两种目录，各自职责不同
 
@@ -20,6 +20,7 @@ B. 每个实际项目的根目录（跨不同 Skill 共享）
 │   ├── project.json                         项目身份、人工确认的个人信息
 │   ├── references.json                      同项目统一论文库（稳定 REF-ID）
 │   ├── schedule.json                        同项目统一周计划（draft/confirmed）
+│   ├── progress.json                        可选：中期检查等文书的真实进展
 │   ├── facts.json                           同项目有来源的技术事实
 │   └── activity.jsonl                       可追溯变更、文书使用关系
 ├── deliverables/taskbook/                   任务书最终 Word 与必要最终报告
@@ -94,3 +95,17 @@ python scripts/project_assets.py cleanup --root "$PROJECT_ROOT" --run-id "$RUN_I
 - `templates/cross-skill-integration-snippet.md`：后续开题报告等其他 Skill 可复制的共同维护规则片段
 
 官方模板副本 SHA-256：`49e0983db300ca1729d7d298b3f849dfce3d8d189c4b3cc4c8c2ce87b5085590`。最终验收仍由用户决定。
+
+## V1.2 — 匿名范本与模板锁
+
+本版本相对于 V1.1 **新增四份去标识化 DOCX** 到 `assets/reference-samples/`。建议先读 `assets/reference-samples/README.md`，然后选择风格最近的 1–2 份；如果环境无法直接解析 Word，可读 `references/anonymized-sample-text.md` 和 `references/sample-style-audit.json`。**范本只有表达参考意义，没有当前项目事实和可引用论文。**
+
+新模板写入前会通过 `assets/template-lock.json` 验证官方空白模板的 SHA-256；若用户更换官方空白模板，不得强灌，须重新分析映射并更新锁。对历史 `-vN.docx` 不执行覆盖。生成后调用 `scripts/render_visual.py` 截取全部页面逐张检查，临时 PDF/PNG 仍放在本轮 `.skill-tmp/`，交付后清理；**不再硬性限制生成页数**。
+
+```bash
+python scripts/inspect_reference_styles.py assets/reference-samples/sample-*.docx --report /tmp/reference-style-audit.json
+python scripts/render_visual.py --file "$FINAL_DOCX" --outdir "$WORKDIR/render"
+# 全部 page-*.png 必须实际逐页审阅；质量结论记录在执行汇报，截图不作为长期项目资产
+```
+
+**页面检查提醒**：官方空白原件中末条附注可能独立出现于第三页；应与官方原件同引擎渲染结果比对，不为了追求特定页数更改原模板或压缩核心正文。

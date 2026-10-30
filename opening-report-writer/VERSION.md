@@ -1,5 +1,33 @@
 # opening-report-writer 版本记录
 
+## v4.0 — 2026-10-30（按 thesis-midterm-check-write-v1.3 重构组织形式）
+
+- **以用户上传 V3.4 开题 Skill 为升级基线**，不新建与之不兼容的系统，保留 `name: opening-report-writer`、文献和七章生成功能、官方模板与共享资产项目协议。
+- 借鉴中期 Skill 的“0.边界、1.资产包、2.官方模板、3.匿名范本、4.写作与文献、5.执行、6.验收、7.索引”的主文档形式，并做清晰的独立分层。
+- 官方空白模板哈希保持 `d4a43a96b90fe215f9983129396b7f20b68229b2d5e70c1f2558ff8adb993e5d` 不变；新增 `assets/template-lock.json`（来源、表格与版面属性）。
+- 脱敏已填写范本从 `examples/` 迁入 `assets/reference-samples/`，新增 SHA256 清单、README、`samples-manifest.json`、格式统计，**当前完整范本只有一份，不伪称四份**；原人物信息源 DOCX 未打包。
+- 新增范本文本逆向与“求同存异”规则 `references/genre-reverse-engineering.md`；项目技术事实与研究现状仍须有当前来源，旧范本文献不能复用。
+- 新增可本地执行的逐页渲染 `scripts/render_visual.py`（LibreOffice+PyMuPDF），不再把 OpenAI 容器绝对路径视为唯一渲染方法；每页截图需 Agent 真实检查，脚本只做自动预检。
+- **修复 V3.4 格式验收漏洞**：`check_report.py` 现在逐段强制检查普通正文/周计划 420twips 首行缩进；参考文献要左对齐、420twips 悬挂缩进且不得有自动列表 `numPr`。新增负面测试确保漏缩进不能再被 PASS。
+- 新增 `manifest.txt`、`templates/input.schema.json`、`references/v4-alignment-map.md`、跨Skill集成片段、专门的清理/技术输入/模板边界指南，便于其它技能使用相同资产包和规范。
+- 所有中间文件仍存 `.skill-tmp/opening-report-writer/<run-id>`，清理只作用于本轮有所有权标记的目录；历史 `-vN` 和项目资产不变。
+
+---
+
+# opening-report-writer 版本记录
+
+## v3.4 — 2026-10-30（用户最新 V2 ZIP 基线增强：匿名写作范本）
+
+- 从用户最初的已填写开题报告构造 `examples/anonymized-opening-report-reference.docx`，遮蔽封面个人信息和原始项目题目，清理作者元数据，并保留主要章段组织，**不包含含敏感信息的原文件**。
+- 内置 `references/anonymized-sample-usage.md`：按章节逆向提取“结构、段落目的、过渡、分点、论证和引用写法”，明确旧范本缺陷不可继承，且绝不可作为新项目事实/文献/周计划来源。
+- 新增 `scripts/sanitize_reference_sample.py`（维护专用）与 `scripts/check_reference_example.py`（匿名检查）及自动测试。
+- 在 SKILL/README/质量门禁/官方模板约束中固定双资产优先级：**空白官方模板 > 当前技术事实与文献 > 匿名已填写范本**。无更换模板、无变更 V2 原有资产库与输出逻辑。
+- 以用户 V2 ZIP 作为唯一升级基线，保留既有项目资产包、3 项交付及中间文件自动清理机制。
+
+## v3.3 — 2026-10-30（实质性分页门禁）
+
+- 补充**实质性分页门禁**：官方模板页数仅是参考，七项内容自然篇幅决定成品页数，不设固定页数指标；硬性 FAIL 仅限为凑/压页数增删事实或改版式、孤页两类。G4 门禁同步。
+
 ## v3.2 — 2026-10-30（截图验证分析环节）
 
 - 阶段 F 统一加入**截图验证分析**（Screenshot Verification Analysis）：截图 → 逐张分析 → 留痕汇报固定三步与红线（未逐张分析不得宣称视觉通过、不得登记 record-use；截图非交付物，结论写入执行汇报后随中间文件清理）。G4 门禁与执行汇报模板同步固定字段。

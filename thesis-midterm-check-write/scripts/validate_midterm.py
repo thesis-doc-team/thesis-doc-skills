@@ -1,100 +1,130 @@
 #!/usr/bin/env python3
-"""Strict structural/template/content acceptance checks; no edits."""
+"""Gate v1.1: immutable official framework + mandatory narrative typography.
+
+Checks the regression that v1.0 missed: no first-line indent, font mismatch,
+unused blank-space spillover, fixed text/signatures changed.
+"""
 import argparse
-from pathlib import Path
 import json
+from pathlib import Path
 from zipfile import ZipFile
 from lxml import etree
 from docx import Document
-from template_tools import DEFAULT_TEMPLATE,lock_check,count_content_chars,para_xml_props,unique_cells,sha256
-from fill_midterm import FIELDS,paragraphs
+from docx.shared import Pt
+from docx.oxml.ns import qn
+from template_tools import DEFAULT_TEMPLATE,lock_check,count_content_chars,unique_cells,sha256
+from fill_midterm import FIELDS,paragraphs,issue_paragraphs,validate_issue_structure,indent_for,BODY_FONT_PT,BODY_FIRST_LINE_PT_BY_ROW
 
-PRESERVE_ZIP_PARTS=('word/styles.xml','word/settings.xml','word/fontTable.xml',
-                    'word/numbering.xml','word/theme/theme1.xml')
-def xml_equal(a,b):
-    if a is None or b is None: return a is None and b is None
+def xml_eq(a,b):
+    if a is None or b is None:return a is None and b is None
     return etree.tostring(a,method='c14n')==etree.tostring(b,method='c14n')
+
+def report_error(errors,message):
+    errors.append(message)
+
+def check_filled_body(original_cell,new_cell,parts,region,row,problems):
+    op=original_cell.paragraphs; np=new_cell.paragraphs
+    if not xml_eq(op[0]._p,np[0]._p):report_error(problems,f'{region} 官方栏目标题有变化')
+    old_fixed=[p for p in op[1:] if p.text.strip()]
+    new_fixed=[p for p in np[1:] if p.text.strip() and p.text.strip() not in parts]
+    # Exact fixed original paragraphs are still present in same order, at the end.
+    if len(new_fixed)!=len(old_fixed):
+        report_error(problems,f'{region} 固定落款段落数改变')
+    else:
+        for i,(x,y) in enumerate(zip(old_fixed,new_fixed)):
+            if not xml_eq(x._p,y._p):report_error(problems,f'{region} 固定落款第{i}段变化')
+    actual=np[1:1+len(parts)]
+    if [p.text for p in actual]!=parts:
+        report_error(problems,f'{region} 正文顺序或内容不一致')
+    if len(np)!=1+len(parts)+len(old_fixed):
+        report_error(problems,f'{region} 未清理多余占位空段或擅自增加段落：{len(np)}')
+    for index,p in enumerate(actual):
+        txt=parts[index]
+        expected=Pt(indent_for(txt,row))
+        if p.paragraph_format.first_line_indent!=expected:
+            report_error(problems,f'{region} 正文第{index+1}段首行缩进错误，应为 {expected.pt}pt')
+        if p.paragraph_format.line_spacing!=1.5:
+            report_error(problems,f'{region} 正文第{index+1}段行距不是原模板1.5倍')
+        # Paragraph styles/spacing other than editable firstLine must be untouched.
+        pa=op[1+index]
+        if pa.style.name!=p.style.name or pa.paragraph_format.space_before!=p.paragraph_format.space_before or pa.paragraph_format.space_after!=p.paragraph_format.space_after or pa.alignment!=p.alignment:
+            report_error(problems,f'{region} 正文第{index+1}段其余格式被改变')
+        for rid,r in enumerate(p.runs):
+            if r.font.size!=Pt(BODY_FONT_PT):report_error(problems,f'{region} 正文第{index+1}段字体大小不是12pt')
+            fonts=r._element.rPr.rFonts if r._element.rPr is not None else None
+            if fonts is None or fonts.get(qn('w:eastAsia'))!='宋体' or fonts.get(qn('w:ascii'))!='Times New Roman':
+                report_error(problems,f'{region} 第{index+1}段第{rid}个run中西文字体错误')
 
 def validate(template,generated,data):
     original,lock=lock_check(template)
     new=Document(generated)
     problems=[]
     if len(new.tables)!=len(original.tables) or len(new.sections)!=len(original.sections):
-        problems.append('表格数/节数被改变')
-        return {'passed':False,'problems':problems}
-    for k,(s1,s2) in enumerate(zip(original.sections,new.sections)):
-        if not xml_equal(s1._sectPr,s2._sectPr): problems.append(f'节{k}页边距/纸张/页码/页眉设置被改变')
-    if len(new.paragraphs)!=len(original.paragraphs):problems.append('表格外段落数量被改变')
+        return {'passed':False,'problems':['原表格数量或节数改变']}
+    for i,(a,b) in enumerate(zip(original.sections,new.sections)):
+        if not xml_eq(a._sectPr,b._sectPr):report_error(problems,f'第{i}节页面设置/页眉页脚改变')
+    if len(original.paragraphs)!=len(new.paragraphs):report_error(problems,'外部段落数量改变')
     for i,(a,b) in enumerate(zip(original.paragraphs,new.paragraphs)):
-        if para_xml_props(a)!=para_xml_props(b):problems.append(f'顶层段落{i}样式/行距被改变')
-        if i!=2 or not data.get('inspection_date'):
-            if a.text!=b.text:problems.append(f'顶层固定文字{i}被改变')
-        elif not all(x in b.text for x in ('年','月','日')):
-            problems.append('日期填写损坏原有年月日标签')
-    a=original.tables[0]; b=new.tables[0]
-    if not xml_equal(a._tbl.tblPr,b._tbl.tblPr) or not xml_equal(a._tbl.tblGrid,b._tbl.tblGrid):
-        problems.append('表格样式/宽度/列网格被改变')
-    if len(a.rows)!=len(b.rows):problems.append('表格行数被改变')
-    allowed_rows={0:{1,3},1:{1},2:{0},3:{0},4:{0},5:({0} if data.get('college_opinion_authorized') else set())}
-    for ri,(r1,r2) in enumerate(zip(a.rows,b.rows)):
-        if not xml_equal(r1._tr.trPr,r2._tr.trPr):problems.append(f'第{ri}行行高/行属性被修改')
-        u1,u2=unique_cells(r1),unique_cells(r2)
-        if len(u1)!=len(u2):problems.append(f'第{ri}行合并关系发生变化');continue
-        for ci,(c1,c2) in enumerate(zip(u1,u2)):
-            if not xml_equal(c1._tc.tcPr,c2._tc.tcPr):problems.append(f'第{ri}行第{ci}个可见单元格属性被修改')
-            if len(c1.paragraphs)!=len(c2.paragraphs):problems.append(f'第{ri}行第{ci}格段落数量被修改')
-            for pi,(p1,p2) in enumerate(zip(c1.paragraphs,c2.paragraphs)):
-                if para_xml_props(p1)!=para_xml_props(p2):problems.append(f'第{ri}行第{ci}格第{pi}段样式/段距改变')
-                editable=(ri==0 and ci in (1,3)) or (ri==1 and ci==1) or (ri in (2,3,4) and ci==0 and pi>0 and not p1.text.strip()) or (ri==5 and ci==0 and pi>0 and not p1.text.strip() and data.get('college_opinion_authorized'))
-                if not editable and p1.text!=p2.text:problems.append(f'固定文字遭到变更: 行{ri}格{ci}段{pi}')
-    # Confirm all fixed teacher and college signatures/dates remain exactly intact.
-    for ri,label in ((4,'指导教师签名'),(5,'负责人签名（盖章）')):
-        p_orig=original.tables[0].cell(ri,0).paragraphs
-        p_new=new.tables[0].cell(ri,0).paragraphs
-        for i,p in enumerate(p_orig):
-            if label in p.text and (p.text != p_new[i].text or p_orig[i+1].text != p_new[i+1].text):
-                problems.append(f'{label}栏位及其日期被篡改')
-    # Verify content equality and character counts; not only that a region is nonempty.
-    t=b
-    if t.cell(1,1).paragraphs[0].text != str(data.get('title','')).strip():problems.append('毕业设计题目与输入不一致')
-    for key,col in (('student_name',1),('class_name',3)):
-        if t.cell(0,col).text.strip()!=str(data.get(key,'')).strip():problems.append(f'{key} 缺失或与输入不一致')
-    for field,row,maxn in FIELDS:
+        if i==2 and data.get('inspection_date'):
+            if a._p.pPr is not None and not xml_eq(a._p.pPr,b._p.pPr):report_error(problems,'顶部日期段格式变更')
+        elif not xml_eq(a._p,b._p):report_error(problems,f'外部固定段落第{i}项修改')
+    ot=original.tables[0];nt=new.tables[0]
+    if not xml_eq(ot._tbl.tblPr,nt._tbl.tblPr) or not xml_eq(ot._tbl.tblGrid,nt._tbl.tblGrid):
+        report_error(problems,'表格宽度/边框/网格被改')
+    if len(ot.rows)!=len(nt.rows):report_error(problems,'表格行数改变')
+    for ri,(ra,rb) in enumerate(zip(ot.rows,nt.rows)):
+        if not xml_eq(ra._tr.trPr,rb._tr.trPr):report_error(problems,f'第{ri}行行属性改变')
+        cells_a=unique_cells(ra);cells_b=unique_cells(rb)
+        if len(cells_a)!=len(cells_b):report_error(problems,f'第{ri}行合并格数改变');continue
+        for ci,(ca,cb) in enumerate(zip(cells_a,cells_b)):
+            if not xml_eq(ca._tc.tcPr,cb._tc.tcPr):report_error(problems,f'第{ri}行第{ci}列单元格属性改变')
+            if ri in (2,3,4) and ci==0:continue
+            if ri==5 and ci==0 and data.get('college_opinion_authorized'):continue
+            if ri==0 and ci in (1,3):
+                if ca.paragraphs[0].paragraph_format.first_line_indent!=cb.paragraphs[0].paragraph_format.first_line_indent:
+                    report_error(problems,f'表头信息第{ci}格缩进改变')
+                continue
+            if ri==1 and ci==1:continue
+            if not xml_eq(ca._tc,cb._tc):report_error(problems,f'禁止修改固定区域第{ri}行第{ci}格')
+    for k,row,_ in FIELDS:
         try:
-            want=paragraphs(data,field)
-        except ValueError as e:
-            problems.append(str(e));continue
-        got=[p.text.strip() for p in t.cell(row,0).paragraphs[1:] if p.text.strip()]
-        if row==4:got=[x for x in got if '指导教师签名' not in x and not ('年' in x and '月' in x and '日' in x)]
-        if got!=want:problems.append(f'{field} 与输入文稿不一致或被改写')
-        count=count_content_chars(want)
-        if count<200:problems.append(f'{field} 仅 {count} 字，低于官方 200 字门槛')
-    if data.get('teacher_opinion_is_draft') is not True:
-        problems.append('指导教师意见必须仅以拟稿身份交付')
-    if not data.get('college_opinion_authorized') and any(p.text.strip() for p in t.cell(5,0).paragraphs[1:10]):
-        problems.append('未经授权填写了学院意见')
-    with ZipFile(template) as z1, ZipFile(generated) as z2:
-        for name in PRESERVE_ZIP_PARTS:
-            if name in z1.namelist():
-                if name not in z2.namelist() or z1.read(name)!=z2.read(name):
-                    problems.append(f'Word 固有样式/配置包发生变化: {name}')
-    report={'passed':not problems,'template_sha256':sha256(template),'output_sha256':sha256(generated),
-            'sections':len(new.sections),'rows':len(b.rows),'paragraph_counts':{x:len(b.cell(r,0).paragraphs) for x,r,_ in FIELDS},
-            'word_counts':{x:count_content_chars(paragraphs(data,x)) for x,_,_ in FIELDS},
-            'problems':problems,'visual_qa':'REQUIRES_MANUAL_PAGE_BY_PAGE_REVIEW',
-            'wps_qa':'NOT_CLAIMED_UNLESS_ACTUALLY_OPENED_IN_WPS'}
-    return report
+            parts=issue_paragraphs(data) if k=='issues_paragraphs' else paragraphs(data,k)
+            if count_content_chars(parts)<200:report_error(problems,f'{k}不足200字')
+            check_filled_body(ot.cell(row,0),nt.cell(row,0),parts,k,row,problems)
+        except (KeyError,ValueError,IndexError) as exc:report_error(problems,str(exc))
+    if nt.cell(1,1).text.strip()!=str(data.get('title','')).strip():report_error(problems,'课题题目不符合输入')
+    for key,col in [('student_name',1),('class_name',3)]:
+        if nt.cell(0,col).text.strip()!=str(data.get(key,'')).strip():report_error(problems,f'{key} 填写不符合输入')
+    if data.get('teacher_opinion_is_draft') is not True:report_error(problems,'未声明教师意见拟稿')
+    if not data.get('college_opinion_authorized') and not xml_eq(ot.cell(5,0)._tc,nt.cell(5,0)._tc):
+        report_error(problems,'学院意见未经授权发生更改')
+    with ZipFile(template) as a,ZipFile(generated) as b:
+        if a.namelist()!=b.namelist():report_error(problems,'DOCX压缩包内文件清单变动')
+        for name in a.namelist():
+            if name!='word/document.xml' and name in b.namelist() and a.read(name)!=b.read(name):
+                report_error(problems,f'模板静态内容发生更改：{name}')
+    return {'passed':not problems,'problems':problems,'template_sha256':sha256(template),
+            'output_sha256':sha256(generated), 'rows':len(nt.rows),
+            'paragraph_counts':{k:len(nt.cell(row,0).paragraphs) for k,row,_ in FIELDS}, 'formatting':{
+                'first_line_indent_pt_by_row':BODY_FIRST_LINE_PT_BY_ROW,
+                'line_spacing':1.5,'font_pt':BODY_FONT_PT,
+                'chinese_font':'宋体','ascii_font':'Times New Roman'},
+            'word_counts':{k:count_content_chars(issue_paragraphs(data) if k=='issues_paragraphs' else paragraphs(data,k)) for k,_,_ in FIELDS},
+            'issue_pairing':validate_issue_structure(issue_paragraphs(data)),
+            'visual_qa':'PENDING: render_visual.py + human/agent each-page inspection'}
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--template',default=str(DEFAULT_TEMPLATE));p.add_argument('--file',required=True)
-    p.add_argument('--data',required=True);p.add_argument('--report')
-    args=p.parse_args()
+    ap=argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--template',default=str(DEFAULT_TEMPLATE))
+    ap.add_argument('--file',required=True)
+    ap.add_argument('--data',required=True)
+    ap.add_argument('--report')
+    args=ap.parse_args()
     try:
-        data=json.loads(Path(args.data).read_text(encoding='utf-8'))
-        result=validate(args.template,args.file,data)
-        out=json.dumps(result,ensure_ascii=False,indent=2)
+        d=json.loads(Path(args.data).read_text(encoding='utf-8'))
+        res=validate(args.template,args.file,d)
+        out=json.dumps(res,ensure_ascii=False,indent=2)
         if args.report:Path(args.report).write_text(out+'\n',encoding='utf-8')
         print(out)
-        if not result['passed']:raise SystemExit(2)
-    except (OSError,ValueError,KeyError) as e:p.exit(2,f'ERROR: {e}\n')
+        if not res['passed']:raise SystemExit(2)
+    except (OSError,ValueError,KeyError) as exc:ap.exit(2,f'ERROR: {exc}\n')

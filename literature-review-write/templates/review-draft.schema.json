@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "文献综述本轮写作草稿（文献以稳定REF-ID引用）",
+  "type": "object",
+  "required": [
+    "project_id",
+    "title",
+    "sections",
+    "teacher_opinion"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title_lines": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "string"
+      }
+    },
+    "cover": {
+      "type": "object",
+      "properties": {
+        "student_name": {
+          "type": "string"
+        },
+        "student_id": {
+          "type": "string"
+        },
+        "college": {
+          "type": "string"
+        },
+        "major": {
+          "type": "string"
+        },
+        "class_name": {
+          "type": "string"
+        },
+        "instructor_name": {
+          "type": "string"
+        },
+        "instructor_title": {
+          "type": "string"
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "heading",
+          "paragraphs"
+        ],
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "paragraphs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "page_break_before": {
+            "type": "boolean",
+            "description": "仅截图验收发现孤立标题时启用，不自动变更官方模板"
+          }
+        }
+      }
+    },
+    "teacher_opinion": {
+      "type": "string",
+      "minLength": 50
+    },
+    "selected_reference_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^REF-[A-Za-z0-9_-]+$"
+      }
+    }
+  }
+}

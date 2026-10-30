@@ -1,6 +1,6 @@
 ---
 name: thesis-taskbook-write
-description: 根据用户本次指定的项目技术文档或 project-technical-doc 产出的技术 MD，逆向提炼项目任务，以用户指定的毕业设计任务书官方 DOCX 空白模板为不可重建的版式底稿，仅填写“毕业论文（设计）任务书”，保留原表格/栏目/标题/附注/签名结构，生成可编辑 DOCX；参考文献需经知网、万方、维普等学术检索或可追溯技术来源核验，优先读取并共同维护项目根目录 project-assets/ 内的技术事实、参考文献和周计划，生成前不得重复编写已有可用资产；只在临时运行目录生成中间文件并于运行结束清理。先检查结构、内容与逐页视觉效果，再如实报告 WPS 未实测限制。不得生成开题报告、论文或 HTML。
+description: 基于四份去标识化任务书范本的写作规律与官方模板哈希锁定，依据用户本次指定的项目技术文档或 project-technical-doc 产出的技术 MD，逆向提炼项目任务，以用户指定的毕业设计任务书官方 DOCX 空白模板为不可重建的版式底稿，仅填写“毕业论文（设计）任务书”，保留原表格/栏目/标题/附注/签名结构，生成可编辑 DOCX；参考文献需经知网、万方、维普等学术检索或可追溯技术来源核验，优先读取并共同维护项目根目录 project-assets/ 内的技术事实、参考文献和周计划，生成前不得重复编写已有可用资产；只在临时运行目录生成中间文件并于运行结束清理。先检查结构、内容与逐页视觉效果，再如实报告 WPS 未实测限制。不得生成开题报告、论文或 HTML。
 ---
 
 # thesis-taskbook-write｜从真实技术资料编写毕业设计任务书
@@ -9,7 +9,7 @@ description: 根据用户本次指定的项目技术文档或 project-technical-
 
 **唯一文书主交付：使用官方空白模板原位填充的 `<课题简称>-毕业设计任务书.docx`。**
 
-**新增跨 Skill 共享契约**：`<PROJECT_ROOT>/project-assets/` 是项目**长期资产**（参考文献、统一周计划、技术事实、使用记录），不是文书交付物、更不是中间文件。其他 Skill（如将来的开题报告 Skill）可读取同一套项目资产；本 Skill 不代替它们写文书。详见 `references/shared-project-assets-contract.md`。
+**新增跨 Skill 共享契约**：`<PROJECT_ROOT>/project-assets/` 是项目**长期资产**（参考文献、统一周计划、技术事实、使用记录），不是文书交付物、更不是中间文件。其他 Skill（如开题报告、中期检查 Skill）可读取同一套项目资产；本 Skill 不代替它们写文书。详见 `references/shared-project-assets-contract.md`。
 
 本 Skill 不是 `proposal-write`（开题报告）、`project-technical-doc`（项目技术文档）、学位论文撰写、系统开发、参考文献综述或 HTML 展示工具。**用户有时会在一句话里误说“开题报告”，若同时明确说“只编写任务书”且上传任务书模板，以后者为准。**如用户明确改变交付类型，再切换到相应 Skill，不能偷换官方模板。
 
@@ -46,7 +46,7 @@ description: 根据用户本次指定的项目技术文档或 project-technical-
 
 ## 0.1 项目级共享资产与中间文件（强制执行）
 
-1. **先识别项目，不先生成文书**：明确本项目根目录及唯一 `project_id`。若 `project-assets/` 已存在，先读取 `project.json`、`facts.json`、`references.json`、`schedule.json`。如果 project_id 不符，必须拒绝混用；如果不存在，才创建空资产库。**任何项目特定资产都不可保存在 Skill 安装目录。**
+1. **先识别项目，不先生成文书**：明确本项目根目录及唯一 `project_id`。若 `project-assets/` 已存在，先读取 `project.json`、`facts.json`、`references.json`、`schedule.json`；`progress.json` 如存在也需识别并保护，但不得用它替代任务书的拟定周计划。如果 project_id 不符，必须拒绝混用；如果不存在，才创建空资产库。**任何项目特定资产都不可保存在 Skill 安装目录。**
 2. **先复用，后补充**：已核验且与当前课题相关的论文直接按稳定 `REF-xxx` 引用；项目级周计划已有基线则直接提取或做文体措辞调整；技术事实以有出处的 `FACT-xxx` 为共同依据。禁止每份文书重搜并重写同一批来源。缺少、失效或与当前课题不符时才增补/更新。
 3. **共享资产不是不可更改的死文档**：需要更新已有引用元数据、周计划或技术事实时，提供实际证据和变更原因，显式执行更新，记入 `activity.jsonl`；不允许后生成的开题报告/任务书悄悄覆盖前一个 Skill 的结论。周计划 `draft` 是建议稿；`confirmed` 仅在用户/正式安排实际确认后使用。
 4. **稳定 ID 与文书编号分离**：项目文献 `REF-001` 跨任务书/开题报告保持不变；任务书的 `[1]...` 只在本次按所选 ID 重新排序。每份文书独立判断选用是否相关、出处是否足够、引用数量是否符合学校要求。
@@ -68,6 +68,13 @@ description: 根据用户本次指定的项目技术文档或 project-technical-
 - 每个版本验收后**单独** `record-use`（不同路径、不同 sha256），`activity.jsonl` 即项目成品的变更史。
 - 历史 `-vN` 版本与共享资产、用户资料、官方模板原件一样属于永不删除项；`.skill-tmp` 清理只针对本轮自己的运行目录。
 
+## 0.3 内置匿名范本（新增：逆向复现的材料，不是当前项目事实）
+
+- 首先读 `assets/reference-samples/README.md`，按课题结构选择 SAMPLE-A～D 的**匿名 DOCX** 观察写作及 Word 段落的共同点；使用 `references/anonymized-sample-text.md` 复现文字节奏，用 `references/sample-style-audit.json` 核对已测量的首行缩进/行距差异。
+- 不得从匿名范本继承人物、年份、项目标题、功能技术、进度日期、导师意见结论、示意文献。范本是风格样本，不是新项目资料，也不能写入 `project-assets/`。
+- 采用“共性优先，差异有理据”的裁决，固定框架只听官方空白 DOCX；参考文献只来自实际检索或当前项目核验资产。若范本原有不合格做法（如漏写导师意见、未核验或重复文献），只作负例。
+- 四份样本 DOCX 已清理个人信息和隐藏元数据；新增或更新样本时必须先去标识化、扫描包内 XML、渲染逐页检查并更新 SHA-256，禁止直接将用户原件入包。
+
 ## 1. 证据与规则优先级
 
 1. **用户本轮明确要求**（包含先前反馈中仍有效的约束）决定交付对象和填写偏好。
@@ -77,7 +84,7 @@ description: 根据用户本次指定的项目技术文档或 project-technical-
 5. 已填写范本只提供**表达习惯、篇幅节奏、任务化写法和进度安排方式**。存在分歧时先看官方约束，官方未规定时求同存异，结合多数与合理性；不继承已填范本的个人信息、参考文献或错误。
 6. AI 的一般知识只辅助组织，不可冒充项目实现证据。确实拿不准且会实质影响论文任务、官方合规或时间时，请用户决定；无关紧要的风格差异可自主判断并汇报。
 
-阅读：`references/template-boundary-and-layout.md`、`references/genre-reverse-engineering.md`、`references/technical-input-and-writing.md`。
+阅读：`references/template-boundary-and-layout.md`、`references/genre-reverse-engineering.md`、`references/technical-input-and-writing.md`，并按需阅读匿名范本文字镜像及样式审计。
 
 ## 2. 用户输入与缺失处理
 
@@ -102,7 +109,7 @@ description: 根据用户本次指定的项目技术文档或 project-technical-
 
 ### A｜先锁定模板，再逆向写作范式
 
-- 识别官方 Word 的**页面及段落属性**、表格 grid、合并单元格、行高规则、书签/域/页码、固定栏目、附注及可填区域。
+- 识别官方 Word 的**页面及段落属性**、表格 grid、合并单元格、行高规则、书签/域/页码、固定栏目、附注及可填区域。**填充前先校验 `assets/template-lock.json` 的官方模板 SHA-256**；模板文件更新时须重新审计且修订填充坐标，不能只靠相同 9×4 行列数。
 - 记录 `SHA-256`，并把官方原件单独保护；尤其检查相同视觉标签是否实为一张合并表格。
 - 如本轮有多份填好的范本，把可迁移特征划为：固定格式 / 常用文字结构 / 可变项目量 / 模板之间非一致的地方；凡范本与官方冲突，以官方为准。
 - 不把旧课题名称、专业、时间、导师、硬件型号或旧参考文献写入本次任务。
@@ -144,11 +151,13 @@ description: 根据用户本次指定的项目技术文档或 project-technical-
 
 1. 先根据 `templates/shared-asset-input-examples.md` 在本轮临时目录撰写任务书特有草稿（`title/thesis_content/issuer_opinion/selected_reference_ids`）。通过 `scripts/project_assets.py compose` **从共享资产生成本轮临时 taskbook-input.json**；验证文献不少于 10 篇、已核验，周次无重无缺。不把本轮临时 JSON 作为永久项目资产。
 2. 用 `assets/official-taskbook-template.docx` 的**复制副本**（或用户当前指定的同结构模板）填入正文，不能新建 `Document()` 仿制。
-3. 填写字段不改变固定标签、页面尺寸/边距、表格 `tblGrid`、`tblPr`、各行 `trPr`、单元格合并/边框/内边距 `tcPr`、表格外附注与签名语句。
+3. 任何最终输出的 `-vN` 路径若已存在必须拒绝覆盖，新版本另起文件名。填写字段不改变固定标签、页面尺寸/边距、表格 `tblGrid`、`tblPr`、各行 `trPr`、单元格合并/边框/内边距 `tcPr`、表格外附注与签名语句。
 4. 只允许在**可填区域**增减普通正文段落、文字和合理的换行。大段正文自然跨页；不为了“模板原有 3 页”压缩到 3 页。
 5. 首页**每个可见单元格**（不按被合并的底层网格）检查水平、垂直居中；消除可填文本的段落多余空段、缩进及制表位影响，不靠空格制造“假居中”。原有标签居中不改变。真实项目题目超长、固定行高裁切时**报告冲突并按用户确认处理**，不能擅自缩放行高/字号/列宽。
 6. 正文按官方附注：**五号宋体、1.5 倍行距；英文和罗马字符 Times New Roman 正体**；官方自带的标题/标签若与正文有局部样式差异，保留其原样，不做全局统一。
 7. 本包脚本中的 `fill_taskbook.py` 实现该版本模板的**限定位置写入**；它不负责根据技术 MD 自动生成语义内容，AI 必须先理解资料并填入真实 JSON 数据，再调用。绝不拿演示输入当正式事实。
+
+**自然分页与视觉质量门禁：** 页数只是内容自然排布的结果，**不得对照官方空白模板的3页基准设置上限，也不得以“未经授权超过基准页数”为 FAIL**。无论 2、3、4 页或更多，只需检查实际文字是否完整、页码/栏目是否连续、是否存在**相较官方原件新增**的异常整页空白或孤立签名、边框/表格是否破裂。官方原件可能将第 4 条附注独立置于末页，不能把这种原样继承的现象误判成必须压缩正文的错误。若异常：只在可填正文范围内调整多余空段和合理措辞/段落，不删核心任务、不压缩字体行距/页边距；必要时报告版式限制，由用户决定是否授权改固定结构。`render_visual.py` 只发出可疑孤页提示，不以页数拦截。详见 `references/template-boundary-and-layout.md`。
 
 ### G｜双重检验与用户最终验收
 
@@ -204,8 +213,10 @@ python scripts/fill_taskbook.py --template assets/official-taskbook-template.doc
 python scripts/validate_taskbook.py --template assets/official-taskbook-template.docx \
   --file "$FINAL_DOCX" --data "$WORKDIR/taskbook-input.json" \
   --report "$WORKDIR/structure-report.json"
+python scripts/render_visual.py --file "$FINAL_DOCX" --outdir "$WORKDIR/render"
+# Agent 必须打开并逐页查看全部 page-*.png；预检查 JSON 不能代替人工视觉复核
 
-# 7. 在 WORKDIR 逐页渲染并人工检查、出具执行报告后才登记真实成品
+# 7. 使用 `scripts/render_visual.py --file "$FINAL_DOCX" --outdir "$WORKDIR/render"` 生成全部页 PNG，逐张检查并出具执行报告后，才登记真实成品
 python scripts/project_assets.py record-use --root "$PROJECT_ROOT" \
   --file "$FINAL_DOCX" --doc-type taskbook --ref-ids REF-001,REF-002
 

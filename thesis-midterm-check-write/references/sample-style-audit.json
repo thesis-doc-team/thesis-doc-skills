@@ -1,0 +1,94 @@
+{
+  "samples": 4,
+  "roles": {
+    "完成进度/body": {
+      "paragraphs": 29,
+      "indent_pt_distribution": {
+        "0.0": 1,
+        "12.0": 25,
+        "None": 2,
+        "24.0": 1
+      },
+      "font_distribution": {
+        "Times New Roman": 11,
+        "宋体": 18
+      },
+      "size_distribution": {
+        "12.0": 29
+      },
+      "line_spacing_distribution": {
+        "1.5": 29
+      }
+    },
+    "完成进度/label": {
+      "paragraphs": 9,
+      "indent_pt_distribution": {
+        "12.0": 7,
+        "None": 2
+      },
+      "font_distribution": {
+        "Times New Roman": 7,
+        "宋体": 2
+      },
+      "size_distribution": {
+        "12.0": 9
+      },
+      "line_spacing_distribution": {
+        "1.5": 9
+      }
+    },
+    "问题与整改/label": {
+      "paragraphs": 8,
+      "indent_pt_distribution": {
+        "0.0": 2,
+        "None": 6
+      },
+      "font_distribution": {
+        "Times New Roman": 2,
+        "宋体": 6
+      },
+      "size_distribution": {
+        "12.0": 8
+      },
+      "line_spacing_distribution": {
+        "1.5": 8
+      }
+    },
+    "问题与整改/body": {
+      "paragraphs": 13,
+      "indent_pt_distribution": {
+        "12.0": 4,
+        "None": 4,
+        "24.0": 5
+      },
+      "font_distribution": {
+        "Times New Roman": 4,
+        "宋体": 9
+      },
+      "size_distribution": {
+        "12.0": 13
+      },
+      "line_spacing_distribution": {
+        "1.5": 13
+      }
+    },
+    "教师意见/body": {
+      "paragraphs": 4,
+      "indent_pt_distribution": {
+        "None": 2,
+        "24.0": 2
+      },
+      "font_distribution": {
+        "Times New Roman": 1,
+        "宋体": 3
+      },
+      "size_distribution": {
+        "12.0": 4
+      },
+      "line_spacing_distribution": {
+        "1.5": 4
+      }
+    }
+  },
+  "policy": "只统计格式属性，不复制范本真实人物/技术事实；官方模板和学校规则优先，冲突在报告中保留，不用统计多数篡改固定栏目"
+}

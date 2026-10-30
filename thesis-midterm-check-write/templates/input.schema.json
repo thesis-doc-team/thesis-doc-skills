@@ -2,32 +2,141 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "仅限毕业设计中期检查记录表的本轮草稿输入",
   "type": "object",
-  "required": ["project_id", "title", "progress_paragraphs", "issues_paragraphs", "teacher_opinion_paragraphs", "teacher_opinion_is_draft"],
+  "required": [
+    "project_id",
+    "title",
+    "progress_paragraphs",
+    "teacher_opinion_paragraphs",
+    "teacher_opinion_is_draft"
+  ],
   "properties": {
-    "project_id": {"type": "string"},
-    "title": {"type": "string", "minLength": 1},
-    "student_name": {"type": "string"},
-    "class_name": {"type": "string"},
-    "inspection_date": {"type": "string", "format": "date"},
-    "progress_paragraphs": {"$ref": "#/$defs/textBlock"},
-    "issues_paragraphs": {"$ref": "#/$defs/textBlock"},
-    "teacher_opinion_paragraphs": {"$ref": "#/$defs/textBlock"},
-    "teacher_opinion_is_draft": {"const": true},
-    "college_opinion_paragraphs": {"$ref": "#/$defs/textBlock"},
-    "college_opinion_authorized": {"type": "boolean", "default": false},
-    "asset_reference_ids": {"type": "array", "items": {"type": "string", "pattern": "^REF-"}, "uniqueItems": true},
-    "asset_fact_ids": {"type": "array", "items": {"type": "string", "pattern": "^FACT-"}, "uniqueItems": true},
-    "asset_progress_ids": {"type": "array", "items": {"type": "string", "pattern": "^PROG-"}, "uniqueItems": true},
-    "schedule_id": {"type": "string"},
-    "evidence_notes": {"type": "array", "items": {"type": "string"}}
+    "project_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "student_name": {
+      "type": "string"
+    },
+    "class_name": {
+      "type": "string"
+    },
+    "inspection_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "progress_paragraphs": {
+      "$ref": "#/$defs/textBlock"
+    },
+    "issues_paragraphs": {
+      "$ref": "#/$defs/textBlock",
+      "description": "问题分点与措施分点：存在问题：、（1）问题、…、整改措施：、（1）措施、…；相同编号一一对应。推荐改用issue_pairs。"
+    },
+    "teacher_opinion_paragraphs": {
+      "$ref": "#/$defs/textBlock"
+    },
+    "teacher_opinion_is_draft": {
+      "const": true
+    },
+    "college_opinion_paragraphs": {
+      "$ref": "#/$defs/textBlock"
+    },
+    "college_opinion_authorized": {
+      "type": "boolean",
+      "default": false
+    },
+    "asset_reference_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^REF-"
+      },
+      "uniqueItems": true
+    },
+    "asset_fact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^FACT-"
+      },
+      "uniqueItems": true
+    },
+    "asset_progress_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^PROG-"
+      },
+      "uniqueItems": true
+    },
+    "schedule_id": {
+      "type": "string"
+    },
+    "evidence_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "issue_pairs": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "description": "优先使用；自动生成两个小标题、顺序编号、一条问题对应一条解决措施",
+      "items": {
+        "type": "object",
+        "required": [
+          "problem",
+          "action"
+        ],
+        "properties": {
+          "problem": {
+            "type": "string",
+            "minLength": 18
+          },
+          "action": {
+            "type": "string",
+            "minLength": 18
+          },
+          "verification": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
   },
   "$defs": {
     "textBlock": {
       "oneOf": [
-        {"type": "string", "minLength": 200},
-        {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        {
+          "type": "string",
+          "minLength": 200
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       ]
     }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "anyOf": [
+    {
+      "required": [
+        "issues_paragraphs"
+      ]
+    },
+    {
+      "required": [
+        "issue_pairs"
+      ]
+    }
+  ]
 }

@@ -255,6 +255,8 @@ def validate_input(data):
 
 def build(data, template, out):
     validate_input(data)
+    if out.exists():
+        raise ValueError('成品路径已存在；历史 -vN 文件不得覆盖。请使用新的版本号。')
     checked_source(template)
     with ZipFile(template, 'r') as src:
         root=etree.fromstring(src.read('word/document.xml'))

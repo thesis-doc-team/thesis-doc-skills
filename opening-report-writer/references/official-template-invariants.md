@@ -57,6 +57,8 @@
 
 ## 5. 与其他开题范本的关系
 
+新增一份已填写历史开题报告的**脱敏参考副本** `assets/reference-samples/sample-a-smart-interaction-anonymized.docx`，其唯一作用是展示写作展开和篇幅，不与本节所述空白官方模板混用。完整行为规范见 `references/anonymized-sample-usage.md`。
+
 历史上曾提供六份已填写开题报告（可用于研究常见二级章题、正文论证方法和参考文献排法）。它们不是此官方文件的替代品：
 
 1. 当前官方模板与用户当次明确要求优先；

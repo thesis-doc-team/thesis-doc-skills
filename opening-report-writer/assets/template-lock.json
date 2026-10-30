@@ -1,0 +1,21 @@
+{
+  "source": "用户最新提供的空白官方模板：02_塔里木大学毕业论文（设计）开题报告(1).docx",
+  "sha256": "d4a43a96b90fe215f9983129396b7f20b68229b2d5e70c1f2558ff8adb993e5d",
+  "bytes": 346209,
+  "kind": "official-blank-docx",
+  "tables": 1,
+  "table_rows": [
+    2
+  ],
+  "table_cols": [
+    1
+  ],
+  "sections": 1,
+  "page_width_emu": 7560310,
+  "page_height_emu": 10692130,
+  "margin_top_emu": 1332230,
+  "margin_bottom_emu": 907415,
+  "margin_left_emu": 1007745,
+  "margin_right_emu": 935990,
+  "protection_policy": "原始 DOCX 不修改；仅允许成品的 word/document.xml 中封面空白与正文写入区变化，文书固定栏保持不可变。"
+}

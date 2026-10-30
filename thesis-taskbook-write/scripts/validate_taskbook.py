@@ -5,6 +5,8 @@ import json
 import re
 from pathlib import Path
 from lxml import etree
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from docx import Document
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -124,6 +126,8 @@ def main():
     ap.add_argument('--data', type=Path)
     ap.add_argument('--report', type=Path)
     args = ap.parse_args()
+    from template_lock import verify as verify_template_lock
+    verify_template_lock(args.template)
     original, output = Document(args.template), Document(args.file)
     data = json.loads(args.data.read_text(encoding='utf-8')) if args.data else None
     se = compare_structure(original, output)

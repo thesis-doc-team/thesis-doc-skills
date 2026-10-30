@@ -10,6 +10,9 @@ from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.shared import Pt
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from template_lock import verify as verify_template_lock
 
 
 def font_set(run, size=10.5, bold=False):
@@ -127,6 +130,12 @@ def validate_input(data):
 
 def write(data, template, output):
     validate_input(data)
+    template, output = Path(template), Path(output)
+    verify_template_lock(template)
+    if output.exists():
+        raise ValueError(f"交付文件已存在，拒绝覆盖历史成品：{output}；请使用新的 -vN 版本名")
+    if template.resolve() == output.resolve():
+        raise ValueError("禁止覆盖官方模板原件")
     document = Document(template)
     t = valid_template(document)
     for row, col, key in [(0, 1, 'college'), (0, 3, 'class_name'),

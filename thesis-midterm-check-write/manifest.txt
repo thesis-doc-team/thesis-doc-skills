@@ -1,27 +1,44 @@
-README.md  sha256:3e2e86abfdb707fb42015b66becfa54e7f2651fc0d5578c1cfa991252e5a5199  bytes:3265
-SKILL.md  sha256:5a6f52f1fd840639fc44179cee7514a5aeb12ae78d996e31794b40378decde7a  bytes:18285
-VERSION.md  sha256:24fc87497bf8eb4b42ebf2c9a784de53df477d3b421b1d8884577f946dcd29c1  bytes:770
-assets/official-midterm-template.docx  sha256:5cde74468158d5ac4497bfba3f70a3cea983709adb8eba95cf9d24f2c4511159  bytes:344973
-assets/template-lock.json  sha256:873a0e324df948d3db3844d5602d1dce62e985aa0e0772ee9ff7475700bb8a2c  bytes:600
-references/citation-policy.md  sha256:e551cec0e5bdba24398ddf8179b801c4f3b8921636cd0580c0d73a33b8291433  bytes:1823
-references/genre-reverse-engineering.md  sha256:52d8703ded4b7958a58e347876047dae2d50b4081057d12cbba0594afc09bd24  bytes:2504
-references/integration-with-other-skills.md  sha256:9990f3c20fd3fbe07eab9b2e60462770e8c2e43bd802142558b608ffd1701960  bytes:1330
-references/intermediate-cleanup-policy.md  sha256:64332e7e4be6af6704912ae1bd1db06807dbde69b244ac28c9b1c97d32ee972a  bytes:1117
-references/progress-asset-extension.md  sha256:717aeebb22454e8e0f1050f7fcc004250f1b8f8497ff229ff260e828cf93dd0f  bytes:1679
-references/quality-gates.md  sha256:b0f2704edcc7f640a12d9615426d87f11b3aae0c31d1118605d47c5c6b021a0a  bytes:2903
-references/shared-project-assets-contract.md  sha256:f8c3f0f2ff41ec0a7a4b59907c59d9e3f77a497763ca51f221698a4904635809  bytes:2112
-references/technical-input-and-writing.md  sha256:ff6e3b6a961de97ba8ff58eec6afb85880613e518014a09660654400d1c1c80f  bytes:2173
-references/template-boundary-and-layout.md  sha256:371faf02b4551e127c0bc2de2257ea95ac3345fe650cf8fa38f0345a40f81d98  bytes:2189
-requirements.txt  sha256:c8a92e2b07a5d28e4396905bf80d55232da866e544b4526890f4b350f6c34f7f  bytes:32
-scripts/fill_midterm.py  sha256:62488924b470c4ed0ba99446874b0cfb37582515515883aa1bc54d481b576f9d  bytes:6018
-scripts/inspect_template.py  sha256:ee672cdee785cf9ed2288d021304f617f70336884b01fbc5e12f09fee6a63dee  bytes:1543
-scripts/project_assets.py  sha256:54135ea57101b7a4e3f5bf9da8051f10ad9b03a9d86af1445e1fc9d176b67bfe  bytes:19828
-scripts/template_tools.py  sha256:d065ebee5bce0fd2417b7546bec11e3c178c33e640be4558585d2cf72062568e  bytes:1982
-scripts/validate_midterm.py  sha256:f35dfe5443c754fb07908e7182a738e988e5d765b59f1377de0683261065ae60  bytes:6543
-templates/cross-skill-integration-snippet.md  sha256:fff262439da2c524b043afa6f798697745491a721dad5727d4a8f54d27b0e00e  bytes:1611
-templates/execution-report.md  sha256:17e3f200ef07498965f3f61f1cf3cfe13d858d778f2c91d89d0c0cee9e6ece95  bytes:1289
-templates/input.schema.json  sha256:6c44daf7d2ef5b18278d6d39aa12bb91e5c718fe21c0c61553627fe4247cbdb2  bytes:1599
-templates/shared-asset-input-examples.md  sha256:ec3080a1407412ec9a7029d2a7d86d7c8eeb7b50889260c8399264d2feeee4a5  bytes:2050
-tests/__init__.py  sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  bytes:0
-tests/test_pipeline.py  sha256:2ad13ce01b09b484b8faec70e1caac1b8c2a88d75399f7898c6d6a6015dafb83  bytes:2652
-tests/test_shared_assets.py  sha256:1157924f072b07a17537df8b366e3dfe0b7f74803295ba93e4bdd73e9b71affa  bytes:2481
+README.md
+SKILL.md
+VERSION.md
+assets/official-midterm-template.docx
+assets/reference-samples/README.md
+assets/reference-samples/SAMPLE-A.sha256
+assets/reference-samples/SAMPLE-B.sha256
+assets/reference-samples/SAMPLE-C.sha256
+assets/reference-samples/SAMPLE-D.sha256
+assets/reference-samples/sample-a_environment-monitor.docx
+assets/reference-samples/sample-b_data-platform.docx
+assets/reference-samples/sample-c_facility-monitor.docx
+assets/reference-samples/sample-d_mobile-inspection.docx
+assets/reference-samples/samples-manifest.json
+assets/template-lock.json
+manifest.txt
+references/anonymized-sample-text.md
+references/citation-policy.md
+references/genre-reverse-engineering.md
+references/integration-with-other-skills.md
+references/intermediate-cleanup-policy.md
+references/numbered-issue-remediation.md
+references/progress-asset-extension.md
+references/quality-gates.md
+references/sample-style-audit.json
+references/shared-project-assets-contract.md
+references/technical-input-and-writing.md
+references/template-boundary-and-layout.md
+requirements.txt
+scripts/fill_midterm.py
+scripts/inspect_reference_styles.py
+scripts/inspect_template.py
+scripts/project_assets.py
+scripts/render_visual.py
+scripts/template_tools.py
+scripts/validate_midterm.py
+templates/cross-skill-integration-snippet.md
+templates/execution-report.md
+templates/input.schema.json
+templates/shared-asset-input-examples.md
+tests/__init__.py
+tests/format-smoke-input.json
+tests/test_pipeline.py
+tests/test_shared_assets.py

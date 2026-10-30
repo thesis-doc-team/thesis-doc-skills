@@ -256,7 +256,7 @@ def compose(args):
     if not draft.get('title'):
         raise ValueError('缺少本项目题目，禁止从范本继承')
     for field in ('progress_paragraphs','issues_paragraphs','teacher_opinion_paragraphs'):
-        if not draft.get(field):
+        if not draft.get(field) and not (field=='issues_paragraphs' and draft.get('issue_pairs')):
             raise ValueError(f'缺少 {field}，Agent 必须依据真实材料撰写')
     if draft.get('teacher_opinion_is_draft') is not True:
         raise ValueError('指导教师意见必须声明为拟稿，尚需教师本人审核')

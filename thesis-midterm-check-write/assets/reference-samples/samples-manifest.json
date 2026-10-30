@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "samples": [
+    {
+      "id": "SAMPLE-A",
+      "file": "sample-a_environment-monitor.docx",
+      "role": "仅学习段落层级、行文及格式；禁止作为当前项目事实来源",
+      "sha256": "e259e4efaae9ceebfdbf707b488f384937548e47133470308cd82d51363a4229"
+    },
+    {
+      "id": "SAMPLE-B",
+      "file": "sample-b_data-platform.docx",
+      "role": "仅学习段落层级、行文及格式；禁止作为当前项目事实来源",
+      "sha256": "e749fac03b7b30e9be4994aede822b94f4935e0c268193ff7e3f9fe8c899fb70"
+    },
+    {
+      "id": "SAMPLE-C",
+      "file": "sample-c_facility-monitor.docx",
+      "role": "仅学习段落层级、行文及格式；禁止作为当前项目事实来源",
+      "sha256": "6a22d206923fd8e3f5b12dd33912a19f2f408455bba6a19325d162e8ec2770fc"
+    },
+    {
+      "id": "SAMPLE-D",
+      "file": "sample-d_mobile-inspection.docx",
+      "role": "仅学习段落层级、行文及格式；禁止作为当前项目事实来源",
+      "sha256": "4de571f3c48be3cb75df6c5e483155625cf730492f391beed7d687c3606cb7ff"
+    }
+  ]
+}

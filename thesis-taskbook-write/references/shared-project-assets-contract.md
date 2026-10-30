@@ -13,6 +13,7 @@
 │   ├── facts.json                   # 项目技术事实、来源、实施状态
 │   ├── references.json              # 共享参考文献库、稳定编号、核验状态
 │   ├── schedule.json                # 一份项目级周计划基线及确认状态
+│   ├── progress.json                 # 可选：中期检查记录的真实进展
 │   └── activity.jsonl               # 增补/变更/被文书使用的审计记录
 ├── deliverables/                    # 持久化最终产物（示例，可按用户指定位置）
 │   ├── taskbook/毕业设计任务书.docx
@@ -68,6 +69,12 @@
 ### `facts.json`（项目事实）
 
 每条保存 `id`、`statement`、`source`（文件及章节、行号或证据地址）、`status`（`implemented` / `declared` / `unverified` / `proposed`）。任务书和开题报告可以引用相同事实，但“现已实现”和“计划设计”是**文体**不同，不能修改事实本身的状态。
+
+### `progress.json`（可选的中期进展扩展，与 midterm-check v1.3 兼容）
+
+`progress.json` 是中期检查等后续文书维护的项目**实际进展**，不等同于任务书 `schedule.json` 的**拟定周计划**。旧项目可没有此文件；若已有则本 Skill 不得删除或覆盖。最小约定：`schema_version=1`、`project_id`、`items[]`；单条 `PROG-xxx` 含 `as_of`、`category`（`completed/in_progress/pending/risk/next_step`）、`status`（`draft/confirmed`）、`description` 与 `source`。源文档或用户未证实的进展不能标为 `confirmed`。
+
+本 Skill 的 `project_assets.py` 支持按相同 ID 读取、显式 `merge --kind progress` 和审计记录，但**任务书的 `compose` 不读取 progress 生成进度表**：编写任务书时按用户确认或拟定的 `schedule.json`，不把中期已完成事实冒充早期计划。其他文书的 `compose` 仍归各自 Skill 所有，禁止交叉调用。
 
 ### `activity.jsonl`（维护记录）
 

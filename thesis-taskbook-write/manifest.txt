@@ -1,26 +1,37 @@
-# thesis-taskbook-write 1.1.0 manifest (SHA-256)
-
-Paths below are relative to the Skill directory.
-a5100c5fd50af64f7f76bc2ee5c8a59e8353eefa90af45dc0c8b8630fb0f70ea  README.md
-bdd4aa8aa4e2c5452520c0b287a0494c3109d6468e7e650c8e0959de2cd163dc  SKILL.md
-77392222c9edb6057e0524c3a7bf807cbd40ecb495697817daa7b46b4cf1c7b0  VERSION.md
-49e0983db300ca1729d7d298b3f849dfce3d8d189c4b3cc4c8c2ce87b5085590  assets/official-taskbook-template.docx
-d92e992f61b46be88095aa43b3d4d57ebbcc0a25007d7cc8671a87311bc8b5e8  references/citation-policy.md
-e7019ad46907cf1fb31ba4a2c6ef3c32c0e8ccebf16d06ec928b67ee7bdf7f87  references/genre-reverse-engineering.md
-2f04887521dac57b915b5e530abb6480e15949cbf6697fec5b33308667068217  references/integration-with-project-technical-doc.md
-a9f59d1df6c4f49a37ca72534390dd9cbff75cc1b5b0aa82f8201842bfb33d37  references/intermediate-cleanup-policy.md
-c79e340269bb5c76478f63cd016e32bdbfe95439f72a2f7195457a713b98384e  references/quality-gates.md
-e4d89617cfcbc7826811c66426bdf92abc27d72225e6195d9770958a30649e3e  references/shared-project-assets-contract.md
-a20d1e351e4d9a27ee20e0911ed4b6cd1eb52e0752b533cc396385d93bcaa6c0  references/technical-input-and-writing.md
-d5e033f67541bdc69d77880dd859099a042d5a8be2b2292550a8818577167401  references/template-boundary-and-layout.md
-e695eab9e1a6a86fb73768b02eb3b12b5fd44908866f3e615f9a70a2a64b0aba  requirements.txt
-c779703d48d64e9cc32abed38418bcd87fb10059b8451d28d0d51c02b517a0ee  scripts/fill_taskbook.py
-8b0d23af07e5e2477b197d0dccd9043feac7afa1efe44b3c14c4cad2adc773c0  scripts/inspect_template.py
-0f543d6049558a9beb7c546571eb1f7fb4d8b77675381488401b65f012451b4e  scripts/project_assets.py
-206b3e596a5c138841178792bd3bf202935df70f4f832cfed0bbbc2cfb7ce102  scripts/validate_taskbook.py
-5791306e406c0f18336d2c821a352d03ebc6ae8b16de2325cafbfc6a0fe9c4b4  templates/cross-skill-integration-snippet.md
-f9294edce361830ea653bffb368c99aea27631cd0c81fa27939e3df27d1fe7bc  templates/execution-report.md
-89c0975afbc164dc3b2051839fa2153568055fff0e58ff8f8e0592c4217a72ef  templates/input.schema.json
-650f0aa64ffa43a9aca73a5647350d9c8526755b8ef8883905ca8373c8139077  templates/shared-asset-input-examples.md
-2d22e1de8ad0581a541e052cd0784135999ecefe1ab54abbc20ba469c5131a1d  tests/test_pipeline.py
-89ec7aa4834e43fdb2b3c86d3fc7bf625cd468306acb1085aa686ac65339b78c  tests/test_shared_assets.py
+README.md
+SKILL.md
+VERSION.md
+assets/official-taskbook-template.docx
+assets/reference-samples/README.md
+assets/reference-samples/anonymization-policy.md
+assets/reference-samples/sample-a_agriculture-inspection.docx
+assets/reference-samples/sample-b_data-visualization.docx
+assets/reference-samples/sample-c_facility-monitor.docx
+assets/reference-samples/sample-d_environment-safety.docx
+assets/reference-samples/samples-manifest.json
+assets/template-lock.json
+references/anonymized-sample-text.md
+references/citation-policy.md
+references/genre-reverse-engineering.md
+references/integration-with-project-technical-doc.md
+references/intermediate-cleanup-policy.md
+references/quality-gates.md
+references/sample-style-audit.json
+references/shared-project-assets-contract.md
+references/technical-input-and-writing.md
+references/template-boundary-and-layout.md
+requirements.txt
+scripts/fill_taskbook.py
+scripts/inspect_reference_styles.py
+scripts/inspect_template.py
+scripts/project_assets.py
+scripts/render_visual.py
+scripts/template_lock.py
+scripts/validate_taskbook.py
+templates/cross-skill-integration-snippet.md
+templates/execution-report.md
+templates/input.schema.json
+templates/shared-asset-input-examples.md
+tests/test_pipeline.py
+tests/test_reference_samples.py
+tests/test_shared_assets.py

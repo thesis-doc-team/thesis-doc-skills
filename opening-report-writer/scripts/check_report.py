@@ -87,12 +87,24 @@ def check(original, target, data):
                 jc=p.xpath('./w:pPr/w:jc',namespaces=N)
                 if len(jc)!=1 or jc[0].get(Q('val'))!='left':
                     err(errors,'参考文献段落必须显式左对齐（w:jc=left），防止两端对齐拉伸出行内大空隙：'+text_of(p)[:30])
+                indent=p.xpath('./w:pPr/w:ind',namespaces=N)
+                if len(indent)!=1 or indent[0].get(Q('left'))!='420' or indent[0].get(Q('hanging'))!='420':
+                    err(errors,'参考文献悬挂缩进不符：'+text_of(p)[:30])
+                if p.xpath('./w:pPr/w:numPr',namespaces=N):
+                    err(errors,'文献不允许额外启用自动列表编号，避免重复 [n] [n]')
             if re.search(r'\[\d+\]\s*\[\d+\]',text):
                 err(errors,'参考文献或正文中出现重复 [n] [n] 编号')
             for p in generated:
                 spacing=p.xpath('./w:pPr/w:spacing',namespaces=N)
                 if len(spacing)!=1 or spacing[0].get(Q('line'))!='360' or spacing[0].get(Q('lineRule'))!='auto':
                     err(errors,'生成内容未统一为 1.5 倍行距：'+text_of(p)[:30])
+                # 参考中期检查 Skill v1.3 的经验：正文必须逐段检查显式缩进，
+                # 不能只检查 run 字体就把正文顶格误判为合格。
+                val=text_of(p)
+                if p not in refs and not re.match(r'^\d+(?:\.\d+)*\s+',val):
+                    ind=p.xpath('./w:pPr/w:ind',namespaces=N)
+                    if len(ind)!=1 or ind[0].get(Q('firstLine'))!='420':
+                        err(errors,'普通正文/周计划首行缩进应为 420 twips（21pt，约两字）：'+val[:30])
                 for r in p.xpath('./w:r',namespaces=N):
                     fonts=r.xpath('./w:rPr/w:rFonts',namespaces=N)
                     sz=r.xpath('./w:rPr/w:sz',namespaces=N)
