@@ -2,8 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Opening Report Draft Input (runtime-only)",
   "type": "object",
-  "required": ["cover", "sections", "references"],
+  "required": ["cover", "sections", "references", "teacher_opinion"],
   "properties": {
+    "teacher_opinion": {
+      "type": "string", "minLength": 50,
+      "description": "指导教师审阅意见拟稿（不少于50字）：供教师审定，签名与日期保持留空；写法见 SKILL.md 教师意见拟稿统一规范"
+    },
     "cover": {
       "type": "object",
       "description": "缺失封面个人信息保留官方留白，不得从匿名范本推断",

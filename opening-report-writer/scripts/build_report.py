@@ -129,7 +129,8 @@ def make_para(kind, content, count):
 def insert_body(tr, payload):
     """Replace only empty writing-area placeholders in official table row 1.
 
-    Official note, student signature/date, table cell, teacher-opinion row are immutable.
+    Official note, student signature/date and the teacher-opinion label/signature/date
+    are immutable; the teacher-opinion blank writing area is filled by fill_teacher_opinion.
     """
     tc = tr.xpath('./w:tc', namespaces=N)[0]
     ps = tc.xpath('./w:p', namespaces=N)
@@ -193,6 +194,38 @@ def insert_body(tr, payload):
     return len(paragraphs)
 
 
+def fill_teacher_opinion(tr, payload):
+    """Fill only the empty writing-area placeholders in official table row 2.
+
+    指导教师审阅意见行：标签行、指导教师签名与年月日段落保持官方原样；
+    只在签名锚点前的空白段落区写入教师意见**拟稿**（供教师审定，不代签）。
+    """
+    tc = tr.xpath('./w:tc', namespaces=N)[0]
+    ps = tc.xpath('./w:p', namespaces=N)
+    label = ps[0]
+    if '指导教师审阅意见' not in text_of(label):
+        raise ValueError('官方模板教师审阅意见标签丢失：停止。')
+    signature = [i for i,p in enumerate(ps) if text_of(p).strip().startswith('指导教师签名')]
+    if len(signature) != 1 or signature[0] < 2:
+        raise ValueError('官方模板教师签名锚点不匹配：停止。')
+    sig_idx = signature[0]
+    writing_slots = ps[1:sig_idx]
+    if any(text_of(p).strip() for p in writing_slots):
+        raise ValueError('官方模板教师意见留白区域不是空的：停止，避免覆盖原有资料。')
+    opinion = re.sub(r'\s+', '', str(payload.get('teacher_opinion') or ''))
+    if len(opinion) < 50:
+        raise ValueError('指导教师审阅意见拟稿不足 50 字（官方模板要求不少于50字）')
+    for p in writing_slots:
+        tc.remove(p)
+    paragraphs = [make_para('paragraph', s, 0) for s in re.split(r'\n+', str(payload['teacher_opinion']).strip()) if s.strip()]
+    signature_node = ps[sig_idx]
+    place = list(tc).index(signature_node)
+    for p in paragraphs:
+        tc.insert(place, p)
+        place += 1
+    return len(paragraphs)
+
+
 def fill_cover(root, cover):
     body = root.xpath('./w:body', namespaces=N)[0]
     used = set()
@@ -224,6 +257,8 @@ def validate_input(data):
         raise ValueError('必须提供 7 个一级章节：1..7')
     if len(data.get('references',[]))<10:
         raise ValueError('官方模板规定参考文献不少于 10 篇')
+    if len(re.sub(r'\s+','',str(data.get('teacher_opinion') or '')))<50:
+        raise ValueError('缺少指导教师审阅意见拟稿（不少于50字）；该栏为供教师审定的拟稿，签名日期仍留空')
     if not isinstance(data.get('cover',{}), dict):
         raise ValueError('封面字段必须为对象')
     for i, sec in enumerate(data['sections'],1):
@@ -264,6 +299,7 @@ def build(data, template, out):
         if len(rows)!=2: raise ValueError('官方模板预期 2 行正文/教师意见表格')
         fill_cover(root, data.get('cover',{}))
         n=insert_body(rows[0], data)
+        m=fill_teacher_opinion(rows[1], data)
         newdoc=etree.tostring(root,xml_declaration=True,encoding='UTF-8',standalone=True)
         if template.resolve()==out.resolve(): raise ValueError('绝对禁止覆盖官方模板原件')
         out.parent.mkdir(parents=True,exist_ok=True)
@@ -271,7 +307,7 @@ def build(data, template, out):
             for info in src.infolist():
                 b = newdoc if info.filename == 'word/document.xml' else src.read(info.filename)
                 dest.writestr(copy.copy(info), b)
-    return n
+    return n, m
 
 
 def main():
@@ -282,8 +318,8 @@ def main():
     args=ap.parse_args()
     try:
         data=json.loads(args.report_json.read_text(encoding='utf-8'))
-        n=build(data,args.template,args.output)
-        print(f'OK: {args.output}；新增正文段落 {n}；源模板未改写')
+        n,m=build(data,args.template,args.output)
+        print(f'OK: {args.output}；新增正文段落 {n}；教师意见拟稿段落 {m}；源模板未改写')
     except Exception as exc:
         print(f'FAIL: {exc}', file=sys.stderr)
         sys.exit(1)

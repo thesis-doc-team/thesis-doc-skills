@@ -12,22 +12,27 @@ sys.path.insert(0,str(BASE/'scripts'))
 from build_report import DEFAULT_TITLES, TEMPLATE, SHA_FILE, build, N, Q, text_of
 from check_report import check
 
+def synthetic_payload():
+    # All references below are deliberately synthetic & confined to the test environment.
+    r=[{'text':f'测试作者{i}. 软件自动化格式校验占位文献[J]. 虚构测试刊物, 2020, 1(1): 1-2.',
+        'source_url':f'https://example.invalid/synthetic/{i}', 'verified':True,'source_type':'journal'}
+       for i in range(1,11)]
+    sec=[]
+    for j,t in enumerate(DEFAULT_TITLES,1):
+        blocks=[] if j==7 else [{'type':'heading2','text':f'{j}.1 测试标题'},
+            {'type':'paragraph','text':('这是一段专用于校验自动排版和版式约束的中文测试文字。'*12 + ('论证内容必须真实准确，尊重引用来源。'*40 if j<4 else '内容基于资料。'*18)) + ('[[cite:1-2]]' if j==1 else '')}]
+        if j==6:
+            blocks.append({'type':'schedule','items':[{'start_week':1,'end_week':2,'task':'准备环境并测试'}]})
+        sec.append({'id':j,'title':t,'blocks':blocks})
+    opinion='该生围绕自动化格式校验方向选题，能够查阅并整理相关文献，对国内外研究现状有较为系统的把握；开题报告结构完整、条理清晰，引用文献真实可查，写作规范。建议开题并按计划开展课题工作，最终评价以指导教师审定为准。'
+    return {'cover':{'title':'仅用于脚本测试'},'sections':sec,'references':r,'teacher_opinion':opinion}
+
+
 class TestPipeline(unittest.TestCase):
     def test_structure_without_editing_template(self):
         import hashlib
         before=hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()
-        # All references below are deliberately synthetic & confined to the test environment.
-        r=[{'text':f'测试作者{i}. 软件自动化格式校验占位文献[J]. 虚构测试刊物, 2020, 1(1): 1-2.',
-            'source_url':f'https://example.invalid/synthetic/{i}', 'verified':True,'source_type':'journal'}
-           for i in range(1,11)]
-        sec=[]
-        for j,t in enumerate(DEFAULT_TITLES,1):
-            blocks=[] if j==7 else [{'type':'heading2','text':f'{j}.1 测试标题'},
-                {'type':'paragraph','text':('这是一段专用于校验自动排版和版式约束的中文测试文字。'*12 + ('论证内容必须真实准确，尊重引用来源。'*40 if j<4 else '内容基于资料。'*18)) + ('[[cite:1-2]]' if j==1 else '')}]
-            if j==6:
-                blocks.append({'type':'schedule','items':[{'start_week':1,'end_week':2,'task':'准备环境并测试'}]})
-            sec.append({'id':j,'title':t,'blocks':blocks})
-        payload={'cover':{'title':'仅用于脚本测试'},'sections':sec,'references':r}
+        payload=synthetic_payload()
         with tempfile.TemporaryDirectory() as d:
             dest=Path(d)/'test.docx'
             build(payload,TEMPLATE,dest)
@@ -35,6 +40,29 @@ class TestPipeline(unittest.TestCase):
             self.assertEqual(report['status'],'PASS',report)
             self.assertEqual(report['metrics']['references'],10)
         self.assertEqual(before,hashlib.sha256(TEMPLATE.read_bytes()).hexdigest())
+
+    def test_teacher_opinion_draft_filled_signature_untouched(self):
+        """教师意见拟稿只写意见书写区；标签、签名与日期段必须保持官方原样；不足50字拒绝。"""
+        from lxml import etree
+        payload=synthetic_payload()
+        with tempfile.TemporaryDirectory() as d:
+            dest=Path(d)/'opinion.docx'
+            build(payload,TEMPLATE,dest)
+            with ZipFile(dest) as z:
+                root=etree.fromstring(z.read('word/document.xml'))
+            ob=root.xpath('./w:body/w:tbl/w:tr',namespaces=N)[1].xpath('./w:tc/w:p',namespaces=N)
+            self.assertIn('指导教师审阅意见',text_of(ob[0]))
+            sig=[i for i,p in enumerate(ob) if text_of(p).strip().startswith('指导教师签名')]
+            self.assertEqual(len(sig),1)
+            opinion=''.join(text_of(p) for p in ob[1:sig[0]])
+            self.assertGreaterEqual(len(re.sub(r'\s+','',opinion)),50)
+            self.assertIn('最终评价以指导教师审定为准',opinion)
+            report=check(TEMPLATE,dest,payload)
+            self.assertEqual(report['status'],'PASS',report)
+        short=dict(payload); short['teacher_opinion']='太短的拟稿'
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):
+                build(short,TEMPLATE,Path(d)/'short.docx')
 
     def test_reference_paragraphs_are_left_aligned(self):
         """v2 回归：文献段落必须显式左对齐，避免两端对齐在长 URL 条目上拉伸大空隙。"""
@@ -44,7 +72,8 @@ class TestPipeline(unittest.TestCase):
            for i in range(1,11)]
         sec=[{'id':j,'title':t,'blocks':([] if j==7 else [{'type':'paragraph','text':'仅用于对齐检查的中文测试段落。'*20}])}
              for j,t in enumerate(DEFAULT_TITLES,1)]
-        payload={'cover':{},'sections':sec,'references':r}
+        payload={'cover':{},'sections':sec,'references':r,
+                 'teacher_opinion':synthetic_payload()['teacher_opinion']}
         with tempfile.TemporaryDirectory() as d:
             dest=Path(d)/'align.docx'
             build(payload,TEMPLATE,dest)

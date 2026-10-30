@@ -12,7 +12,8 @@ class TestGuards(unittest.TestCase):
         self.data={
             'cover':{},
             'sections':[{'id':i,'title':title,'blocks':([] if i==7 else [{'type':'paragraph','text':'仅供测试'}])} for i,title in enumerate(DEFAULT_TITLES,1)],
-            'references':[{'text':f'模拟作者{i}. 非真实测试出处[J]. 软件测试, 2020, 1(1):1-2.', 'verified':True,'source_type':'journal','source_url':f'https://example.invalid/{i}'} for i in range(1,11)]
+            'references':[{'text':f'模拟作者{i}. 非真实测试出处[J]. 软件测试, 2020, 1(1):1-2.', 'verified':True,'source_type':'journal','source_url':f'https://example.invalid/{i}'} for i in range(1,11)],
+            'teacher_opinion':'该生围绕软件测试方向选题，能够查阅并整理相关文献，对国内外研究现状有较为系统的把握；开题报告结构完整、条理清晰，引用文献真实可查，写作规范。建议开题并按计划开展课题工作，最终评价以指导教师审定为准。'
         }
     def test_reject_unverified(self):
         self.data['references'][3]['verified']=False

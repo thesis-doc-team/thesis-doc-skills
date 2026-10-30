@@ -40,8 +40,40 @@ def check(original, target, data):
             err(errors, f'官方表格结构发生变动：{tag}')
     ar=atab.xpath('./w:tr',namespaces=N);br=btab.xpath('./w:tr',namespaces=N)
     if len(ar)!=2 or len(br)!=2: err(errors,'正文表格必须保持原来的两行结构')
-    elif xml_bytes(ar[1])!=xml_bytes(br[1]):
-        err(errors,'指导教师意见及签名区域与官方模板不一致')
+    else:
+        # 教师审阅意见行：标签行与签名/日期段必须原样；仅标签与签名之间的空白书写区允许写入意见拟稿。
+        oa=ar[1].xpath('./w:tc/w:p',namespaces=N); ob=br[1].xpath('./w:tc/w:p',namespaces=N)
+        if not oa or not ob or xml_bytes(oa[0])!=xml_bytes(ob[0]):
+            err(errors,'指导教师审阅意见标签段被修改')
+        sa=[x for x in oa if text_of(x).strip().startswith('指导教师签名')]
+        sb=[x for x in ob if text_of(x).strip().startswith('指导教师签名')]
+        if len(sa)!=1 or len(sb)!=1: err(errors,'指导教师签名锚点丢失')
+        else:
+            ia=oa.index(sa[0]); ib=ob.index(sb[0])
+            if len(oa)-ia!=len(ob)-ib:
+                err(errors,'指导教师签名/日期段落数量被修改')
+            else:
+                for k in range(len(oa)-ia):
+                    if xml_bytes(oa[ia+k])!=xml_bytes(ob[ib+k]):
+                        err(errors,'指导教师签名或日期段被修改')
+            opinion_text=''.join(text_of(p) for p in ob[1:ib])
+            metrics['teacher_opinion_chars']=len(re.sub(r'\s+','',opinion_text))
+            if metrics['teacher_opinion_chars']<50:
+                err(errors,'指导教师审阅意见拟稿不足50字或未填写')
+            for p in ob[1:ib]:
+                spacing=p.xpath('./w:pPr/w:spacing',namespaces=N)
+                if len(spacing)!=1 or spacing[0].get(Q('line'))!='360' or spacing[0].get(Q('lineRule'))!='auto':
+                    err(errors,'教师意见拟稿未统一为1.5倍行距：'+text_of(p)[:20])
+                ind=p.xpath('./w:pPr/w:ind',namespaces=N)
+                if len(ind)!=1 or ind[0].get(Q('firstLine'))!='420':
+                    err(errors,'教师意见拟稿首行缩进应为420twips：'+text_of(p)[:20])
+                for r in p.xpath('./w:r',namespaces=N):
+                    fonts=r.xpath('./w:rPr/w:rFonts',namespaces=N)
+                    sz=r.xpath('./w:rPr/w:sz',namespaces=N)
+                    if not fonts or fonts[0].get(Q('eastAsia'))!='宋体' or fonts[0].get(Q('ascii'))!='Times New Roman' or not sz or sz[0].get(Q('val'))!='21':
+                        err(errors,'教师意见拟稿字体或字号错误：'+text_of(p)[:20])
+        if not re.search('指导教师审阅意见',text_of(ob[0] if ob else oa[0])):
+            err(errors,'教师审阅意见区域丢失')
     for e1,e2 in zip(ap.xpath('./w:sectPr',namespaces=N), bp.xpath('./w:sectPr',namespaces=N)):
         if xml_bytes(e1)!=xml_bytes(e2): err(errors,'页面与节属性被改变')
     aps=ap.xpath('./w:p',namespaces=N);bps=bp.xpath('./w:p',namespaces=N)
@@ -136,8 +168,6 @@ def check(original, target, data):
             if num_zh<3000:err(errors,f'正文汉字数不足 3000：目前 {num_zh}')
             if re.search(r'\[\[cite:|【待填写】|\{\{',text):err(errors,'成品残留内部引用语法或占位符')
             if len(refs)<10:err(errors,'参考文献少于 10 条')
-            if not re.search('指导教师审阅意见',text_of(br[1])):
-                err(errors,'教师审阅意见区域丢失')
     if not data.get('cover',{}).get('student_name'):
         warnings.append('封面学生信息保留空白；用户需手动填写，不可自行臆造。')
     warnings.append('机器结构检查不能代替 Word/WPS 全页渲染目视检查及文献真实性核验。')
