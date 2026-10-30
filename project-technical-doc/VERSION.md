@@ -1,0 +1,21 @@
+# V5.1 — 截图验证分析环节（2026-10-30）
+
+- E5 与 HTML 门禁统一**截图验证分析**（Screenshot Verification Analysis）：1440/768/390 三宽度截图 → 逐张分析 → 留痕汇报固定三步与红线；浏览器不可用如实记录“未执行截图验证分析”，不能谎称通过。执行汇报模板同步固定字段。
+
+# V5 — 项目级共享资产接入（2026-10-30）
+
+- 新增 1.5 节：**项目资产包（bundle）布局与版本意识**——一个项目一个包（`project-assets/` + `deliverables/` + `.skill-tmp/`），默认交付路径切到 `<PROJECT_ROOT>/deliverables/technical-document/`；重生成产出 `-v2`、`-v3`…不覆盖历史版本，每版单独 record-use 留痕。
+
+- 接入**项目级共享资产协议 v1**（`references/shared-project-assets-contract.md`）：与 thesis-taskbook-write、opening-report-writer 共用 `<PROJECT_ROOT>/project-assets/` 一个数据资产库，本 Skill 定位为 **FACT-xxx 项目事实的主要提炼者**。
+- 新增第 1 章“项目级共享资产”：先读后写、稳定 ID、证据分类→status 固定映射（VERIFIED→implemented、DECLARED/EXAMPLE→declared、DESIGN/PLANNED→proposed、UNKNOWN→unverified）、record-use 强制登记、安全清理红线，烙印进 SKILL.md 并贯穿阶段 A/B 与交付环节。
+- 新增 `scripts/project_assets.py`（协议兼容副本，所有权常量归属本 Skill：`.skill-tmp/project-technical-doc/<run-id>/`）；过程临时文件改入该运行目录，交付前 cleanup。
+- 新增回归测试 `tests/test_project_assets.py`。
+- 其余机制（MD+HTML 双产物、事实门禁、禁问题/改进章节、离线单页 HTML）与 V4 一致。
+
+# V4 — MD + HTML 双产物
+
+- 基于 V3：保留项目源码/技术资料理解流程、通用技术文档范本、事实证据门禁与禁止独立问题/改进章节的内容边界。
+- 增加：从**同次生成的 MD**构建单文件离线 HTML 展示网站，集成用户提供网页的固定布局、导航、搜索、阅读进度、章节卡、表格、Mermaid SVG、移动端与打印样式。
+- 增加：可配置首页功能卡、真实流程、参数速览；缺乏来源时降级为章节速览。
+- 增加：`publish.py` 一键检查 MD、生成 SVG/HTML 并对照 MD 验证，自动生成 JSON 报告。
+- 原则：不把网页范例中具体项目的技术事实带入 Skill，不独立重写 HTML 技术正文，不新增改进/展望类章节。
