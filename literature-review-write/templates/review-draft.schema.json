@@ -67,7 +67,32 @@
             "type": "array",
             "minItems": 1,
             "items": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "text",
+                    "kind"
+                  ],
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "enum": [
+                        "paragraph",
+                        "subheading"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             }
           },
           "page_break_before": {
@@ -75,7 +100,8 @@
             "description": "仅截图验收发现孤立标题时启用，不自动变更官方模板"
           }
         }
-      }
+      },
+      "maxItems": 3
     },
     "teacher_opinion": {
       "type": "string",

@@ -1,31 +1,54 @@
-# literature-review-write
+# literature-review-write｜文献综述编写 Skill
 
-**唯一文书：塔里木大学毕业论文（设计）文献综述 DOCX。**
+> **基于用户最新上传的 `literature-review-write.zip` 增量升级**，参考 `thesis-midterm-check-write.zip` 的四范本脱敏、模板锁定、格式统计和回归门禁。保留原有资产协议和代码执行方式，不把它改造成任务书、中期检查表或开题报告 Skill。
 
-基于用户最新提供的官方空白 Word 模板开发；包内复制官方原件，不修改源文件。参考范本（`examples/`）已去除原学生个人信息，**仅用于风格参考**，有明确的旧版引文错误提示。
+## 这个 Skill 能做什么
 
-与 `thesis-taskbook-write-v1.1` 共享同一个 `project-assets/` 事实/参考文献/周计划/记录机制；编写文献综述时周计划只读，不另建资产库。运行区单独隔离，最后清理本轮。
+接收当前项目技术文档及（最好）已有的项目 `project-assets/` 数据，根据**真实且可核验的学术论文资料**编写不少于2500字的毕业设计文献综述，在官方原始 DOCX 母版中填写正文/参考文献/指导教师评语**拟稿**，自动做正文上标引用和结构审计，输出可由人工逐页验证的 PNG，最后版本化保存 Word。
 
-## 文件结构
+严格禁止修改官方原件、复制旧范本身份资料、抄用范本文献作为项目证据、冒充教师签名或未经实际截图检查就报告最终排版通过。
 
-- `SKILL.md`：核心路由、写作及 Word 操作规则（Claude/Codex 可直接读）
-- `assets/official-literature-review-template.docx`：**官方空白原件副本**
-- `examples/anonymized-style-reference.docx`：最早范本去个人标识参考
-- `references/`：逆向写作规则、引用核验、项目共享契约、跨 Skill 接口、质量门禁
-- `scripts/project_assets.py`：继承任务书 v1.1 共享资产 schema；独立运行区
-- `scripts/inspect_template.py`：模板只读盘点
-- `scripts/compose_review.py`：按共享 REF-ID 组装本次文书 JSON
-- `scripts/fill_review.py`：在原官方 DOCX 原位填写
-- `scripts/validate_review.py`：不变区、字数、上标、引用一致性验证
-- `templates/review-draft.schema.json`：本轮草稿结构
-- `tests/smoke_test.py`：在隔离虚拟项目中运行生成、验证、共享资产清理，不影响真实项目
+## 安装与调用
 
-## 安装
+把本压缩包里的**`literature-review-write/` 目录本身**解压到你的 Claude Code Skills 目录（例如项目 `.claude/skills/literature-review-write/`）或 Codex Skills 搜索目录，读取 `SKILL.md`。不要把 `project-assets/` 放进 Skill 安装目录。
 
-将最外层 `literature-review-write-v3.0/` 目录放在 Claude Code 的 Skills 目录或 Codex 的 Skills 目录即可。具体触发方式取决于你当前使用的客户端设置；也可直接要求 Agent “读取 `literature-review-write-v3.0/SKILL.md` 并执行”。
+要求本机有 Python 3.10+、`python-docx`、`lxml`；截图预检额外需要 `PyMuPDF` 和可从命令行运行的 `soffice`（LibreOffice）。安装依赖：`python -m pip install -r requirements.txt`。
 
-**重要**：Skill 安装目录不是项目数据目录，不允许把论文或个人数据放到本 Skill 的 `examples/` 和 `assets/`。
+参考指令：
 
-## 版本边界
+> 请使用 `literature-review-write` Skill，根据我提供的技术文档和当前项目的 `project-assets/`，编写符合官方 Word 模板的文献综述。先核验引文，再填原模板；完成后执行结构审计并逐页打开渲染截图，重点检查题目两行、所有下划线、Word 上标与教师审阅区；发现问题继续修改。保留历史版本，最后给我 DOCX 和执行报告。
 
-这是**可安装并带脚本的 Skill**，不包含当前胡杨林项目的正文或已核验参考文献数据。只有运行时读取当前项目技术文档和共享数据才能生成实际论文综述。`tests/` 的数据仅用于代码完整性测试，绝不能用作真实文献。
+## 项目数据保持兼容
+
+一个项目 = 一个资产包（数据+成品+运行区）；使用项目根 `project-assets/{project,facts,references,schedule}.json` 与 `activity.jsonl`，与任务书和中期检查 Skill 共用数据真源，文献综述只读周计划。每轮临时文件放 `.skill-tmp/literature-review-write/<run-id>/`，不触碰其他 Skill 运行区。
+
+## 核心文件
+
+| 路径 | 作用 |
+|---|---|
+| `SKILL.md` | 执行政策、边界、完整流程 |
+| `assets/official-literature-review-template.docx` | 学校空白原件副本（严禁改写） |
+| `assets/template-lock.json` | 官方原件 SHA-256、封面段落与表格位置锁 |
+| `assets/reference-samples/` | **最初四份**脱敏范本 + 内容边界说明 + manifest |
+| `examples/anonymized-style-reference.docx` | 旧版兼容的第一份匿名范本（不作为主入口） |
+| `references/format-reverse-engineering.md` | 四份范本求同存异的写作规则和反面规则 |
+| `references/sample-style-audit.json` | 从 DOCX 实际统计的段落格式值 |
+| `scripts/project_assets.py` | 兼容统一项目资产协议，带隔离运行区清理 |
+| `scripts/template_tools.py` | 原版模板锁与原位填写 guard |
+| `scripts/compose_review.py` | 核验 REF-ID → 本文编号，并生成严格写作输入 |
+| `scripts/fill_review.py` | 在学校既有段落/表格内写 Word，不重新建封面 |
+| `scripts/validate_review.py` | Word 原结构、真实上标、字体字号、引文对应与教师固定区审计 |
+| `scripts/render_visual.py` | 实际渲染 PNG/PDF + 自动预警（**不是自动视觉验收**） |
+| `tests/smoke_test.py` | 正向端到端隔离模拟 |
+| `tests/test_regression.py` | 负向故障回归：防伪模板、防覆写、防普通引用和篡改固定区 |
+| `templates/execution-report.md` | 本轮执行证据与待用户审核的交付报告 |
+
+## 测试
+
+```bash
+python tests/smoke_test.py
+python tests/test_regression.py
+python scripts/inspect_reference_styles.py --report /tmp/literature-sample-audit.json
+```
+
+测试只会创建虚构内容，绝不可作为真实研究文献。截图工具和人工看图是独立于以上代码测试的**正式成品门禁**。

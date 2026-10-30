@@ -2,7 +2,7 @@
 """Offline isolated INTEGRATION TEST ONLY. Test references are placeholders, not valid research."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import subprocess, sys, json, os
+import subprocess, sys, json, os, shutil
 
 BASE=Path(__file__).resolve().parent.parent
 SCRIPTS=BASE/'scripts'
@@ -50,6 +50,8 @@ def main():
         check=json.loads(cmd(SCRIPTS/'validate_review.py','--template',tmpl,'--file',final,'--data',out))
         assert check['result']=='PASS',check
         assert check['references']==8
+        if os.environ.get('LIT_QA_EXPORT'):
+            shutil.copy2(final,os.environ['LIT_QA_EXPORT'])
         cmd(SCRIPTS/'project_assets.py','record-use','--root',root,'--file',final,'--doc-type','literature-review',
             '--ref-ids',','.join([f'REF-{j:03d}' for j in range(1,9)]))
         cmd(SCRIPTS/'project_assets.py','cleanup','--root',root,'--run-id','qa-001')

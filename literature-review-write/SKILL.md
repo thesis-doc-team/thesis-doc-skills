@@ -11,7 +11,7 @@ description: 根据本项目真实技术文档和经核验的论文资料，直�
 
 ## 0｜硬性原则（执行前读取）
 
-1. **官方模板是物理结构真源**。必须在当前用户指定的官方 `.docx` 副本中原位填写，禁止 `Document()` 新建仿造，禁止新画封面线条/重建封面表格、改官方标题文字/表格网格/审阅签名区/节/边距/页码。该 Skill 附 `assets/official-literature-review-template.docx` 为本次上传官方原件的只读副本；用户下一次提供新模板时，以新模板为准，结构不匹配须停止自动填充而不是强灌。
+1. **官方模板是物理结构真源**。使用 `assets/template-lock.json` 固定原版 SHA-256，`scripts/template_tools.py` 对任何未经重新审计的 DOCX 更改一律 fail-closed。必须在当前用户指定的官方 `.docx` 副本中原位填写，禁止 `Document()` 新建仿造，禁止新画封面线条/重建封面表格、改官方标题文字/表格网格/审阅签名区/节/边距/页码。该 Skill 附 `assets/official-literature-review-template.docx` 为本次上传官方原件的只读副本；用户下一次提供新模板时，以新模板为准，结构不匹配须停止自动填充而不是强灌。
 2. **一个项目，一个共享资产包**：与 `thesis-taskbook-write-v1.1` 共用项目根目录 `project-assets/project.json、facts.json、references.json、schedule.json、activity.jsonl`。**绝不额外创建 `data/reference_registry.json`、另一套 reference index 或另一份“项目真相”**；完整规则见 `references/shared-project-assets-contract.md`。
 3. **文献先复用后增补**：只使用项目共享库中实际核验、与本次研究相关的资料。新增文献先核对原始出处后 `merge --kind references`；现有 `REF-xxx` 稳定 ID 不变，本综述的 `[1]` 由**正文首次引用顺序**生成，不能直接把项目稳定 ID 当文内编号。
 4. **文献真实性硬门槛**：优先知网 CNKI、万方、维普、期刊官网、出版社、学位论文库、正式学会、DOI 或可靠论文原文；CSDN/博客/硬件手册可作背景与技术辅助，不得冒充已发表研究。只查到检索片段不得臆造结论或著录元数据；每条记录 `source_url/source_type/verified/checked_at`，严格遵守 `references/citation-policy.md`。
@@ -68,7 +68,7 @@ description: 根据本项目真实技术文档和经核验的论文资料，直�
 2. **对多个例文做共性矩阵**：四份范本中多数采用“引言/国内外研究现状/评述/参考文献”；一份把“设计内容”单独展开，但不是官方强制项。通常由研究问题引入→分类比较国内外文献→作出限定性的总结与技术切入点；教师意见为独立一个自然段。详见 `references/genre-and-example-rules.md`。
 3. **求同存异**：官方明示的格式不可变；官方没有规定的标题措辞或二级节次，优先多数范本共性与学术合理性；少数例文的奇怪空行、重复论文、乱码或不匹配论据一律不继承；实质争议才询问用户。
 4. **文体变换**：从技术文档提取研究主题，而不是把“模块实现”“JSON 字段”“测试用例”逐条直接移进综述。文献综述回答“别人做了什么、证据说明了什么、还存在什么限制、本课题据此如何设计”，不能变成产品说明书或申请书。
-5. **参考范本**：`examples/anonymized-style-reference.docx` 是第一份范本去掉学生/学号/导师等标识后的风格参照，**不是官方版式真源，也不是可抄袭的引用库**。其部分旧版格式/引文错误已明确列在 `references/genre-and-example-rules.md`，不可照搬。
+5. **参考范本**：优先阅读 `assets/reference-samples/sample-a-environment-monitor.docx` 至 `sample-d-mobile-inspection.docx` 四份脱敏范本，并用 `scripts/inspect_reference_styles.py` 只读统计；旧路径 `examples/anonymized-style-reference.docx` 仅为兼容保留。它们都是去掉学生/学号/导师等标识后的风格参照，**不是官方版式真源，也不是可抄袭的引用库**。其部分旧版格式/引文错误已明确列在 `references/genre-and-example-rules.md`，不可照搬。
 
 ## 4｜文献检索与共享入库（不能跳过）
 
@@ -101,12 +101,12 @@ description: 根据本项目真实技术文档和经核验的论文资料，直�
 
 ## 6｜生成流程：原模板原位填写，不再“造模板”
 
-1. 使用 `scripts/inspect_template.py` 扫描模板，并存 SHA-256；只读保存模板原件。映射应与本次官方模板匹配：封面固定字段、题目两行位置、2节、1张2×1跨页表格、说明及签字区。
-2. 在本次工作区生成 `review-draft.json`：课题题目、可选 **title_lines 必须拼回完整题目**、已知封面字段、正文 `sections`（至少3章）、教师意见拟稿、引用以 `[[REF:REF-xxx]]` 表示。
+1. 使用 `scripts/inspect_template.py` 扫描模板，并通过 `scripts/template_tools.py` 与 `assets/template-lock.json` 校验真实 SHA-256；不相同直接拒绝而非猜测。只读保存模板原件。映射应与本次官方模板匹配：封面固定字段、题目两行位置、2节、1张2×1跨页表格、说明及签字区。
+2. 在本次工作区生成 `review-draft.json`：课题题目、可选 **title_lines 必须拼回完整题目**、已知封面字段、正文 `sections`（固定1/2/3三个主章，二级标题可用 `{"text": "2.1 ...", "kind": "subheading"}`）、教师意见拟稿、引用以 `[[REF:REF-xxx]]` 表示。**禁止在草稿手填 `[1]` 等本地编号**。
 3. `scripts/compose_review.py` 从共享 `references.json` 读取核验资料，验证每处引用来源，按**首现顺序编号**并生成本轮 `review-input.json`。**不修改共享项目文献原始编号、引用元数据或周计划**。
 4. `scripts/fill_review.py` 仅在**实际官方模板的已存在段落与表格可填区域**写入：题目按原封面两行，使用居中制表位及制表符线条保持左右端点一致；留空的封面字段保留统一下划线；正文保留原说明段落、原 2 行 1 列表格、教师审阅标签和签字/日期。正文新增段落只在第一行可填区内，教师评语只在第二行可填区内。
-5. `scripts/validate_review.py` 做结构比对和事实/引用检查；**脚本 PASS 只是程序结构通过**，不能代替视觉截图。
-6. **实际渲染每页 DOCX**：`python /home/oai/skills/docx/render_docx.py ... --output_dir "$WORKDIR/render"`（或本机可用的等价工具），逐张看图、必要时裁剪放大封面及参考文献/教师意见。检查题目两行是否同中心、下划线是否同起止、线与字是否重叠、页码、字体、表格断裂、乱码、上标、孤行、签名日期。修复只允许动可填区域，修后再全部渲染。若某个一级标题孤立在页末，可先尝试对该节草稿设置 `page_break_before: true`，但某些渲染器会忽略跨页表格中的分页指令；若截图仍有孤立标题，需要调整仅新增的正文分段并复验，未解决时明确报告 FAIL，不得碰官方模板分节/表格。
+5. `scripts/validate_review.py` 对原始 `sectPr`、官方固定段落 XML、表格/签字/日期 XML、正文 10.5pt 中西文字体、1.5倍行距、2500有效字符、所有 Word 引用上标（含 `[1,2]` 范围）、文后著录逐条验证；**脚本 PASS 只是程序结构通过**，不能代替视觉截图。
+6. **实际渲染每页 DOCX**：`python scripts/render_visual.py --file "$TEMP_DOCX" --outdir "$WORKDIR/render"`（依赖 LibreOffice 和 PyMuPDF；或使用本机等价渲染工具），逐张看图、必要时裁剪放大封面及参考文献/教师意见。检查题目两行是否同中心、下划线是否同起止、线与字是否重叠、页码、字体、表格断裂、乱码、上标、孤行、签名日期。修复只允许动可填区域，修后再全部渲染。若某个一级标题孤立在页末，可先尝试对该节草稿设置 `page_break_before: true`，但某些渲染器会忽略跨页表格中的分页指令；若截图仍有孤立标题，需要调整仅新增的正文分段并复验，未解决时明确报告 FAIL，不得碰官方模板分节/表格。
 7. 全部通过后将版本化 DOCX 移到 `<PROJECT_ROOT>/deliverables/literature-review/`；`record-use` 登记本版 SHA256 与引用 `REF-xxx`；填写执行报告与未知项；最后 `cleanup` 安全清理本轮运行目录。
 
 **不允许**保留用户可见 Word 的错误后只说“各端软件有差异”。渲染无法修好就如实标明未通过，不可虚报成功。只有**真正使用 WPS**检查后，才可写“WPS 已验证”；用 LibreOffice 等兼容渲染器则必须写“未在 WPS 客户端实测”。
@@ -126,6 +126,7 @@ python scripts/project_assets.py status --root "$PROJECT_ROOT"
 python scripts/project_assets.py workdir --root "$PROJECT_ROOT"
 python scripts/inspect_template.py assets/official-literature-review-template.docx \
   --json "$WORKDIR/template-inspect.json"
+python scripts/inspect_reference_styles.py --report "$WORKDIR/style-audit.json"
 
 # C. Agent 在 WORKDIR 构建真正的 review-draft.json；读现有 references.json，
 #    不足时依据检索来源新增，并先 merge 到共享资产库（不能用模拟文献）
@@ -135,13 +136,14 @@ python scripts/compose_review.py --root "$PROJECT_ROOT" \
 # D. 直接以官方原模板为底稿填充，不会新建封面/表格
 python scripts/fill_review.py --template assets/official-literature-review-template.docx \
   --data "$WORKDIR/review-input.json" --out "$FINAL_DOCX"
+# 输出路径不得与官方模板或任何旧版成品相同
 python scripts/validate_review.py --template assets/official-literature-review-template.docx \
   --file "$FINAL_DOCX" --data "$WORKDIR/review-input.json" \
   --report "$WORKDIR/validation.json"
 
 # E. 逐张打开 render 中的页面 PNG 进行真正视觉分析
-python /home/oai/skills/docx/render_docx.py "$FINAL_DOCX" \
-  --output_dir "$WORKDIR/render" --emit_pdf
+python scripts/render_visual.py --file "$FINAL_DOCX" --outdir "$WORKDIR/render"
+# 需要逐页真正打开渲染 PNG；预检 JSON 中的 PENDING 不是通过
 
 # F. 检查通过才发布和登记：引用 ID 按 review-input.json selected_reference_ids 组装
 python scripts/project_assets.py record-use --root "$PROJECT_ROOT" \
@@ -153,8 +155,12 @@ python scripts/project_assets.py cleanup --root "$PROJECT_ROOT" --run-id "$RUN_I
 
 **路径示例是命令形状，不是实际文件路径**。填充脚本只支持经扫描验证的本次官方模板；如用户给出的官方模板与本包底稿不同，必须先重新建立“只填可写位置映射”并补自动化测试，而不是临时重建官方格式。
 
-## 8｜验收门槛与执行报告
+## 8｜回归稳定性与验收
 
-参考 `references/quality-gates.md`。正式交付前必须满足：真实技术事实、正文≥2500、正文引文均上标且对应真实已核验文献、封面无示例私人数据、教师评语拟稿≥50、原官方签字日期没变、原 DOCX 两节一表框架保留、逐页 PNG 已实际查看、仅本轮临时目录清理。
+每次修改本 Skill 后运行：`python tests/smoke_test.py` 与 `python tests/test_regression.py`。后者必须拒绝：改过的官方模板、覆盖已有成品、非上标引用、教师固定栏目篡改、直接手填 `[n]` 引用。程序测试使用 2099 年及 example.invalid 的**纯虚构**资料，不能用作正文论据。打包后检查 ZIP 完整性、官方 SHA、四份样本中的身份信息是否已经脱敏；如修改涉及版式，必须重新生成测试 Word 并截图查看。
+
+## 9｜验收门槛与执行报告
+
+参考 `references/quality-gates.md`、`references/format-reverse-engineering.md`、`references/sample-style-audit.json` 和 `templates/execution-report.md`。正式交付前必须满足：真实技术事实、正文≥2500、正文引文均上标且对应真实已核验文献、封面无示例私人数据、教师评语拟稿≥50、原官方签字日期没变、原 DOCX 两节一表框架保留、逐页 PNG 已实际查看、仅本轮临时目录清理。
 
 **报告要写实**：成品路径及 `-vN`、技术资料来源、复用多少/新增多少 REF-ID、正文实际字符数、文献数量及状态、各章结构、教师拟稿状态、审计结果、截图页数/逐页 PASS-WARN-FAIL、是否实际用 WPS 检查、未知/留空字段、是否清理临时目录。**最终验收由用户和真实指导教师决定。**

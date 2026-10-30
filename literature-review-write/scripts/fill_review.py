@@ -11,6 +11,7 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_TAB_ALIGNMENT, WD_TAB_LEADER, WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
+from template_tools import require_official_template
 
 REF = re.compile(r'\[(?:\d+)(?:[，,\-–]\d+)*\]')
 FIELD_PARA = {14:'student_name', 16:'student_id',18:'college',20:'major',
@@ -87,7 +88,7 @@ def format_text(p, text, body=True, heading=False):
         r=font(p.add_run(text[cursor:]));r.bold=heading
 
 def fill(template, data, out):
-    doc=Document(template)
+    doc,lock=require_official_template(template)
     if len(doc.sections)!=2 or len(doc.tables)!=1 or len(doc.tables[0].rows)!=2 or len(doc.tables[0].columns)!=1:
         raise ValueError('官方模板结构与此 Skill 映射不符；拒绝重建或强制写入')
     if len(doc.paragraphs)<27 or not all(doc.paragraphs[i].text.startswith(label)
@@ -124,7 +125,9 @@ def fill(template, data, out):
             p._p.remove(br._r)
             first_r.addprevious(br._r)
         for content in sec['paragraphs']:
-            p=body.add_paragraph();format_text(p,content)
+            kind = content.get('kind','paragraph') if isinstance(content,dict) else 'paragraph'
+            value = content['text'] if isinstance(content,dict) else content
+            p=body.add_paragraph();format_text(p,value,heading=(kind=='subheading'))
     p=body.add_paragraph();format_text(p,'4 参考文献',heading=True)
     for item in data['bibliography']:
         p=body.add_paragraph()
@@ -149,7 +152,12 @@ def fill(template, data, out):
     p=Paragraph(new,cell)
     format_text(p,data['teacher_opinion'],body=False)
     # Do not set 'teacher signed / approved' metadata or insert a fake signature.
-    out=Path(out);out.parent.mkdir(parents=True,exist_ok=True)
+    out=Path(out)
+    if out.resolve()==Path(template).resolve():
+        raise ValueError('拒绝覆盖官方模板原件')
+    if out.exists():
+        raise ValueError('最终成品文件已存在：请分配新 vN 版本名，禁止覆盖旧成品')
+    out.parent.mkdir(parents=True,exist_ok=True)
     doc.save(out)
     return out
 

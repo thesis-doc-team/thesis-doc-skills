@@ -3,3 +3,4 @@ __pycache__/
 .skill-tmp/
 .DS_Store
 Thumbs.db
+*.zip

@@ -1,0 +1,148 @@
+{
+  "samples": [
+    {
+      "file": "sample-a-environment-monitor.docx",
+      "sections": 2,
+      "tables": 1,
+      "section_headings": [
+        "1引言",
+        "2 国内外研究现状",
+        "3 评述"
+      ]
+    },
+    {
+      "file": "sample-b-data-platform.docx",
+      "sections": 2,
+      "tables": 1,
+      "section_headings": [
+        "1研究背景",
+        "2 国内外研究现状",
+        "3 设计内容"
+      ]
+    },
+    {
+      "file": "sample-c-facility-monitor.docx",
+      "sections": 3,
+      "tables": 1,
+      "section_headings": [
+        "1引言",
+        "2 国内外研究现状",
+        "3 评述"
+      ]
+    },
+    {
+      "file": "sample-d-mobile-inspection.docx",
+      "sections": 3,
+      "tables": 1,
+      "section_headings": [
+        "1引言",
+        "2 国内外研究现状",
+        "3 评述"
+      ]
+    }
+  ],
+  "role_summary": {
+    "body": {
+      "paragraphs": 103,
+      "indent_pt": {
+        "None": 79,
+        "21.0": 18,
+        "31.5": 2,
+        "241.5": 4
+      },
+      "line_spacing": {
+        "1.5": 64,
+        "None": 39
+      },
+      "size_pt": {
+        "None": 60,
+        "10.5": 43
+      },
+      "western_font": {
+        "Times New Roman": 25,
+        "宋体": 40,
+        "None": 38
+      }
+    },
+    "main-heading": {
+      "paragraphs": 12,
+      "indent_pt": {
+        "None": 12
+      },
+      "line_spacing": {
+        "1.5": 12
+      },
+      "size_pt": {
+        "None": 12
+      },
+      "western_font": {
+        "Times New Roman": 12
+      }
+    },
+    "bibliography-heading": {
+      "paragraphs": 4,
+      "indent_pt": {
+        "None": 4
+      },
+      "line_spacing": {
+        "1.5": 4
+      },
+      "size_pt": {
+        "None": 4
+      },
+      "western_font": {
+        "None": 1,
+        "Times New Roman": 3
+      }
+    },
+    "teacher-label": {
+      "paragraphs": 4,
+      "indent_pt": {
+        "None": 4
+      },
+      "line_spacing": {
+        "1.5": 4
+      },
+      "size_pt": {
+        "None": 4
+      },
+      "western_font": {
+        "Times New Roman": 4
+      }
+    },
+    "teacher-opinion": {
+      "paragraphs": 4,
+      "indent_pt": {
+        "21.0": 2,
+        "None": 2
+      },
+      "line_spacing": {
+        "1.5": 3,
+        "None": 1
+      },
+      "size_pt": {
+        "None": 4
+      },
+      "western_font": {
+        "None": 3,
+        "Times New Roman": 1
+      }
+    },
+    "bibliography-entry": {
+      "paragraphs": 15,
+      "indent_pt": {
+        "-21.0": 15
+      },
+      "line_spacing": {
+        "1.5": 15
+      },
+      "size_pt": {
+        "10.5": 15
+      },
+      "western_font": {
+        "宋体": 15
+      }
+    }
+  },
+  "caveat": "统计仅是描述，不能覆盖学校官方模板；错误引用、文本事实与个人信息一律不得复用"
+}
