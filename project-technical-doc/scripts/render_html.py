@@ -54,7 +54,7 @@ def svg_markup(s):
     if not raw:
         return None
     soup = BeautifulSoup(raw.group(0), 'html.parser')
-    for element in soup.select('script,foreignobject,iframe,object,embed'):
+    for element in soup.select('script,iframe,object,embed'):
         element.decompose()
     for element in soup.find_all(True):
         for attr in list(element.attrs):
@@ -82,6 +82,14 @@ def prefix_svg_ids(svg_text, prefix):
                     val=val.replace('url(#'+old+')','url(#'+new+')')
                     if attr in ('href','xlink:href') and val=='#'+old:val='#'+new
                 el[attr]=val
+    for el in soup.find_all('style'):
+        if el.string:
+            css=el.string
+            # 词边界替换：只改 #id 选择器引用，不误伤 #fff 等颜色字面量；
+            # 按旧 id 长度降序，避免短 id 抢先截断长 id。
+            for old,new in sorted(renames.items(), key=lambda kv: len(kv[0]), reverse=True):
+                css=re.sub(r'#'+re.escape(old)+r'(?![\w-])', '#'+new, css)
+            el.string.replace_with(css)
     return str(soup)
 
 

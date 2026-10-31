@@ -221,6 +221,12 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 
 “10 章”是默认结构，而非无证据也必须写满；有必要时调整章名或合并不适用内容，并在执行汇报说明；但不得因此恢复被排除的章节。**生成的是有细节的成稿，不是小节占位符**。技术深度尽量接近参考范本，实际长度由项目材料支撑程度决定，不强行指定字数、表格数、流程图数或页数；范本/模板的篇幅仅是参考，不得为凑足或压缩到某个篇幅而增删事实、稀释或堆砌文字（实质性分页门禁同源原则）。
 
+### 图示硬性要求（强制：MD 必须自带图，HTML 才可能有 SVG）
+
+- 技术 MD **必须**包含 Mermaid 图（` ```mermaid ` 流程图/框图）：**「系统总体架构」章至少 1 幅、「关键流程」章每个关键流程至少 1 幅、全文至少 1 幅**；文字描述不能替代图。
+- 这是 `check_markdown.py` 的**硬门禁**（ERROR）：0 幅 Mermaid、或"总体架构/关键流程"章缺图 → 判 FAIL，**禁止进入 HTML 阶段**。原因：HTML 从 MD 单向派生，MD 无图 = HTML 无图无 SVG，事后补不进交付链。
+- 图只画**有证据的**结构/流程（与正文一致，不虚构模块）；图形引擎缺失时降级为可展开源码回退 + WARN（见 E4 预检），但图源在 MD 中**必须存在**。
+
 ### 分章写法与内容质量
 
 - 第 1 章强调“项目是什么、为什么要做、核心组成”，不要堆算法细节。
@@ -280,7 +286,7 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 
 - `#` → 网站名称；前言/引用块 → 来源说明与必要事实边界； `##` / `###` → 章节卡/子章节导航，按 MD 实际数量生成。
 - 段落与列表 → 原意完整保留；表格 → 每行每列保留并允许表格区域横向滚动；JSON/C/其他代码 → `pre/code` 原样展示。
-- Mermaid → 自动按源文本节点与分支尝试生成**内嵌 SVG**，并保留可展开源码用于核对；不支持的语法必须以原始 Mermaid 代码块回退并报告，不能声称已完成图形化。
+- Mermaid → 自动按源文本节点与分支尝试生成**内嵌 SVG**，并保留可展开源码用于核对；不支持的语法必须以原始 Mermaid 代码块回退并报告，不能声称已完成图形化。**图区全局显示**：流程图完整呈现，禁止内层滚动条、`max-height` 高度压缩与 `min-width` 溢出（模板规则与自动拦截见 E4/E5）。
 - 设计/实现/待验证状态 → 保持原有证据等级，不将“有代码”改写成“已实测通过”。网页首页如需展示范围说明，应简短、中性，**不是改进建议板块**。
 - HTML 不独立添加任何新的功能、统计量、医疗效果、技术参数或测试结果；首页精简文案是**来源支持的摘录**，不能改变事实。技术正文不因视觉美化而删掉重要细节。
 
@@ -294,13 +300,21 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 
 首次使用若缺依赖：`python -m pip install -r <skill-root>/requirements.txt`。只从信任的软件源安装依赖；无法安装时如实报告障碍，尝试已有本地环境。
 
+**图形引擎预检（每次进入本阶段先做，别等交付才发现图没转）**：
+
+```bash
+python <skill-root>/scripts/diagram_svg.py engine
+```
+
+`svg_capable=true` 才能期待 Mermaid 转为离线 SVG；为 `false` 时**立即告知用户**（不是交付时才说）：本次流程图将保留可展开源码回退、执行汇报记 WARN，并给出安装命令（`npm i -g @mermaid-js/mermaid-cli` 或 Graphviz）。用户装好引擎后重跑 `publish.py` 会自动生成**新版本** HTML 补上 SVG，不覆盖旧版。`publish.py` 本身也会做同样的预检并写入报告的 `svg_engines` 字段。
+
 ```bash
 python <skill-root>/scripts/publish.py "output/technical-document/<项目名>-技术文档.md" \
   --config "output/technical-document/展示配置.json" \
   --out-dir "output/technical-document"
 ```
 
-没有配置时删除 `--config` 参数。发布程序依次：**检查 MD → 解析 Markdown → 转换 Mermaid 为离线 SVG（Mermaid CLI 优先，简单 flowchart 可用 Graphviz 回退）→ 填入用户页面模板 → 输出 HTML → 按 MD 对照全文 → 生成 JSON 报告**。MD 检查 FAIL 时禁止进入 HTML 阶段；HTML 检查 FAIL 时不得以完成状态交付。默认创建带版本号新 HTML，防止覆盖已有成果。
+没有配置时删除 `--config` 参数。发布程序依次：**检查 MD → 解析 Markdown → 转换 Mermaid 为离线 SVG（Mermaid CLI 优先，简单 flowchart 可用 Graphviz 回退）→ 填入用户页面模板 → 输出 HTML → 按 MD 对照全文 → 逐图渲染内容断言（样式闭合 / 标签存活 / 字号可读性代理，防"SVG 渲染损坏却全绿"）→ 生成 JSON 报告**。校验默认落盘同名 `<html>.audit.json` 证据文件，作为 record-use 登记凭证。MD 检查 FAIL 时禁止进入 HTML 阶段；HTML 检查 FAIL（含渲染内容断言失败）时不得以完成状态交付。默认创建带版本号新 HTML，防止覆盖已有成果。
 
 生成网页后也可以独立复查：
 
@@ -313,14 +327,20 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 
 - **正文一致性**：MD 的章标题、小节标题、表格单元格、长段落、列表项、代码/协议、Mermaid 定义在 HTML 中均可找到；检查页面内的值、单位、状态和文字，没有新编造。
 - **内容边界**：目录、卡片、正文、页脚都不能出现单独的已知问题/改进/展望章节；页面展示必须保留真实的功能状态与必要适用范围。
-- **图形**：SVG 数量、流程图源码数量与 MD 一致；仅源码回退计为 WARN，并说明转换能力限制；不能以空白图替代。
+- **图形**：SVG 数量、流程图源码数量与 MD 一致；仅源码回退计为 WARN，并说明转换能力限制；不能以空白图替代。**HTML 中 Mermaid 图为 0 属 FAIL**（阶段 C/D 的 MD 图示硬门禁已保证 MD 必须有图）。**逐图渲染内容断言**（`validate_html.py` 自动执行）：`<style>` 与 `url(#…)` 引用必须闭合命中本图 id、Mermaid 源标签必须 100% 存活于 SVG 文本、估算最小字号 <9px 报 WARN——断言失败即 **FAIL**，不得降级为 WARN；图区出现内层滚动条/高度压缩/最小宽溢出同样 FAIL（流程图必须全局显示）。
 - **本地静态**：无必须联网才能使用的 CSS/字体/图片/JS；单个 HTML 文件双击可打开。
 - **结构/交互**：检查全部导航锚点、章节搜索、滚动进度、移动抽屉、技术表格横向滚动和图容器；链接无死链。
 - **截图验证分析（Screenshot Verification Analysis，交付前硬性环节）**：可用浏览器时对**首页、关键章节、搜索/抽屉交互态**在 1440px、768px、390px 三种宽度截图并**逐张分析**，固定三步——
-  1. **截图**：三宽度全页/关键屏截图，只存本轮运行目录，不进交付目录；
+  1. **截图**：三宽度全页/关键屏截图，只存本轮运行目录，不进交付目录；截图集必须过**覆盖矩阵** `screenshot_audit.py coverage --manifest <shots.json>`（1440/768/390 × 首页/含图章节/交互态 9 格齐全且字节互异），缺格或字节级重复 = 拍摄失败，补齐前不得进入分析；
   2. **逐张分析**（缺一张即未完成）：重叠、全页横向溢出、空白图/破图、导航锚点/章节搜索/滚动进度/移动抽屉、技术表格横滚、Console 错误、Mermaid SVG/回退显示；
   3. **留痕汇报**：执行汇报固定填写截图工具、截图张数、实看张数、逐张结论 PASS/WARN/FAIL 与问题清单、返工复检次数。
   浏览器不可用则明确记录**未执行截图验证分析**，不能谎称通过；自动校验不等于截图验证分析。
+- **截图伪象防护（防误判的硬规则，细则见 `references/browser-verification-notes.md`，工具 `scripts/screenshot_audit.py`）**：
+  1. **量测先于定性**：判定"横向溢出/布局错位/内容截断"FAIL 之前，必须先跑 `screenshot_audit.py probe` 拿量测数据（`body.scrollWidth` vs 视口宽）；目测截图得出的溢出结论不作数。Windows 无头 Chrome 有约 512px 最小布局视口，`--window-size=390` 的截图是 512 布局**裁**成 390 的图——右缘被切可能只是裁切伪象，不是页面 bug。
+  2. **截图字节级查重**：逐张分析前先 `screenshot_audit.py dupcheck`；两张"不同状态/章节"的截图哈希相同 = 锚点未滚动或状态未切换导致**拍摄失败**，必须重拍，不得解释为"两处一致"。
+  3. **窄视口与章节截图用 iframe**：390px 移动端验证用固定宽度 iframe 强制真实布局视口；章节截图用负偏移 iframe 切片（`screenshot_audit.py harness`），因为 `--screenshot` 永远从文档顶部开始、锚点/`scrollIntoView()` 无效；全页长图有高度上限，超出部分靠章节切片补齐。
+  4. **探针脚本红线**：注入 JS 不用带反斜杠转义的 heredoc（会层层转义成语法错误静默失败），用独立 `.js` 文件由 Python 读取；探针立即执行不等事件、只测一次写一次结果；出错先抓浏览器 Console/dump-dom 报错，不对着截图猜。
+  5. **动效如实声明**：滚动高亮、阅读进度条等无法逐帧截图时写"代码审查确认，未逐帧实测"，不算截图验证通过项。
 
 如需手工修正布局，只能改 HTML 展示层或通用模板的安全副本；若发现技术事实错误，先依据项目资料修订 MD，再从 MD **重新生成** HTML，禁止直接改 HTML 技术正文形成双版本漂移。
 
@@ -334,7 +354,7 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 
 本 Skill 的正常运行不是问答式教学：除非项目完全不可读取，否则直接读取资料、理解项目、组织内容、完成文档、执行检查并汇报。不得反复询问模板、章数、段落语气、是否可以开始等已由 Skill 决定的事项。
 
-完成标志：**存在一份与当前项目证据一致的完整 MD、由该 MD 派生的单文件 HTML 用户展示页，以及注明双产物检查情况的执行汇报**；关键设计事实不以已验证口吻出现；用户能够审查并提出修订。交付前按第 1 章执行 **`record-use` 登记**（成品路径、REF-xxx、sha256）与 **`cleanup` 清理**本轮运行目录；共享资产与用户原始资料任何情况下不得删除。如果实际材料缺失造成不能执行，明确说明具体缺口，不从内置参考范本捏造新项目。
+完成标志：**存在一份与当前项目证据一致的完整 MD、由该 MD 派生的单文件 HTML 用户展示页，以及注明双产物检查情况的执行汇报**；关键设计事实不以已验证口吻出现；用户能够审查并提出修订。交付前按第 1 章执行 **`record-use` 登记**（成品路径、REF-xxx、sha256）与 **`cleanup` 清理**本轮运行目录；**HTML 派生页登记必须已存在同名 `<html>.audit.json` 校验证据（publish/validate 默认生成），无证据不得登记**；共享资产与用户原始资料任何情况下不得删除。如果实际材料缺失造成不能执行，明确说明具体缺口，不从内置参考范本捏造新项目。
 
 ## 9. 文件索引（按需读取，不必每次全部加载）
 
@@ -347,12 +367,16 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 - `templates/technical-document-skeleton.md`：可改写的正文 10 章骨架。
 - `templates/evidence-register.md`：信息来源与事实状态台账。
 - `templates/execution-report.md`：执行结束的汇报格式。
-- `scripts/check_markdown.py`：无第三方依赖的 MD 结构和正文边界检查。
+- `scripts/check_markdown.py`：无第三方依赖的 MD 结构和正文边界检查（含 Mermaid 图示强制门禁：0 幅图 / 总体架构与关键流程章缺图即 ERROR）。
+- `references/browser-verification-notes.md`：浏览器截图验证的伪象判别、量测规则与探针写法红线（E5 截图验证分析实施细则）。
+- `scripts/screenshot_audit.py`：截图字节级查重（dupcheck）、真实布局量测（probe）、章节切片 harness 生成（harness）、图区渲染/像素探针（renderprobe、pixelprobe）、截图覆盖矩阵核对（coverage）。
+- `scripts/viewport_probe.js`：布局量测探针（由 screenshot_audit.py 注入，单次执行）。
+- `scripts/diagram_probe.js`：图区渲染探针（高度比/容器滚动条/填充色/文字色对比，由 screenshot_audit.py renderprobe 注入，单次执行）。
 - `references/html-layout-and-content.md`：用户提供的可视化页面所提取的通用布局、样式和内容映射规范。
 - `assets/layout.html`：通用离线 HTML 页面视觉/交互骨架，不含示例项目业务。
 - `examples/showcase-config.example.json`：可选首页配置字段示例（必须替换真实项目内容）。
 - `scripts/publish.py`：MD 检查通过后，完整生成 HTML + JSON 检查报告的一键发布入口。
 - `scripts/render_html.py`：从当前 MD 自动填充通用网站布局。
-- `scripts/diagram_svg.py`：Mermaid 流程图离线 SVG 自动生成与原文回退。
-- `scripts/validate_html.py`：HTML 结构、离线依赖、章节与 MD 内容对应检查。
+- `scripts/diagram_svg.py`：Mermaid 流程图离线 SVG 自动生成与原文回退；`diagram_svg.py engine` 输出图形引擎预检 JSON（exit 2=无引擎）。
+- `scripts/validate_html.py`：HTML 结构、离线依赖、章节与 MD 内容对应检查 + 逐图渲染内容断言（样式闭合/标签存活/字号代理）与模板 CSS lint（未作用域元素选择器、图区压缩/滚动禁令），默认落盘 `<html>.audit.json` 证据。
 - `requirements.txt`：HTML 阶段的本地 Python 解析依赖。

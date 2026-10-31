@@ -7,6 +7,7 @@ The latter must be reported and never presented as a completed diagram.
 """
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -84,15 +85,41 @@ def _flowchart_to_dot(source):
     return '\n'.join(result)
 
 
+def _find_browser():
+    """mmdc 的 puppeteer 需要一个 Chrome/Edge：env 优先，其次 PATH，最后常见安装位置。"""
+    env=os.environ.get('PUPPETEER_EXECUTABLE_PATH') or os.environ.get('TDS_BROWSER')
+    if env and Path(env).is_file():
+        return env
+    for name in ('chrome','msedge','google-chrome','chromium'):
+        found=shutil.which(name)
+        if found:
+            return found
+    for cand in (r'C:\Program Files\Google\Chrome\Application\chrome.exe',
+                 r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
+                 r'C:\Program Files\Microsoft\Edge\Application\msedge.exe',
+                 r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'):
+        if Path(cand).is_file():
+            return cand
+    return None
+
+
 def render_one(source: str, svgfile: Path):
     svgfile.parent.mkdir(parents=True, exist_ok=True)
     cli=shutil.which('mmdc')
     if cli:
+        # 系统 Chrome/Edge 渲染（无独立 Chromium 的标准配置）：未设置时补默认值，
+        # 否则 mmdc 静默失败、整图降级为源码回退——"装了引擎却没 SVG"的假绿口子。
+        if not os.environ.get('PUPPETEER_EXECUTABLE_PATH'):
+            browser=_find_browser()
+            if browser:
+                os.environ['PUPPETEER_EXECUTABLE_PATH']=browser
         srcfile=svgfile.with_suffix('.mmd')
-        srcfile.write_text(source,'utf-8')
+        srcfile.write_text(source,'utf-8',newline='\n')
+        cfgfile=svgfile.with_suffix('.mermaid-config.json')
+        cfgfile.write_text('{"htmlLabels": false, "flowchart": {"htmlLabels": false}, "themeVariables": {"htmlLabels": false}}','utf-8')
         try:
-            cp=subprocess.run([cli, '-i',str(srcfile),'-o',str(svgfile),'-b','transparent'],
-                              capture_output=True,text=True,timeout=30)
+            cp=subprocess.run([cli, '-i',str(srcfile),'-o',str(svgfile),'-b','transparent','-c',str(cfgfile)],
+                              capture_output=True,text=True,encoding="utf-8",errors="replace",timeout=30)
             if cp.returncode==0 and svgfile.is_file() and '<svg' in svgfile.read_text('utf-8'):
                 return 'mermaid-cli',None
         except (OSError,subprocess.TimeoutExpired) as exc:
@@ -103,7 +130,7 @@ def render_one(source: str, svgfile: Path):
     if dot:
         try:
             dot_src=_flowchart_to_dot(source)
-            cp=subprocess.run([dot,'-Tsvg','-o',str(svgfile)],input=dot_src,text=True,
+            cp=subprocess.run([dot,'-Tsvg','-o',str(svgfile)],input=dot_src,text=True,encoding="utf-8",errors="replace",
                               capture_output=True,timeout=12)
             if cp.returncode==0 and svgfile.is_file() and '<svg' in svgfile.read_text('utf-8'):
                 return 'graphviz-flowchart-subset',None
@@ -134,3 +161,46 @@ def render_diagrams(markdown, svg_dir):
         kind,error=render_one(source,path)
         report.append({'index':idx,'engine':kind,'svg':str(path) if kind else None,'warning':error})
     return report
+
+
+def engine_status():
+    """Report offline SVG engine availability without converting anything.
+
+    Pre-flight check so missing engines are announced BEFORE diagrams are
+    written, not discovered at delivery time.  Capability is honest: mmdc
+    without a Chrome/Edge for puppeteer cannot render, so it does NOT count
+    as svg_capable (no "engine installed but zero SVG" false green).
+    """
+    cli=shutil.which('mmdc')
+    dot=shutil.which('dot')
+    browser=_find_browser()
+    version=None
+    if cli:
+        try:
+            cp=subprocess.run([cli,'--version'],capture_output=True,text=True,
+                              encoding='utf-8',errors='replace',timeout=15)
+            version=((cp.stdout or cp.stderr or '').strip().splitlines() or [None])[0]
+        except (OSError,subprocess.TimeoutExpired):
+            version=None
+    mmdc_ready=bool(cli and browser)
+    capable=bool(mmdc_ready or dot)
+    if not capable and cli and not browser:
+        hint='mmdc 需要 Chrome/Edge 渲染：安装 Chrome 或设置 PUPPETEER_EXECUTABLE_PATH 指向浏览器可执行文件；或安装 Graphviz（dot）'
+    else:
+        hint=None if capable else 'npm i -g @mermaid-js/mermaid-cli（并安装 Chrome/Edge）或安装 Graphviz（提供 dot 命令）'
+    return {
+        'mermaid_cli':cli or None,
+        'mmdc_version':version,
+        'graphviz_dot':dot or None,
+        'puppeteer_browser':browser,
+        'svg_capable':capable,
+        'install_hint':hint,
+        'note':'svg_capable=false 时 Mermaid 图只能保留可展开源码回退，执行汇报必须记 WARN；装好引擎后重跑 publish 会生成新版本 HTML 补上 SVG，不覆盖旧版。'
+    }
+
+
+if __name__=='__main__':
+    import json,sys
+    status=engine_status()
+    print(json.dumps(status,ensure_ascii=False,indent=2))
+    sys.exit(0 if status['svg_capable'] else 2)

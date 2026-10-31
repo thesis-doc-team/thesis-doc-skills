@@ -119,6 +119,25 @@ def check(path):
                 warning.append(f"第 {number} 行：小节 {title} 与当前章 {last_h2} 不一致")
     if not h2_ids:
         warning.append("未检测到编号主章节")
+    # Mandatory diagrams: HTML is derived from this MD — an MD without Mermaid
+    # sources yields an HTML without figures/SVG at all.  Hard gate (ERROR),
+    # so publish.py refuses to enter the HTML stage until diagrams exist.
+    mermaid_starts = [start for start, lang, _ in code_blocks if lang == "mermaid"]
+    if not mermaid_starts:
+        error.append("MD 未包含任何 Mermaid 图：架构与关键流程必须以 ```mermaid 图表达（强制），无图 MD 不得进入 HTML 阶段")
+    h2_marks = [(number, title) for number, level, title, _ in headings if level == 2 and title != "目录"]
+    def chapter_of(line_no):
+        current = None
+        for mark_no, mark_title in h2_marks:
+            if mark_no <= line_no:
+                current = mark_title
+            else:
+                break
+        return current
+    per_chapter = Counter(chapter_of(s) for s in mermaid_starts)
+    for mark_no, mark_title in h2_marks:
+        if re.search(r"总体架构|关键流程", mark_title) and not per_chapter[mark_title]:
+            error.append(f"第 {mark_no} 行：章节「{mark_title}」必须包含至少 1 幅 Mermaid 图（强制），文字描述不能替代图")
     print(f"FILE  {path}")
     print(f"STATS 行数={len(lines)} H1={len(h1s)} H2={sum(h[1]==2 for h in headings)} "
           f"H3={sum(h[1]==3 for h in headings)} 代码块={len(code_blocks)} "

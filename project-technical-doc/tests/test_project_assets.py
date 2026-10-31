@@ -18,8 +18,8 @@ SCRIPT = Path(__file__).resolve().parents[1] / 'scripts' / 'project_assets.py'
 def run(*args):
     env = dict(os.environ, PYTHONIOENCODING='utf-8')
     return subprocess.run([sys.executable, str(SCRIPT), *[str(a) for a in args]],
-                          capture_output=True, text=True, encoding='utf-8',
-                          errors='replace', env=env)
+                          capture_output=True, text=True, encoding='utf-8', errors='replace',
+                          env=env)
 
 
 class ProjectAssetsSmoke(unittest.TestCase):

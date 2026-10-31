@@ -53,7 +53,7 @@ def run():
         folder=Path(temp)
         md=folder/'测试系统-技术文档.md'
         md.write_text(MD,'utf-8')
-        output=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,capture_output=True)
+        output=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
         assert output.returncode==0,(output.stdout,output.stderr)
         page=folder/'测试系统_用户展示.html'
         assert page.is_file()
@@ -69,11 +69,11 @@ def run():
         # Fail closed: forbidden chapters in the MD stop second-stage creation.
         forbidden=folder/'不合法文档.md'
         forbidden.write_text(MD+'\n## 4. 已知问题与改进建议\n内容不应进入正文。\n','utf-8')
-        bad=subprocess.run([sys.executable,str(PUBLISH),str(forbidden)],text=True,capture_output=True)
+        bad=subprocess.run([sys.executable,str(PUBLISH),str(forbidden)],text=True,encoding="utf-8",errors="replace",capture_output=True)
         assert bad.returncode!=0,(bad.stdout,bad.stderr)
         assert not (folder/'不合法文档_用户展示.html').exists()
         # A second run must version, not overwrite existing site.
-        again=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,capture_output=True)
+        again=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
         assert again.returncode==0,(again.stdout,again.stderr)
         assert (folder/'测试系统_用户展示-v2.html').exists()
     print('PASS：原文一致、离线页面、越界拦截、重复生成不覆盖')
