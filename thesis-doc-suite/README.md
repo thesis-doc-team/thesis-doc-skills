@@ -13,7 +13,7 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 
 ## 目录
 
-1. [六个 Skill 的功能](#1-六个-skill-的功能)
+1. [各 Skill 的功能](#1-各-skill-的功能)
 2. [Skill 之间的关系](#2-skill-之间的关系)
 3. [系统整体架构](#3-系统整体架构)
 4. [安装与加载](#4-安装与加载)
@@ -28,15 +28,15 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 13. [生成文件保存在哪里](#13-生成文件保存在哪里)
 14. [版本管理、更新与维护](#14-版本管理更新与维护)
 15. [查看错误与常见问题](#15-查看错误与常见问题)
-16. [如何添加第七个 Skill](#16-如何添加第七个-skill)
+16. [如何添加新的 Skill](#16-如何添加新的-skill)
 17. [备份策略](#17-备份策略)
 18. [文档索引](#18-文档索引)
 
 ---
 
-## 1. 六个 Skill 的功能
+## 1. 各 Skill 的功能
 
-每个 Skill 都能独立执行，只负责自己的文书，不越界生成其他文书。
+6 个业务 Skill 各管一种文书，1 个支持 Skill 管公共视觉素材，3 个管理 Skill 管项目与导航。每个 Skill 都能独立执行，只负责自己的产出，不越界生成其他文书。
 
 | 命令 | 生成什么 | 必需输入 | 关键门槛 |
 |---|---|---|---|
@@ -46,6 +46,12 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 | `/thesis-doc-suite:literature-review-write` | `<课题简称>-文献综述-vN.docx` + 执行汇报 | 课题技术资料、官方文献综述模板、项目根目录 | 正文 ≥2500 字、默认 ≥8 篇独立真实文献 |
 | `/thesis-doc-suite:thesis-guidance-record-write` | `<课题简称>-指导记录-vN.docx` + 执行汇报 | 真实项目技术资料、官方指导记录模板、项目根目录 | ≥8 次有真实依据的指导主题；时间/地点/方式/评价缺失一律留空 |
 | `/thesis-doc-suite:thesis-midterm-check-write` | `<课题简称>-中期检查记录表-vN.docx` + 执行汇报 | 真实项目技术资料、官方中期检查模板、项目根目录 | 三个栏目各 ≥200 字；问题与整改逐条编号一一对应 |
+
+另有 1 个支持 Skill（公共图片资料层，不生成文书、不负责在文书里插图）：
+
+| 命令 | 作用 |
+|---|---|
+| `/thesis-doc-suite:technical-visual-assets` | 建立四类真实可追溯视觉资产（系统框架图/功能架构图/关键流程图/核心模块实物图，VIS-xxx），入库 `project-assets/visual-assets/`；拒绝局部器件图冒充，宁缺毋滥 |
 
 另有三个管理型 Skill（不生成文书、不修改业务 Skill 职责）：
 
@@ -61,7 +67,7 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 
 **共享资产复用 + 执行独立性**：
 
-- 一个真实项目只有一份共享数据资产 `<PROJECT_ROOT>/project-assets/`。`project-technical-doc` 提炼的技术事实（`FACT-xxx`）可被任务书、开题报告直接复用；文献综述与开题报告共享参考文献库（`REF-xxx`）；中期检查与指导记录读取共享周计划与进展。
+- 一个真实项目只有一份共享数据资产 `<PROJECT_ROOT>/project-assets/`。`project-technical-doc` 提炼的技术事实（`FACT-xxx`）可被任务书、开题报告直接复用；文献综述与开题报告共享参考文献库（`REF-xxx`）；中期检查与指导记录读取共享周计划与进展；`technical-visual-assets` 读取技术 MD 与 FACT，登记 VIS 视觉资产（`project-assets/visual-assets/` 子层）。
 - 复用关系**不等于固定执行顺序**。只有确实必要的输入才是硬性前置（如任务书需要技术资料与官方模板）；缺少非必要资料时允许降级执行，并在执行汇报中说明影响。
 - **禁止一个业务 Skill 跨越边界生成其他业务文书**。写任务书不会顺带产出开题报告；技术文档 Skill 不会自动编写任何 Word 表格。
 - 各 Skill 对共享资产"先读后写"，更新已有条目必须给出证据与理由（`--replace --reason`），绝不静默覆盖其他 Skill 已确认的数据。
@@ -71,13 +77,14 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 ```
 thesis-doc-suite/                 ← 一个 Claude Code 插件
 ├── .claude-plugin/plugin.json    ← 插件清单
-├── skills/                       ← 六个业务 Skill + 三个管理型 Skill
+├── skills/                       ← 六个业务 Skill + 一个支持 Skill + 三个管理型 Skill
 │   ├── project-technical-doc/    ← 各自独立：SKILL.md + scripts/ + references/ + templates/ + assets/
 │   ├── thesis-taskbook-write/
 │   ├── opening-report-writer/
 │   ├── literature-review-write/
 │   ├── thesis-guidance-record-write/
 │   ├── thesis-midterm-check-write/
+│   ├── technical-visual-assets/  ← 公共图片资料层（VIS 视觉资产）
 │   ├── init-project/  check-project/  help/
 ├── core/                         ← 公共基础设施（资产契约、引用规范、模板保护、质量规则）
 ├── scripts/                      ← 环境检查 / 插件校验 / 打包脚本
@@ -185,10 +192,14 @@ python E:\Code\thesis-doc-skills\thesis-doc-suite\core\asset-management\project_
 
 ## 9. 每个 Skill 的调用方式与示例
 
-六个业务 Skill 均设为**仅显式调用**（普通聊天不会意外创建文档）。在 Claude Code 输入框中：
+六个业务 Skill 与支持 Skill 均设为**仅显式调用**（普通聊天不会意外创建文档）。在 Claude Code 输入框中：
 
 ```
 /thesis-doc-suite:project-technical-doc
+```
+
+```
+/thesis-doc-suite:technical-visual-assets
 ```
 
 ```
@@ -232,6 +243,7 @@ python E:\Code\thesis-doc-skills\thesis-doc-suite\core\asset-management\project_
    → 放入项目技术资料
    → /thesis-doc-suite:check-project         确认前置条件
    → /thesis-doc-suite:project-technical-doc 技术文档（提炼 FACT-xxx）
+   → /thesis-doc-suite:technical-visual-assets 视觉素材（四类图，可选、按需）
    → /thesis-doc-suite:thesis-taskbook-write 任务书（建立 REF-xxx 与周计划基线）
    → /thesis-doc-suite:opening-report-writer 开题报告（复用事实/文献/计划）
    → /thesis-doc-suite:literature-review-write  文献综述（复用文献）
@@ -300,9 +312,9 @@ python scripts\verify_plugin.py
 
 常见问题（Skill 没加载、模板哈希不符、文献核验失败、渲染器缺失、GBK 编码报错、清理失败、成品覆盖保护、project_id 冲突等）的**症状 → 原因 → 处理**见 [docs/troubleshooting.md](docs/troubleshooting.md)。
 
-## 16. 如何添加第七个 Skill
+## 16. 如何添加新的 Skill
 
-后续计划扩展：论文正文生成、摘要与关键词、答辩 PPT 规划、指导教师评语、成果说明、更多学校模板。添加新 Skill 的步骤：
+（`technical-visual-assets` 即按此流程扩展的支持 Skill。）后续计划扩展：论文正文生成、摘要与关键词、答辩 PPT 规划、指导教师评语、成果说明、更多学校模板。添加新 Skill 的步骤：
 
 1. 在 `skills/` 下新建目录 `skills/<new-skill-name>/`，编写 `SKILL.md`（frontmatter 的 `name` **必须与目录名一致**，`description` 写清触发场景；文书生成类建议加 `disable-model-invocation: true` 防止误触发）。
 2. **选择性**复用公共资产：需要共享事实/文献/计划时，以 `core/asset-management/project_assets.py` 为参考实现，制作本 Skill 的"协议兼容副本"（只改所有权常量与本 Skill 专用的 `compose` 装配逻辑）；不需要共享资产的 Skill 可以完全不用它。
@@ -331,7 +343,7 @@ python scripts\verify_plugin.py
 | [docs/user-guide.md](docs/user-guide.md) | 完整使用手册：每个 Skill 的详细用法与验收要点 |
 | [docs/architecture.md](docs/architecture.md) | 系统架构与扩展机制 |
 | [docs/asset-management.md](docs/asset-management.md) | 项目资产包结构、schema、读写与冲突规则 |
-| [docs/skill-catalog.md](docs/skill-catalog.md) | 9 个 Skill 的逐一说明 |
+| [docs/skill-catalog.md](docs/skill-catalog.md) | 10 个 Skill 的逐一说明 |
 | [docs/prerequisites.md](docs/prerequisites.md) | 前置条件清单（必需 / 可选） |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | 常见问题排查 |
 | [docs/migration-report.md](docs/migration-report.md) | 迁移报告：6 个 Skill 的盘点、契约变体与逐文件差异记录 |

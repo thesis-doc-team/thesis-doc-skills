@@ -1,6 +1,6 @@
 # Skill 职责边界与关系规则（跨 Skill 契约）
 
-> 本文是六个业务 Skill 的职责边界、互操作关系与扩展规范。各 Skill 的详细执行规则以其 SKILL.md 为准；本文只约束"谁负责什么、谁能复用什么、谁不能越界"。
+> 本文是六个业务 Skill 与支持 Skill（technical-visual-assets）的职责边界、互操作关系与扩展规范。各 Skill 的详细执行规则以其 SKILL.md 为准；本文只约束"谁负责什么、谁能复用什么、谁不能越界"。
 
 ## 1. 六个业务 Skill 的独立职责
 
@@ -21,6 +21,7 @@
 - `thesis-taskbook-write` 与 `opening-report-writer` 共用技术事实与周计划（schedule.json）。
 - `literature-review-write` 与 `opening-report-writer` 共享参考文献（REF-xxx）。
 - `thesis-midterm-check-write` 与 `thesis-guidance-record-write` 读取项目计划与实际进展（progress.json）。
+- `technical-visual-assets`（支持 Skill）只读技术 MD 与 FACT-xxx，登记 VIS-xxx 视觉资产到 `project-assets/visual-assets/` 子层；**不在任何文书中插图**，插图与否由下游文书 Skill 自行决定。
 
 **只有确实必要的输入才设为硬性前置条件**（如 Word 文书需要官方模板与技术资料）。缺非必要资料时允许**降级执行**并在执行汇报中明确说明影响（例如：缺已核验文献时可先交标注"待补文献"的草稿，不得伪造）。这些关系**不意味着固定执行顺序**；除"技术资料是多数文书的事实输入"外，各 Skill 可独立调用、独立验收、独立失败。
 
@@ -33,10 +34,11 @@
 | schedule.json | thesis-taskbook-write（拟定基线） | 读取复用；有依据可 `--replace --reason` 更新 |
 | progress.json（PROG-xxx） | thesis-midterm-check-write（扩展） | thesis-guidance-record-write 读取；有证据可补充 |
 | project.json metadata | 用户确认后写入 | 读取个人信息填充封面，不从范本继承 |
+| visual-assets/（VIS-xxx） | technical-visual-assets | 读取、按 VIS ID 引用；下游 Skill 是否插图自决，不改写素材 |
 
 所有变更遵守 `core/contracts/shared-project-assets-contract.md` 第 3 节（先读后写、不静默覆盖、审计留痕）。
 
-## 4. 添加第七个 Skill（扩展规范）
+## 4. 添加新 Skill（扩展规范）
 
 1. 在 `skills/<new-skill-name>/` 新建独立目录，`SKILL.md` frontmatter 的 `name` 必须与目录名一致，`description` 写清触发场景与边界；文档生成类 Skill 建议加 `disable-model-invocation: true`（仅显式调用）。
 2. 只复用所需公共能力：项目资产协议（`core/asset-management/project_assets.py` 或自备协议兼容副本）、模板保护（`core/template-protection/template_guard.py`）、写作规范（`core/quality-check/shared-writing-rules.md`）。**不要复制其他 Skill 的执行规则**。

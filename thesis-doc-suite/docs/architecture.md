@@ -4,19 +4,20 @@
 
 ---
 
-## 1. 总体结构：一个插件 + 六个业务 Skill + 公共基础设施 + 管理型 Skill
+## 1. 总体结构：一个插件 + 六个业务 Skill + 一个支持 Skill + 公共基础设施 + 管理型 Skill
 
 ```
 thesis-doc-suite/
 ├── .claude-plugin/
 │   └── plugin.json                 # 插件清单（name=thesis-doc-suite，唯一必需字段是 name）
-├── skills/                         # 9 个 Skill，各自独立
+├── skills/                         # 10 个 Skill，各自独立
 │   ├── project-technical-doc/      # 业务 Skill：自包含 SKILL.md + scripts/ + references/ + templates/ + assets/
 │   ├── thesis-taskbook-write/
 │   ├── opening-report-writer/
 │   ├── literature-review-write/
 │   ├── thesis-guidance-record-write/
 │   ├── thesis-midterm-check-write/
+│   ├── technical-visual-assets/    # 支持 Skill：公共图片资料层（VIS 视觉资产，不生成文书）
 │   ├── init-project/               # 管理型 Skill：初始化项目资产包
 │   ├── check-project/              # 管理型 Skill：前置条件与资产检查
 │   └── help/                       # 管理型 Skill：使用导航
@@ -39,15 +40,15 @@ thesis-doc-suite/
 
 - 每个业务 Skill 一个目录、一个 `SKILL.md` 入口，能单独执行；一个 Skill 出问题不影响其他 Skill。
 - **不合并**为单个大 SKILL.md；执行规则按需加载（渐进式披露）：常驻上下文的只有 `name` + `description`，正文触发后才加载，`references/` 里的细则按需读取。
-- 六个业务 Skill 与 `init-project` 均设 `disable-model-invocation: true`——可能写入正式文件/修改资产的能力只响应**用户显式调用**，普通聊天不会意外创建文档。
-- 边界规则（`core/contracts/skill-boundaries.md`）：业务 Skill 不得跨越边界生成其他业务文书；`project-technical-doc` 是技术事实（FACT-xxx）的主要提炼者；任务书/开题报告共享事实与计划；文献综述与开题报告共享文献；中期检查/指导记录读取计划与进展。**这些复用关系不构成固定执行顺序**——只有真实必要的输入才是硬性前置，缺非必要资料时降级执行并声明影响。
+- 六个业务 Skill、支持 Skill `technical-visual-assets` 与 `init-project` 均设 `disable-model-invocation: true`——可能写入正式文件/修改资产的能力只响应**用户显式调用**，普通聊天不会意外创建文档。
+- 边界规则（`core/contracts/skill-boundaries.md`）：业务 Skill 不得跨越边界生成其他业务文书；`project-technical-doc` 是技术事实（FACT-xxx）的主要提炼者；任务书/开题报告共享事实与计划；文献综述与开题报告共享文献；中期检查/指导记录读取计划与进展；`technical-visual-assets` 只读技术 MD 与 FACT 登记 VIS 视觉资产（素材层，不在文书里插图）。**这些复用关系不构成固定执行顺序**——只有真实必要的输入才是硬性前置，缺非必要资料时降级执行并声明影响。
 
 ## 3. 公共资产契约（core/contracts/）
 
 一个项目 = 一个资产包（数据 + 成品 + 运行区），`<PROJECT_ROOT>/` 下：
 
 ```
-project-assets/    数据层：project.json / facts.json / references.json / schedule.json / progress.json(可选) / activity.jsonl
+project-assets/    数据层：project.json / facts.json / references.json / schedule.json / progress.json(可选) / activity.jsonl + visual-assets/(可选，VIS 视觉资产子层)
 deliverables/      成品层：technical-document/ taskbook/ opening-report/ literature-review/ guidance/ midterm/（-vN 永不覆盖）
 .skill-tmp/        运行层：<skill-name>/<run-id>/（带所有权标记，结束清理）
 ```
@@ -112,7 +113,7 @@ core/template-protection/template_guard.py   通用哈希/锁校验（check-proj
 
 ## 8. 共享元数据与文档同步（skill-catalog.json）
 
-`core/contracts/skill-catalog.json` 是 9 个 Skill 的**结构化事实源**（名称、命令、版本、输入、输出、前置条件、交付目录）。README、`docs/skill-catalog.md` 与 `site/` 网站的内容都以它为准；`tests/test_doc_consistency.py` 校验文档/网站中的命令与 Skill 名称与目录一致，避免"三套说法不一致"。
+`core/contracts/skill-catalog.json` 是 10 个 Skill 的**结构化事实源**（名称、命令、版本、输入、输出、前置条件、交付目录）。README、`docs/skill-catalog.md` 与 `site/` 网站的内容都以它为准；`tests/test_doc_consistency.py` 校验文档/网站中的命令与 Skill 名称与目录一致，避免"三套说法不一致"。
 
 ## 9. 扩展点
 
@@ -123,7 +124,7 @@ core/template-protection/template_guard.py   通用哈希/锁校验（check-proj
 | 新检查规则 | 对应 Skill 的 validate/check 脚本或 core/quality-check 规则文档 | 按需 |
 | 资产 schema 演进 | 递增 `schema_version`，旧字段只增不改；提供迁移说明；兼容读取旧版 | core 契约 + 各副本同步 |
 
-详见 [README.md 第 16 节](../README.md#16-如何添加第七个-skill)。
+详见 [README.md 第 16 节](../README.md#16-如何添加新的-skill)。
 
 ## 10. 运行时路径约定
 

@@ -1,6 +1,6 @@
 # Skill 目录（Skill Catalog)
 
-本页与 `core/contracts/skill-catalog.json`（结构化事实源）保持一致。插件共 9 个 Skill：6 个业务 Skill（生成文书）+ 3 个管理型 Skill（初始化/检查/导航）。所有业务 Skill 仅响应显式调用（`/thesis-doc-suite:<skill名>`），普通聊天不会触发文书生成。
+本页与 `core/contracts/skill-catalog.json`（结构化事实源）保持一致。插件共 10 个 Skill：6 个业务 Skill（生成文书）+ 1 个支持 Skill（公共图片资料层）+ 3 个管理型 Skill（初始化/检查/导航）。所有业务与支持 Skill 仅响应显式调用（`/thesis-doc-suite:<skill名>`），普通聊天不会触发文书生成。
 
 ---
 
@@ -14,6 +14,7 @@
 | `/thesis-doc-suite:literature-review-write` | 业务 | 3.2.1 | 文献综述 DOCX + 执行汇报 | `deliverables/literature-review/` |
 | `/thesis-doc-suite:thesis-guidance-record-write` | 业务 | 1.2.0 | 指导记录 DOCX + 执行汇报 | `deliverables/guidance/` |
 | `/thesis-doc-suite:thesis-midterm-check-write` | 业务 | 1.3.2 | 中期检查记录表 DOCX + 执行汇报 | `deliverables/midterm/` |
+| `/thesis-doc-suite:technical-visual-assets` | 支持 | 0.3.0 | 四类视觉资产（VIS-xxx 索引/.mmd/SVG/实物图）+ 覆盖缺口报告 | `project-assets/visual-assets/` |
 | `/thesis-doc-suite:init-project` | 管理 | 0.1.0 | 项目资产包骨架 | — |
 | `/thesis-doc-suite:check-project` | 管理 | 0.1.0 | PASS/WARN/BLOCK 检查报告 | — |
 | `/thesis-doc-suite:help` | 管理 | 0.1.0 | 命令导航与使用指导 | — |
@@ -84,6 +85,20 @@
 
 ---
 
+## 支持 Skill 逐项说明
+
+### technical-visual-assets｜技术图示与模块实物图（v0.3.0）
+
+- **定位**：基于 `project-technical-doc` 的正式技术 MD 与同项目 FACT-xxx，建立系统框架图、功能架构图、关键流程图、核心模块完整实物图四类真实可追溯视觉资产（VIS-xxx）。联网按准确型号核验来源与复用许可，拒绝裸芯片/局部元件/芯片内部框图冒充模块实物图。**只做素材与登记，不负责在 Word/MD 中插图**（插图由下游 Skill 自行决定）。
+- **生成**：`project-assets/visual-assets/`（VIS-xxx 索引、可编辑 `.mmd`/SVG、已授权图片）、四类覆盖与缺口报告。
+- **必需输入**：project-technical-doc 产出的正式技术 MD、`project-assets/project.json` 与 `facts.json`、项目根目录。
+- **可选输入**：用户明确许可后保存的网络模块图片、技术 MD 已有 Mermaid/本地图、已安装 DDGS/Mermaid CLI/Graphviz（可选，**绝不自动安装**）。
+- **前置条件**：Python 3.10+（仅标准库）；联网检索能力；逐图人工确认（审核声明≠自动视觉识别）。
+- **场景**：为技术文档或文书准备系统框架图、功能架构图、流程图与核心模块实物图素材；宁缺毋滥，无合格图如实报 MISSING。
+- **边界**：技术事实只来自上游 MD 与 FACT，网络资料只核对图片与型号；不修改上游 MD 与六个业务 Skill；外部检索≠自动下载（下载需用户明确许可 + `--allow-image-download`）。
+
+---
+
 ## 管理型 Skill 逐项说明
 
 ### init-project｜初始化项目资产包（v0.1.0）
@@ -110,7 +125,7 @@
 
 ## Skill 之间的关系（速览）
 
-- **共享资产复用**：技术文档提炼 FACT → 任务书/开题报告复用；文献综述与开题报告共享 REF；中期检查/指导记录读取计划与进展。
+- **共享资产复用**：技术文档提炼 FACT → 任务书/开题报告复用；文献综述与开题报告共享 REF；中期检查/指导记录读取计划与进展；technical-visual-assets 读取技术 MD 与 FACT 登记 VIS 视觉资产（`project-assets/visual-assets/` 子层）。
 - **执行独立性**：任何 Skill 可单独调用；复用关系不构成固定执行顺序；缺非必要资料降级执行并声明影响。
 - **边界**：业务 Skill 不越界生成其他业务文书；管理型 Skill 不修改业务 Skill 职责。
 - 详见 [architecture.md](architecture.md) 与 `core/contracts/skill-boundaries.md`。

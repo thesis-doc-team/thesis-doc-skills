@@ -39,6 +39,8 @@ ITEMS = [
     ('guidance: pipeline', ['tests/test_pipeline.py'], ROOT / 'skills' / 'thesis-guidance-record-write'),
     ('midterm: pipeline', ['tests/test_pipeline.py'], ROOT / 'skills' / 'thesis-midterm-check-write'),
     ('midterm: shared-assets', ['tests/test_shared_assets.py'], ROOT / 'skills' / 'thesis-midterm-check-write'),
+    ('visual: regression', ['tests/test_visual_assets.py'], ROOT / 'skills' / 'technical-visual-assets'),
+    ('visual: selection-examples', ['tests/test_user_selection_examples.py'], ROOT / 'skills' / 'technical-visual-assets'),
 ]
 
 # tests that exercise rendering without LibreOffice may print WARN-style notes;

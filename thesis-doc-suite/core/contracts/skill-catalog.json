@@ -99,6 +99,21 @@
       "scenario": "中期检查节点需要提交进度与问题整改记录表时。"
     },
     {
+      "name": "technical-visual-assets",
+      "command": "/thesis-doc-suite:technical-visual-assets",
+      "version": "0.3.0",
+      "category": "support",
+      "title": "技术图示与模块实物图（公共图片资料层）",
+      "positioning": "基于 project-technical-doc 的正式技术 MD 与同项目 FACT-xxx，建立系统框架图、功能架构图、关键流程图、核心模块完整实物图四类真实可追溯视觉资产（VIS-xxx）；联网核验准确型号与复用许可，拒绝裸芯片/局部元件/内部框图冒充模块实物图；只做素材与登记，不负责在 Word/MD 中插图。",
+      "generates": ["project-assets/visual-assets/（VIS-xxx 索引、可编辑 .mmd/SVG、已授权图片）", "四类覆盖与缺口报告"],
+      "inputs_required": ["project-technical-doc 产出的正式技术 MD", "project-assets/project.json 与 facts.json（FACT-xxx）", "项目根目录 <PROJECT_ROOT>"],
+      "inputs_optional": ["用户明确许可后保存的网络模块图片", "技术 MD 已有 Mermaid/本地图", "已安装 DDGS / Mermaid CLI / Graphviz（可选，绝不自动安装）"],
+      "prerequisites": ["Python 3.10+（仅标准库）", "联网检索能力（WebSearch/WebFetch/浏览器）", "用户逐图人工确认（审核声明≠自动视觉识别）"],
+      "deliverable_dir": "project-assets/visual-assets/",
+      "doc_type": "—",
+      "scenario": "为技术文档或文书准备系统框架图、功能架构图、流程图与核心模块实物图素材时；图必须真实可追溯、主体层级正确，宁缺毋滥。"
+    },
+    {
       "name": "init-project",
       "command": "/thesis-doc-suite:init-project",
       "version": "0.1.0",
@@ -146,7 +161,7 @@
   ],
   "bundle": {
     "root": "<PROJECT_ROOT>/",
-    "data": "project-assets/ — project.json / facts.json / references.json / schedule.json / progress.json（可选） / activity.jsonl",
+    "data": "project-assets/ — project.json / facts.json / references.json / schedule.json / progress.json（可选） / activity.jsonl / visual-assets/（可选，VIS 视觉资产子层）",
     "outputs": "deliverables/ — technical-document/ taskbook/ opening-report/ literature-review/ guidance/ midterm/",
     "runs": ".skill-tmp/<skill-name>/<run-id>/ — 本轮运行区，结束自动清理"
   }

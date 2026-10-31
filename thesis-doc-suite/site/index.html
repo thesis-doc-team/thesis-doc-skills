@@ -52,7 +52,7 @@
           </a>
           <a class="btn btn-ghost" href="#skills">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="13" y="4" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="4" y="13" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="13" y="13" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/></svg>
-            查看 9 个 Skill
+            查看 10 个 Skill
           </a>
         </div>
       </div>
@@ -169,8 +169,8 @@
   <div class="wrap">
     <div class="section-head">
       <span class="kicker">SKILL 功能展示</span>
-      <h2>9 个 Skill，各司其职，独立可调</h2>
-      <p>6 个业务 Skill 负责文书生成，3 个管理 Skill 负责项目初始化、检查与导航。点击卡片展开完整说明。</p>
+      <h2>10 个 Skill，各司其职，独立可调</h2>
+      <p>6 个业务 Skill 负责文书生成，1 个支持 Skill 管公共视觉素材，3 个管理 Skill 负责项目初始化、检查与导航。点击卡片展开完整说明。</p>
     </div>
 
     <div class="grid skill-grid">
@@ -369,6 +369,38 @@
         </div>
       </article>
 
+      <!-- technical-visual-assets -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-sup">支持 Skill</span><span class="tag tag-ver">v0.3.0</span></div>
+          <h3>technical-visual-assets</h3>
+          <p class="pos">公共图片资料层：系统框架图、功能架构图、关键流程图、核心模块完整实物图，四类真实可追溯视觉资产（VIS-xxx）。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>project-assets/visual-assets/：VIS-xxx 资产索引、可编辑 .mmd/SVG、已授权模块实物图，以及四类覆盖与缺口报告。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>project-technical-doc 产出的正式技术 MD<span class="badge-req req-yes">必需</span></li>
+            <li>project-assets/project.json 与 facts.json（FACT-xxx）<span class="badge-req req-yes">必需</span></li>
+            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
+            <li>用户许可后保存的网络图片、已有 Mermaid/本地图、DDGS/Mermaid CLI/Graphviz（可选，绝不自动安装）<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><ul>
+            <li>四类视觉资产（框架/架构/流程图 + 核心模块实物图）与覆盖缺口报告</li>
+            <li>保存位置：<code>project-assets/visual-assets/</code></li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>为技术文档或文书准备真实可追溯的图示素材。拒绝裸芯片/局部元件冒充模块实物图，无合格图如实报 MISSING；只做素材与登记，不在 Word/MD 里插图。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:technical-visual-assets</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+（仅标准库，禁止自动装包）</li>
+            <li>联网检索能力（WebSearch/WebFetch/浏览器）</li>
+            <li>逐图人工确认（审核声明≠自动视觉识别）</li>
+          </ul></div>
+        </div>
+      </article>
+
       <!-- init-project -->
       <article class="skill-card">
         <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
@@ -445,7 +477,7 @@
     <div class="section-head">
       <span class="kicker">SKILL 关系图</span>
       <h2>技术资料 → 共享项目事实 → 文档生成</h2>
-      <p>六个 Skill 通过同一个项目资产包关联：上游沉淀的事实与文献，下游直接复用。</p>
+      <p>所有 Skill 通过同一个项目资产包关联：上游沉淀的事实与文献，下游直接复用。</p>
     </div>
 
     <div class="notice notice-info">
@@ -646,7 +678,7 @@
         <div class="step-num">2</div>
         <div class="step-body">
           <h3>加载插件</h3>
-          <p>在 Claude Code 中指向插件目录启动；看到 9 个 <code>/thesis-doc-suite:…</code> 命令即加载成功。</p>
+          <p>在 Claude Code 中指向插件目录启动；看到 10 个 <code>/thesis-doc-suite:…</code> 命令即加载成功。</p>
           <div class="cmd"><span class="cmd-text">claude --plugin-dir "E:\Code\thesis-doc-suite"</span><button class="copy-btn">复制</button></div>
         </div>
       </div>
@@ -781,7 +813,7 @@
       <h3 style="margin-top:0">① 本地加载插件（Windows 示例）</h3>
       <div class="cmd"><span class="cmd-text">claude --plugin-dir "E:\Code\thesis-doc-suite"</span><button class="copy-btn">复制</button></div>
       <div class="cmd"><span class="cmd-text">claude plugin validate "E:\Code\thesis-doc-suite"</span><button class="copy-btn">复制</button></div>
-      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:0">把路径换成你解压/克隆插件后的实际目录。出现 9 个 <code>/thesis-doc-suite:…</code> 命令即加载成功。</p>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:0">把路径换成你解压/克隆插件后的实际目录。出现 10 个 <code>/thesis-doc-suite:…</code> 命令即加载成功。</p>
     </div>
 
     <div class="card" style="max-width:860px;margin:0 auto 20px">
@@ -819,7 +851,7 @@
     <div class="faq">
       <details>
         <summary><span class="q-badge">Q</span>为什么 Skill 没加载？<span class="arrow">▾</span></summary>
-        <div class="faq-body">确认插件目录指向的是含 <code>.claude-plugin/plugin.json</code> 的根目录（Windows 路径含空格/中文时建议加引号）；重启 Claude Code 后在输入框键入 <code>/thesis-doc-suite:</code>，应出现 9 个命令的自动补全。仍不出现时运行 <code>claude plugin validate</code> 检查清单结构，或执行 <code>/thesis-doc-suite:check-project</code>（若该命令也没有，请检查插件是否加载）。</div>
+        <div class="faq-body">确认插件目录指向的是含 <code>.claude-plugin/plugin.json</code> 的根目录（Windows 路径含空格/中文时建议加引号）；重启 Claude Code 后在输入框键入 <code>/thesis-doc-suite:</code>，应出现 10 个命令的自动补全。仍不出现时运行 <code>claude plugin validate</code> 检查清单结构，或执行 <code>/thesis-doc-suite:check-project</code>（若该命令也没有，请检查插件是否加载）。</div>
       </details>
       <details>
         <summary><span class="q-badge">Q</span>为什么缺少模板？<span class="arrow">▾</span></summary>

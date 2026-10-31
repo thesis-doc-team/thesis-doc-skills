@@ -25,6 +25,11 @@
 │   ├── references.json              # REF-xxx 共享参考文献库、稳定编号、核验状态
 │   ├── schedule.json                # 唯一项目级周计划基线（draft/confirmed）
 │   ├── progress.json                # 可选：PROG-xxx 实际进展快照（中期检查扩展）
+│   ├── visual-assets/               # 可选：VIS-xxx 视觉资产子层（technical-visual-assets 管理）
+│   │   ├── index.json               #   VIS 索引：ID、类别、来源、许可、哈希
+│   │   ├── diagrams/                #   可编辑 .mmd 源码与渲染 SVG（框架/架构/流程图）
+│   │   ├── images/                  #   经用户许可保存的模块实物图等
+│   │   └── requirements.json        #   四类覆盖与缺口报告
 │   └── activity.jsonl               # 变更、引用、成品登记的审计流水
 ├── deliverables/                    # 成品层：按文书类型分目录，-vN 版本永不覆盖
 │   ├── technical-document/          # project-technical-doc（MD + HTML）
@@ -61,6 +66,9 @@
 
 ### `progress.json` — `items[]`（可选扩展）
 每条 `PROG-xxx`：`id`、`as_of`、`category` ∈ `completed/in_progress/pending/risk/next_step`、`status` ∈ `draft/confirmed`、`description`、`source`。旧项目可没有此文件；存在则不得删除或覆盖。周计划不能冒充实际进展。
+
+### `visual-assets/`（可选子层，VIS-xxx）
+`technical-visual-assets` 管理的公共图片资料层：每条视觉资产一个稳定 ID `VIS-` + 内容 SHA-256 前 12 位（内容不变则 ID 不变，天然去重）。四类固定类别：`system-framework` / `functional-architecture` / `flowchart` / `module-photo`。索引 `index.json` 逐图登记来源（用户拍摄 / 联网检索 + 用户许可下载 / 由技术 MD 生成）、复用许可、哈希与逐图人工确认状态（审核声明≠自动视觉核验）。子层遵守本协议全部红线：写入走同一把 `.asset-write.lock` 与 `activity.jsonl` 审计；只登记合格素材，不合格如实报 MISSING，宁缺毋滥；**只做素材与登记，不在文书中插图**。旧项目可没有此子层；存在则不得删除或覆盖。
 
 ### `activity.jsonl`
 逐行 JSON 审计：`at`、`action`（`init/merge/document-published/...`）、`actor`、变更 `ids`、`reason`、成品 `path`、`sha256`、`doc_type`、`reference_ids`、`project_id`。自然形成资产与成品的变更史。
