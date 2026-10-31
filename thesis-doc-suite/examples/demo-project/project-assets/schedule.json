@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "project_id": "DEMO-2099-ONLY",
+  "plan": {
+    "id": "PLAN-DEMO-2099",
+    "status": "draft",
+    "total_weeks": 18,
+    "start_date": "2099-03-01",
+    "end_date": "2099-06-30",
+    "stages": [
+      { "id": "STAGE-1", "from_week": 1, "to_week": 3, "task": "调研与文献综述（合成示例）" },
+      { "id": "STAGE-2", "from_week": 4, "to_week": 6, "task": "开题准备与总体方案（合成示例）" },
+      { "id": "STAGE-3", "from_week": 7, "to_week": 13, "task": "模块开发与系统集成（合成示例）" },
+      { "id": "STAGE-4", "from_week": 14, "to_week": 18, "task": "调试验证与论文整理（合成示例）" }
+    ]
+  },
+  "updated_at": "2099-01-03T00:00:00+00:00"
+}

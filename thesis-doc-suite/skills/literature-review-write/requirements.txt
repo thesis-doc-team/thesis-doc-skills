@@ -1,0 +1,5 @@
+python-docx>=1.1.0,<2
+lxml>=4.9
+
+# Used by scripts/render_visual.py for PDF page images
+PyMuPDF>=1.23,<2

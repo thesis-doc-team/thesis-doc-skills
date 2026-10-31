@@ -1,0 +1,4 @@
+{"at": "2099-01-01T00:00:00+00:00", "action": "init", "actor": "demo", "project_id": "DEMO-2099-ONLY"}
+{"at": "2099-01-02T00:00:00+00:00", "action": "merge", "kind": "facts", "ids": ["FACT-001", "FACT-002", "FACT-003"], "actor": "demo", "reason": "新增资产（合成示例）"}
+{"at": "2099-01-05T00:00:00+00:00", "action": "merge", "kind": "references", "ids": ["REF-001", "REF-002"], "actor": "demo", "reason": "新增资产（合成示例）"}
+{"at": "2099-01-06T00:00:00+00:00", "action": "document-published", "actor": "demo", "doc_type": "taskbook", "path": "C:\\Temp\\demo-try\\deliverables\\taskbook\\合成示例-毕业设计任务书-v1.docx", "reference_ids": ["REF-002"], "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "project_id": "DEMO-2099-ONLY", "note": "合成示例记录：sha256 为占位值，非真实成品"}

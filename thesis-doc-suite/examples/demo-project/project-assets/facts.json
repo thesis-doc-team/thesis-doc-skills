@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "project_id": "DEMO-2099-ONLY",
+  "items": [
+    {
+      "id": "FACT-001",
+      "statement": "（合成示例）主控为 STM32F103，负责传感器数据采集与外设调度",
+      "source": "示例技术手册.md §3.1（合成）",
+      "status": "declared",
+      "notes": "资料声明，未核对源码；status=declared 表示不能写成代码已证实"
+    },
+    {
+      "id": "FACT-002",
+      "statement": "（合成示例）采集数据经 4G 模块通过 MQTT 协议上报至监控平台",
+      "source": "示例源码 main.c:120（合成）",
+      "status": "implemented",
+      "notes": "有源码直接证据时才允许 implemented"
+    },
+    {
+      "id": "FACT-003",
+      "statement": "（合成示例）计划增加火焰传感器联动告警，尚未开发",
+      "source": "示例设计稿 §5（合成）",
+      "status": "proposed",
+      "notes": "设计拟议；任何文书不得写成已完成"
+    }
+  ],
+  "updated_at": "2099-01-02T00:00:00+00:00"
+}

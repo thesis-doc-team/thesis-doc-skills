@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "project_id": "DEMO-2099-ONLY",
+  "name": "（合成示例）基于STM32的环境监测系统",
+  "metadata": {
+    "student_name": "示例学生",
+    "college": "示例学院",
+    "note": "纯合成示例数据，禁止当作真实项目或个人信息使用"
+  },
+  "created_at": "2099-01-01T00:00:00+00:00",
+  "updated_at": "2099-01-01T00:00:00+00:00"
+}

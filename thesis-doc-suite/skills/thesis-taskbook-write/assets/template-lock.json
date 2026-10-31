@@ -1,0 +1,8 @@
+{
+  "template": "official-taskbook-template.docx",
+  "sha256": "49e0983db300ca1729d7d298b3f849dfce3d8d189c4b3cc4c8c2ce87b5085590",
+  "rows": 9,
+  "cols": 4,
+  "table_count": 1,
+  "status": "官方空白模板哈希锁定；禁止用此映射填充未经重新审计的其他模板。"
+}

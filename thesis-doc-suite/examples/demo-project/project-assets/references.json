@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "project_id": "DEMO-2099-ONLY",
+  "items": [
+    {
+      "id": "REF-001",
+      "citation": "示例作者. （合成示例）环境监测系统研究综述[J]. 示例期刊, 2098, 1(1): 1-10.",
+      "source_url": "https://example.invalid/record/001",
+      "source_type": "journal",
+      "verified": false,
+      "tags": ["环境监测"],
+      "project_relevance": "拟用于研究现状章节",
+      "notes": "合成条目，verified=false：真实项目中必须到可核验来源核实后才能改为 true"
+    },
+    {
+      "id": "REF-002",
+      "citation": "示例作者. （合成示例）基于 MQTT 的数据上报方法[J]. 示例学报, 2099, 2(3): 20-30.",
+      "source_url": "https://example.invalid/record/002",
+      "source_type": "journal",
+      "verified": true,
+      "checked_at": "2099-01-05",
+      "doi": "10.example/2099.0002",
+      "tags": ["MQTT", "物联网"],
+      "project_relevance": "支撑通信方案对比",
+      "notes": "合成条目：演示 verified=true 时必须带 checked_at（实际核验日期）"
+    }
+  ],
+  "updated_at": "2099-01-05T00:00:00+00:00"
+}

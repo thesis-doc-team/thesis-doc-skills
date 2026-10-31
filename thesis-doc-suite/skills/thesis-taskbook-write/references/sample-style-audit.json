@@ -1,0 +1,90 @@
+{
+  "sample_count": 4,
+  "samples": [
+    {
+      "file": "sample-a_agriculture-inspection.docx",
+      "content_paragraphs": 1,
+      "schedule_paragraphs": 8,
+      "reference_entries": 15,
+      "issuer_opinion_present": true
+    },
+    {
+      "file": "sample-b_data-visualization.docx",
+      "content_paragraphs": 4,
+      "schedule_paragraphs": 2,
+      "reference_entries": 10,
+      "issuer_opinion_present": false
+    },
+    {
+      "file": "sample-c_facility-monitor.docx",
+      "content_paragraphs": 1,
+      "schedule_paragraphs": 8,
+      "reference_entries": 15,
+      "issuer_opinion_present": true
+    },
+    {
+      "file": "sample-d_environment-safety.docx",
+      "content_paragraphs": 6,
+      "schedule_paragraphs": 6,
+      "reference_entries": 15,
+      "issuer_opinion_present": true
+    }
+  ],
+  "roles": {
+    "内容": {
+      "count": 12,
+      "indent_pt": {
+        "21.0": 6,
+        "None": 6
+      },
+      "line_spacing": {
+        "1.5": 6,
+        "None": 6
+      },
+      "size_pt": {
+        "None": 8,
+        "10.5": 4
+      },
+      "font": {
+        "None": 12
+      }
+    },
+    "进度": {
+      "count": 24,
+      "indent_pt": {
+        "None": 24
+      },
+      "line_spacing": {
+        "1.5": 18,
+        "None": 6
+      },
+      "size_pt": {
+        "None": 22,
+        "10.5": 2
+      },
+      "font": {
+        "Times New Roman": 16,
+        "宋体": 2,
+        "None": 6
+      }
+    },
+    "下达人意见": {
+      "count": 3,
+      "indent_pt": {
+        "21.0": 3
+      },
+      "line_spacing": {
+        "254000": 1,
+        "1.5": 2
+      },
+      "size_pt": {
+        "10.5": 3
+      },
+      "font": {
+        "None": 1,
+        "宋体": 2
+      }
+    }
+  },
+  "decision_rule": "仅统计匿名范本，官方模板的固定边框、字体要求优先；差异不按简单平均改变原模板；样本引用均为无效示意，不得作为真实文献。"
+}

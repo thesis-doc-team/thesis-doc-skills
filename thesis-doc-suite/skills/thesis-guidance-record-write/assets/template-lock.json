@@ -1,0 +1,19 @@
+{
+  "template_name": "official-guidance-template.docx",
+  "sha256": "352be87130c8926921d729c7e3ec1cea73aa7ba41de5897f19b69052b5405a2c",
+  "sections": 2,
+  "tables": [
+    {
+      "rows": 4,
+      "columns": 2
+    },
+    {
+      "rows": 26,
+      "columns": 11
+    }
+  ],
+  "record_rows": 13,
+  "record_groups_in_template": 2,
+  "preservation": "original bytes immutable; fixed labels/geometry preserved; repeat the existing 13-row blank record block to meet count",
+  "template_revision": "2026 supplied official copy"
+}

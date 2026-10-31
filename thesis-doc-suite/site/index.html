@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thesis Doc Suite Taru｜毕业设计文书 Skill 六件套 · 官方介绍与使用说明</title>
+<meta name="description" content="thesis-doc-suite：一个插件，六种毕业设计文书；一个项目，一套共享资产。技术文档 / 任务书 / 开题报告 / 文献综述 / 指导记录 / 中期检查。">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235b7cfa'/%3E%3Cpath d='M12 34 32 22l20 12-20 12z' fill='white'/%3E%3Crect x='30' y='28' width='4' height='12' rx='1' fill='%2322c5dd'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<!-- ================= 顶部导航 ================= -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#home">
+      <span class="logo-badge" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 64 64"><path d="M12 34 32 22l20 12-20 12z" fill="#fff"/><rect x="30" y="28" width="4" height="12" rx="1" fill="#22c5dd"/></svg>
+      </span>
+      <span>Thesis Doc Suite Taru<small>thesis-doc-suite · 毕业设计文书套件</small></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="展开导航" aria-expanded="false">☰</button>
+    <nav class="nav-links" id="navLinks">
+      <a href="#home">首页</a>
+      <a href="#skills">Skill 功能</a>
+      <a href="#relations">关系图</a>
+      <a href="#assets">资产管理</a>
+      <a href="#workflow">使用流程</a>
+      <a href="#prereq">准备清单</a>
+      <a href="#commands">命令实操</a>
+      <a href="#faq">常见问题</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ================= 板块 1：产品首页 ================= -->
+<section class="hero" id="home">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <span class="pill">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#4f6df5" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#4f6df5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Claude Code 插件 · 本地运行 · 离线可用
+        </span>
+        <h1>毕业设计文书，<br><span class="grad-text">一套插件全部备齐</span></h1>
+        <p class="tagline">一个插件，六种毕业设计文书；一个项目，一套共享资产。</p>
+        <p class="sub">Thesis Doc Suite Taru（thesis-doc-suite）把技术文档、任务书、开题报告、文献综述、指导记录、中期检查六种文书生成能力整合为一个 Claude Code 插件：官方 Word 模板原位填写、参考文献真实核验、逐页截图检查，项目数据只录一次、跨文书复用。</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#workflow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            新手从这里开始
+          </a>
+          <a class="btn btn-ghost" href="#skills">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="13" y="4" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="4" y="13" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="13" y="13" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/></svg>
+            查看 9 个 Skill
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-bubble">
+          <!-- 卡通科技主视觉：学士帽机器人 + 工具箱 + 文书 -->
+          <svg viewBox="0 0 460 380" role="img" aria-label="卡通插画：机器人助手从工具箱中取出六种毕业设计文书">
+            <defs>
+              <linearGradient id="gBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#eef2ff"/><stop offset="1" stop-color="#dff4fb"/>
+              </linearGradient>
+              <linearGradient id="gMain" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#5b7cfa"/><stop offset="1" stop-color="#7c5cf4"/>
+              </linearGradient>
+              <linearGradient id="gTool" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#22c5dd"/><stop offset="1" stop-color="#4f6df5"/>
+              </linearGradient>
+            </defs>
+            <rect x="10" y="10" width="440" height="360" rx="28" fill="url(#gBg)"/>
+            <!-- 星点装饰 -->
+            <circle cx="60" cy="60" r="4" fill="#7c5cf4" opacity="0.35"/>
+            <circle cx="410" cy="90" r="5" fill="#22c5dd" opacity="0.4"/>
+            <circle cx="392" cy="320" r="4" fill="#4f6df5" opacity="0.3"/>
+            <path d="M70 320l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#7c5cf4" opacity="0.4"/>
+            <path d="M420 200l2.4 6.4 6.4 2.4-6.4 2.4-2.4 6.4-2.4-6.4-6.4-2.4 6.4-2.4z" fill="#22c5dd" opacity="0.5"/>
+            <!-- 机器人 -->
+            <g>
+              <rect x="160" y="96" width="140" height="120" rx="34" fill="url(#gMain)"/>
+              <rect x="176" y="118" width="108" height="64" rx="22" fill="#fff"/>
+              <circle cx="208" cy="150" r="10" fill="#26304f"/>
+              <circle cx="252" cy="150" r="10" fill="#26304f"/>
+              <circle cx="211" cy="146" r="3.4" fill="#fff"/>
+              <circle cx="255" cy="146" r="3.4" fill="#fff"/>
+              <path d="M214 196q16 12 32 0" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none"/>
+              <!-- 学士帽 -->
+              <path d="M230 58l-72 30 72 30 72-30z" fill="#26304f"/>
+              <rect x="212" y="86" width="36" height="18" rx="6" fill="#26304f"/>
+              <path d="M302 88v34" stroke="#22c5dd" stroke-width="5" stroke-linecap="round"/>
+              <circle cx="302" cy="126" r="8" fill="#22c5dd"/>
+              <!-- 天线 -->
+              <path d="M230 96v-14" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+              <circle cx="230" cy="76" r="7" fill="#34d399"/>
+            </g>
+            <!-- 左手举文书 -->
+            <g>
+              <path d="M168 176q-26 6-38 26" stroke="url(#gMain)" stroke-width="16" stroke-linecap="round" fill="none"/>
+              <g transform="rotate(-8 110 160)">
+                <rect x="78" y="120" width="74" height="94" rx="10" fill="#fff" stroke="#c9d2ff" stroke-width="3"/>
+                <rect x="90" y="138" width="42" height="7" rx="3.5" fill="#5b7cfa"/>
+                <rect x="90" y="154" width="50" height="5" rx="2.5" fill="#c9d2ff"/>
+                <rect x="90" y="166" width="50" height="5" rx="2.5" fill="#c9d2ff"/>
+                <rect x="90" y="178" width="34" height="5" rx="2.5" fill="#c9d2ff"/>
+                <rect x="90" y="194" width="26" height="9" rx="4.5" fill="#34d399"/>
+              </g>
+            </g>
+            <!-- 右手 -->
+            <path d="M292 176q28 8 38 28" stroke="url(#gMain)" stroke-width="16" stroke-linecap="round" fill="none"/>
+            <!-- 工具箱 -->
+            <g>
+              <rect x="286" y="216" width="118" height="82" rx="16" fill="url(#gTool)"/>
+              <rect x="286" y="248" width="118" height="14" fill="#1e9fb5" opacity="0.55"/>
+              <rect x="326" y="202" width="38" height="18" rx="8" fill="#26304f"/>
+              <rect x="336" y="252" width="18" height="12" rx="4" fill="#fff"/>
+            </g>
+            <!-- 文档卡片从工具箱飞出 -->
+            <g>
+              <rect x="64" y="252" width="60" height="76" rx="9" fill="#fff" stroke="#c9d2ff" stroke-width="3" transform="rotate(-10 94 290)"/>
+              <rect x="78" y="270" width="30" height="6" rx="3" fill="#7c5cf4" transform="rotate(-10 94 290)"/>
+              <rect x="78" y="284" width="34" height="4.6" rx="2.3" fill="#c9d2ff" transform="rotate(-10 94 290)"/>
+              <rect x="140" y="266" width="60" height="76" rx="9" fill="#fff" stroke="#b8e8f2" stroke-width="3" transform="rotate(4 170 304)"/>
+              <rect x="154" y="284" width="30" height="6" rx="3" fill="#22c5dd" transform="rotate(4 170 304)"/>
+              <rect x="154" y="298" width="34" height="4.6" rx="2.3" fill="#b8e8f2" transform="rotate(4 170 304)"/>
+              <rect x="214" y="262" width="60" height="76" rx="9" fill="#fff" stroke="#d6c9ff" stroke-width="3" transform="rotate(-4 244 300)"/>
+              <rect x="228" y="280" width="30" height="6" rx="3" fill="#34d399" transform="rotate(-4 244 300)"/>
+              <rect x="228" y="294" width="34" height="4.6" rx="2.3" fill="#d6c9ff" transform="rotate(-4 244 300)"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 六种文档能力速览 -->
+    <div class="mini-grid">
+      <div class="mini-card">
+        <span class="icon-chip chip-blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7z" stroke="#4f6df5" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v5h5M10 13h6M10 17h6" stroke="#4f6df5" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <div><b>技术文档</b><span>MD 成稿 + 离线 HTML 展示站</span></div>
+      </div>
+      <div class="mini-card">
+        <span class="icon-chip chip-purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2.5" stroke="#7c5cf4" stroke-width="2"/><path d="M9 8h6M9 12h6M9 16h4" stroke="#7c5cf4" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <div><b>任务书</b><span>官方模板原位填写 · 文献≥10</span></div>
+      </div>
+      <div class="mini-card">
+        <span class="icon-chip chip-cyan"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="#22c5dd" stroke-width="2"/><path d="M12 8v4l3 2" stroke="#22c5dd" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <div><b>开题报告</b><span>七项内容 · 正文≥3000字</span></div>
+      </div>
+      <div class="mini-card">
+        <span class="icon-chip chip-mint"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 6h10M4 12h16M4 18h12" stroke="#22a06b" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="6" r="2" fill="#34d399"/></svg></span>
+        <div><b>文献综述</b><span>真实上标引文 · 正文≥2500字</span></div>
+      </div>
+      <div class="mini-card">
+        <span class="icon-chip chip-amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="#c98a12" stroke-width="2"/><path d="M4 19c0-3 2.4-5 5-5s5 2 5 5" stroke="#c98a12" stroke-width="2" stroke-linecap="round"/><path d="M16 7h4M18 5v4" stroke="#c98a12" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <div><b>指导记录</b><span>≥8 次真实主题 · 问题整改配对</span></div>
+      </div>
+      <div class="mini-card">
+        <span class="icon-chip chip-rose"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="#d8456a" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#d8456a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <div><b>中期检查</b><span>进度 + 问题整改逐条配对</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 板块 2：Skill 功能展示 ================= -->
+<section id="skills">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">SKILL 功能展示</span>
+      <h2>9 个 Skill，各司其职，独立可调</h2>
+      <p>6 个业务 Skill 负责文书生成，3 个管理 Skill 负责项目初始化、检查与导航。点击卡片展开完整说明。</p>
+    </div>
+
+    <div class="grid skill-grid">
+
+      <!-- project-technical-doc -->
+      <article class="skill-card open">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="true">
+          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v5.2.0</span></div>
+          <h3>project-technical-doc</h3>
+          <p class="pos">项目技术文档生成：只读理解真实项目 → 带证据的 MD 技术文档 → 派生离线 HTML 展示站。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>完整 Markdown 技术文档、单文件离线 HTML 用户展示网站，并沉淀可复用的项目技术事实（FACT-xxx）。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>项目源码或技术资料（MD/DOCX/PDF 等）<span class="badge-req req-yes">必需</span></li>
+            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
+            <li>展示配置.json、已有 project-assets 事实库<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><ul>
+            <li>&lt;项目名&gt;-技术文档.md、&lt;项目名&gt;_用户展示.html、执行汇报.md</li>
+            <li>项目事实与证据台账.md（大型项目）</li>
+            <li>保存位置：<code>deliverables/technical-document/</code></li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>需要把一个真实项目整理成可交付的技术说明文档和展示网页时。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:project-technical-doc</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+</li><li>markdown-it-py、beautifulsoup4（HTML 派生）</li><li>无需官方 Word 模板</li>
+          </ul></div>
+        </div>
+      </article>
+
+      <!-- thesis-taskbook-write -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v1.2.2</span></div>
+          <h3>thesis-taskbook-write</h3>
+          <p class="pos">毕业设计任务书：官方空白 DOCX 原位填写，固定栏目 / 表格 / 签名结构全部保留。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>使用官方任务书模板副本填充的可编辑 DOCX，含任务内容、周进度安排、下达人意见拟稿与参考文献。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>技术资料或技术 MD<span class="badge-req req-yes">必需</span></li>
+            <li>官方任务书 DOCX 模板（内置只读副本）<span class="badge-req req-yes">必需</span></li>
+            <li>课题题目、项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
+            <li>院系/班级/姓名/学号/导师/职称、起止日期、已核验参考文献、已填范本<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><ul>
+            <li>&lt;课题简称&gt;-毕业设计任务书-vN.docx、执行汇报</li>
+            <li>保存位置：<code>deliverables/taskbook/</code>（-vN 版本永不覆盖）</li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>开题前需要提交学校格式的毕业设计任务书时。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:thesis-taskbook-write</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+（python-docx、lxml、PyMuPDF）</li>
+            <li>LibreOffice 或 Word 兼容渲染器（逐页截图）</li>
+            <li>≥10 篇真实可核验参考文献</li>
+            <li>官方模板 template-lock.json 哈希匹配</li>
+          </ul></div>
+        </div>
+      </article>
+
+      <!-- opening-report-writer -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v4.1.0</span></div>
+          <h3>opening-report-writer</h3>
+          <p class="pos">毕业设计开题报告：官方空白 DOCX 允许填写区编写七项完整内容，真上标引文。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>立项依据、国内外研究现状、任务与可行性、重点问题与思路、工作条件、进度计划、参考文献七项内容及指导教师审阅意见拟稿。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>项目技术文档（上游技术 MD 优先）<span class="badge-req req-yes">必需</span></li>
+            <li>官方开题报告 DOCX 模板（内置只读副本）<span class="badge-req req-yes">必需</span></li>
+            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
+            <li>已核验参考文献（REF-xxx）、共享周计划、封面个人信息<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><ul>
+            <li>&lt;课题简称&gt;-毕业设计开题报告-vN.docx</li>
+            <li>执行汇报-vN.md、文献核验台账-vN.md（每版恰好三项）</li>
+            <li>保存位置：<code>deliverables/opening-report/</code></li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>开题答辩前需要撰写并排版开题报告时。尚未完成的研究工作不会被写成已完成。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:opening-report-writer</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+（python-docx、lxml、PyMuPDF）</li>
+            <li>LibreOffice 或 Word 兼容渲染器</li>
+            <li>≥10 篇真实可核验参考文献</li>
+            <li>正文汉字 ≥3000（不含文献与封面）</li>
+          </ul></div>
+        </div>
+      </article>
+
+      <!-- literature-review-write -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v3.2.1</span></div>
+          <h3>literature-review-write</h3>
+          <p class="pos">文献综述：按研究问题组织文献比较与评述，真实 Word 上标引文，不做标题堆砌。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>引言、国内外研究现状、评述、参考文献的综述正文与指导教师意见拟稿，引用按正文首现顺序编号并设为真上标。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>当前课题技术资料<span class="badge-req req-yes">必需</span></li>
+            <li>官方文献综述 DOCX 模板（内置只读副本）<span class="badge-req req-yes">必需</span></li>
+            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
+            <li>已核验文献（REF-xxx）、文献综述范本、封面个人信息<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><ul>
+            <li>&lt;课题简称&gt;-文献综述-vN.docx、执行汇报</li>
+            <li>保存位置：<code>deliverables/literature-review/</code></li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>需要提交毕业设计文献综述、或为开题报告积累文献基础时。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:literature-review-write</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+（python-docx、lxml、PyMuPDF）</li>
+            <li>LibreOffice 或 Word 兼容渲染器</li>
+            <li>正文 ≥2500 字</li>
+            <li>默认 ≥8 篇独立真实文献（服从学校要求）</li>
+          </ul></div>
+        </div>
+      </article>
+
+      <!-- thesis-guidance-record-write -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v1.2.0</span></div>
+          <h3>thesis-guidance-record-write</h3>
+          <p class="pos">指导记录：≥8 次真实主题拟稿，问题与修改意见编号配对，评价与签名栏保持空白。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>按官方 13 行记录表结构逐次填写的指导记录 Word 拟稿；每次「存在问题」与「修改意见」一问题一措施严格配对。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>真实项目技术资料<span class="badge-req req-yes">必需</span></li>
+            <li>官方指导记录 DOCX 模板（内置只读副本）<span class="badge-req req-yes">必需</span></li>
+            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
+            <li>真实指导时间/地点/方式（缺失一律留空）、已填范本、共享计划与进展<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><ul>
+            <li>&lt;课题简称&gt;-指导记录-vN.docx、执行汇报</li>
+            <li>保存位置：<code>deliverables/guidance/</code></li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>需要整理指导教师指导记录表供审核打印时。产出是待审核拟稿，不代签、不编造会面。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:thesis-guidance-record-write</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+（python-docx、lxml、PyMuPDF）</li>
+            <li>LibreOffice 或 Word 兼容渲染器</li>
+            <li>≥8 个有真实依据的指导主题</li>
+          </ul></div>
+        </div>
+      </article>
+
+      <!-- thesis-midterm-check-write -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v1.3.2</span></div>
+          <h3>thesis-midterm-check-write</h3>
+          <p class="pos">中期检查记录表：完成进度、问题整改逐条编号配对、教师意见拟稿，三栏各 ≥200 字。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>官方中期检查记录表填充件：完成进度（含下一步）、存在问题与整改措施（一一对应）、指导教师意见拟稿。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>真实项目技术资料<span class="badge-req req-yes">必需</span></li>
+            <li>官方中期检查 DOCX 模板（内置只读副本）<span class="badge-req req-yes">必需</span></li>
+            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
+            <li>共享周计划、进展快照、检查日期、班级/姓名<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><ul>
+            <li>&lt;课题简称&gt;-中期检查记录表-vN.docx、执行汇报-vN</li>
+            <li>保存位置：<code>deliverables/midterm/</code></li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>中期检查节点需要提交进度与问题整改记录表时。计划不会被写成已完成成果。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:thesis-midterm-check-write</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+（python-docx、lxml、PyMuPDF）</li>
+            <li>LibreOffice 或 Word 兼容渲染器</li>
+            <li>计划与实际进度的真实证据</li>
+          </ul></div>
+        </div>
+      </article>
+
+      <!-- init-project -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-mgr">管理 Skill</span><span class="tag tag-ver">v0.1.0</span></div>
+          <h3>init-project</h3>
+          <p class="pos">初始化项目资产包：一个项目对应一个资产包，数据 / 成品 / 运行区一次建好。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>项目根目录下的 <code>project-assets/</code>（project.json 及空数据文件）与 <code>deliverables/</code> 文书类型子目录骨架。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code>、稳定 project_id、项目名称<span class="badge-req req-yes">必需</span></li>
+            <li>人员元信息（姓名/学院等）<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><p>可被所有业务 Skill 直接读写的共享资产包骨架；不产生文书。</p></div>
+          <div class="field"><b>使用场景</b><p>开始为一个新毕业设计项目使用本插件的第一步。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:init-project</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul><li>Python 3.10+（仅标准库）</li></ul></div>
+        </div>
+      </article>
+
+      <!-- check-project -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-mgr">管理 Skill</span><span class="tag tag-ver">v0.1.0</span></div>
+          <h3>check-project</h3>
+          <p class="pos">前置条件与资产检查：环境、模板哈希、项目数据逐项核对，PASS / WARN / BLOCK 三类结论。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>环境与项目检查报告（对话输出 + 可选 JSON）：Python 依赖、官方模板哈希、参考文献核验情况、计划完整度等。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>无必填输入</li>
+            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code>、目标 Skill 名称<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>最终输出什么</b><p>三类检查结论：PASS（满足）/ WARN（可继续但影响完整度）/ BLOCK（关键条件不足）。只有确实影响可靠执行的条件才阻止操作。</p></div>
+          <div class="field"><b>使用场景</b><p>生成任何文书前确认环境与资料是否齐备；排查 Skill 无法执行的原因时。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:check-project</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul><li>Python 3.10+（仅标准库）</li></ul></div>
+        </div>
+      </article>
+
+      <!-- help -->
+      <article class="skill-card">
+        <div class="skill-top" tabindex="0" role="button" aria-expanded="false">
+          <div class="tags"><span class="tag tag-mgr">管理 Skill</span><span class="tag tag-ver">v0.1.0</span></div>
+          <h3>help</h3>
+          <p class="pos">使用导航：展示全部命令、推荐工作流程与文档入口，按当前进度给出下一步建议。</p>
+          <div class="expand-hint"><span>展开详细说明</span><span class="arrow">▾</span></div>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>命令清单与使用指导（纯导航，不生成文书、不修改任何资产）。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul><li>无必填输入</li><li>具体问题或场景描述<span class="badge-req req-opt">可选</span></li></ul></div>
+          <div class="field"><b>最终输出什么</b><p>按需给出建议命令与文档入口。</p></div>
+          <div class="field"><b>使用场景</b><p>忘记命令、不知道先做什么、或想了解某个 Skill 能干什么时。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:help</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul><li>无</li></ul></div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= 板块 3：Skill 关系图 ================= -->
+<section id="relations">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">SKILL 关系图</span>
+      <h2>技术资料 → 共享项目事实 → 文档生成</h2>
+      <p>六个 Skill 通过同一个项目资产包关联：上游沉淀的事实与文献，下游直接复用。</p>
+    </div>
+
+    <div class="notice notice-info">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9" stroke="#2c3aa8" stroke-width="2"/><path d="M12 11v5M12 8h.01" stroke="#2c3aa8" stroke-width="2" stroke-linecap="round"/></svg>
+      <div><b>不必依次完成所有文档！</b>各 Skill 可独立调用，只有「真实项目技术资料」是共同必需输入；技术文档是推荐的起点（它沉淀的 FACT-xxx 技术事实能让后续文书少走弯路），但不是硬性前置。</div>
+    </div>
+
+    <div class="relation-frame">
+      <svg viewBox="0 0 960 540" role="img" aria-label="关系图：项目技术资料经共享资产包流向六种文书输出" style="min-width:760px">
+        <defs>
+          <marker id="arrBlue" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="#4f6df5"/></marker>
+          <marker id="arrPurple" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="#7c5cf4"/></marker>
+          <linearGradient id="gHub" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b7cfa"/><stop offset="1" stop-color="#7c5cf4"/></linearGradient>
+        </defs>
+
+        <!-- 左：项目技术资料 -->
+        <g>
+          <rect x="24" y="196" width="212" height="150" rx="20" fill="#fff" stroke="#4f6df5" stroke-width="2.5"/>
+          <rect x="24" y="196" width="212" height="44" rx="20" fill="#e6ebff"/>
+          <text x="130" y="225" text-anchor="middle" font-size="18" font-weight="700" fill="#2c3aa8" font-family="sans-serif">项目技术资料</text>
+          <text x="130" y="272" text-anchor="middle" font-size="14" fill="#5c6888" font-family="sans-serif">源码 / 技术手册 / 设计文档</text>
+          <text x="130" y="298" text-anchor="middle" font-size="14" fill="#5c6888" font-family="sans-serif">需求、协议、测试记录…</text>
+          <rect x="86" y="312" width="88" height="22" rx="11" fill="#fde4ea"/>
+          <text x="130" y="328" text-anchor="middle" font-size="12.5" font-weight="700" fill="#d8456a" font-family="sans-serif">共同必需输入</text>
+        </g>
+
+        <!-- 中：共享资产包 -->
+        <g>
+          <rect x="336" y="158" width="242" height="228" rx="22" fill="url(#gHub)"/>
+          <text x="457" y="196" text-anchor="middle" font-size="18" font-weight="800" fill="#fff" font-family="sans-serif">共享项目资产包</text>
+          <text x="457" y="220" text-anchor="middle" font-size="12.5" fill="#dfe6ff" font-family="sans-serif">project-assets/ · 一个项目一套</text>
+          <rect x="362" y="238" width="190" height="38" rx="12" fill="rgba(255,255,255,0.92)"/>
+          <text x="457" y="262" text-anchor="middle" font-size="14" font-weight="700" fill="#3b4fd8" font-family="Consolas,monospace">FACT-xxx 技术事实</text>
+          <rect x="362" y="286" width="190" height="38" rx="12" fill="rgba(255,255,255,0.92)"/>
+          <text x="457" y="310" text-anchor="middle" font-size="14" font-weight="700" fill="#3b4fd8" font-family="Consolas,monospace">REF-xxx 文献库</text>
+          <rect x="362" y="334" width="190" height="38" rx="12" fill="rgba(255,255,255,0.92)"/>
+          <text x="457" y="358" text-anchor="middle" font-size="14" font-weight="700" fill="#3b4fd8" font-family="Consolas,monospace">周计划 schedule</text>
+        </g>
+
+        <!-- 左→中 -->
+        <path d="M236 258 C 282 258, 296 262, 332 262" stroke="#4f6df5" stroke-width="3" fill="none" marker-end="url(#arrBlue)"/>
+        <text x="272" y="244" text-anchor="middle" font-size="12.5" fill="#4f6df5" font-family="sans-serif">project-technical-doc</text>
+        <text x="272" y="322" text-anchor="middle" font-size="12.5" fill="#4f6df5" font-family="sans-serif">提炼 / 核实</text>
+
+        <!-- 右侧六文书 -->
+        <g>
+          <!-- 技术文档 -->
+          <rect x="688" y="66" width="248" height="84" rx="16" fill="#fff" stroke="#4f6df5" stroke-width="2.2"/>
+          <text x="812" y="100" text-anchor="middle" font-size="16" font-weight="700" fill="#26304f" font-family="sans-serif">技术文档 + 展示 HTML</text>
+          <text x="812" y="126" text-anchor="middle" font-size="12.5" fill="#5c6888" font-family="sans-serif">project-technical-doc · 建议第一步</text>
+          <!-- 任务书 -->
+          <rect x="688" y="172" width="248" height="72" rx="16" fill="#fff" stroke="#7c5cf4" stroke-width="2.2"/>
+          <text x="812" y="202" text-anchor="middle" font-size="16" font-weight="700" fill="#26304f" font-family="sans-serif">任务书 DOCX</text>
+          <text x="812" y="226" text-anchor="middle" font-size="12.5" fill="#5c6888" font-family="sans-serif">thesis-taskbook-write</text>
+          <!-- 开题报告 -->
+          <rect x="688" y="266" width="248" height="72" rx="16" fill="#fff" stroke="#22c5dd" stroke-width="2.2"/>
+          <text x="812" y="296" text-anchor="middle" font-size="16" font-weight="700" fill="#26304f" font-family="sans-serif">开题报告 DOCX</text>
+          <text x="812" y="320" text-anchor="middle" font-size="12.5" fill="#5c6888" font-family="sans-serif">opening-report-writer</text>
+          <!-- 文献综述 -->
+          <rect x="688" y="360" width="248" height="72" rx="16" fill="#fff" stroke="#34d399" stroke-width="2.2"/>
+          <text x="812" y="390" text-anchor="middle" font-size="16" font-weight="700" fill="#26304f" font-family="sans-serif">文献综述 DOCX</text>
+          <text x="812" y="414" text-anchor="middle" font-size="12.5" fill="#5c6888" font-family="sans-serif">literature-review-write</text>
+          <!-- 指导记录 -->
+          <rect x="688" y="454" width="120" height="60" rx="14" fill="#fff" stroke="#f0b429" stroke-width="2.2"/>
+          <text x="748" y="480" text-anchor="middle" font-size="14.5" font-weight="700" fill="#26304f" font-family="sans-serif">指导记录</text>
+          <text x="748" y="500" text-anchor="middle" font-size="11" fill="#5c6888" font-family="sans-serif">guidance-record</text>
+          <!-- 中期检查 -->
+          <rect x="816" y="454" width="120" height="60" rx="14" fill="#fff" stroke="#e2688a" stroke-width="2.2"/>
+          <text x="876" y="480" text-anchor="middle" font-size="14.5" font-weight="700" fill="#26304f" font-family="sans-serif">中期检查</text>
+          <text x="876" y="500" text-anchor="middle" font-size="11" fill="#5c6888" font-family="sans-serif">midterm-check</text>
+        </g>
+
+        <!-- 中→右：复用（细曲线） -->
+        <g stroke="#7c5cf4" stroke-width="2.2" fill="none" opacity="0.75">
+          <path d="M582 240 C 640 200, 652 120, 684 108" marker-end="url(#arrPurple)"/>
+          <path d="M582 258 C 636 232, 648 210, 684 208" marker-end="url(#arrPurple)"/>
+          <path d="M582 276 C 636 278, 650 296, 684 300" marker-end="url(#arrPurple)"/>
+          <path d="M582 300 C 630 330, 646 386, 684 396" marker-end="url(#arrPurple)"/>
+          <path d="M582 320 C 620 380, 642 452, 684 478" marker-end="url(#arrPurple)"/>
+          <path d="M582 336 C 640 400, 760 440, 812 478" marker-end="url(#arrPurple)"/>
+        </g>
+        <text x="620" y="160" font-size="13" font-weight="700" fill="#7c5cf4" font-family="sans-serif">复用 FACT / REF / 计划</text>
+
+        <!-- 推荐顺序虚线 -->
+        <path d="M812 150 C 812 162, 812 164, 812 170" stroke="#7c5cf4" stroke-width="2.6" stroke-dasharray="7 6" fill="none" marker-end="url(#arrPurple)"/>
+        <text x="946" y="164" text-anchor="end" font-size="11.5" fill="#7c5cf4" font-family="sans-serif" transform="rotate(0)">推荐顺序</text>
+
+        <!-- 左→右直接必需输入（点线） -->
+        <path d="M236 300 C 420 470, 560 500, 684 486" stroke="#4f6df5" stroke-width="2" stroke-dasharray="3 5" fill="none" opacity="0.5" marker-end="url(#arrBlue)"/>
+        <text x="420" y="480" text-anchor="middle" font-size="12" fill="#4f6df5" opacity="0.8" font-family="sans-serif">每份文书都直接以当次技术资料为依据（必需）</text>
+      </svg>
+
+      <div class="legend">
+        <span><span class="dot" style="background:#4f6df5"></span>实线＝必需依赖 / 提炼事实</span>
+        <span><span class="dot" style="background:#7c5cf4"></span>紫色细线＝共享资产复用</span>
+        <span><span class="dot" style="background:#7c5cf4;border-radius:6px;height:3px"></span>虚线＝推荐顺序（非强制）</span>
+        <span><span class="dot" style="background:#4f6df5;opacity:.5"></span>点线＝独立调用时的直接输入</span>
+      </div>
+    </div>
+
+    <div class="notice notice-warn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M12 4l9 16H3z" stroke="#8a5b03" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4M12 17h.01" stroke="#8a5b03" stroke-width="2" stroke-linecap="round"/></svg>
+      <div><b>边界规则</b>每个 Skill 只生成自己的文书：任务书 Skill 不会顺带写出开题报告，中期检查也不会重写技术文档。跨文书的共享只发生在 project-assets 数据层。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 板块 4：统一资产管理 ================= -->
+<section id="assets">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">统一资产管理</span>
+      <h2>一个项目 = 一个资产包</h2>
+      <p>数据区 + 成品区 + 运行区。同一信息只录一次，所有文书共用；项目之间完全隔离。</p>
+    </div>
+
+    <div class="grid asset-grid">
+      <div class="card asset-zone">
+        <svg width="46" height="46" viewBox="0 0 48 48" fill="none"><rect x="6" y="10" width="36" height="28" rx="8" fill="#e6ebff"/><ellipse cx="24" cy="19" rx="12" ry="5" stroke="#4f6df5" stroke-width="2.4"/><path d="M12 19v10c0 2.8 5.4 5 12 5s12-2.2 12-5V19" stroke="#4f6df5" stroke-width="2.4"/><path d="M12 24c0 2.8 5.4 5 12 5s12-2.2 12-5" stroke="#4f6df5" stroke-width="2.4"/></svg>
+        <h3>数据区 · project-assets/</h3>
+        <span class="zone-path">project.json · facts.json · references.json</span>
+        <span class="zone-path">schedule.json · progress.json · activity.jsonl</span>
+        <ul>
+          <li>项目身份与人员元信息（project.json）</li>
+          <li>FACT-xxx 技术事实：结论 + 来源 + 确认状态</li>
+          <li>REF-xxx 文献库：稳定编号 + 核验记录</li>
+          <li>统一周计划：原计划 / 变更 / 实际进展分开</li>
+          <li>activity.jsonl：每次变更与成品登记的审计流水</li>
+        </ul>
+      </div>
+      <div class="card asset-zone">
+        <svg width="46" height="46" viewBox="0 0 48 48" fill="none"><rect x="10" y="6" width="28" height="36" rx="7" fill="#eee9ff"/><path d="M17 16h14M17 22h14M17 28h9" stroke="#7c5cf4" stroke-width="2.4" stroke-linecap="round"/><circle cx="34" cy="34" r="8" fill="#fff" stroke="#34d399" stroke-width="2.2"/><path d="M31 34l2.2 2.2L37.5 32" stroke="#34d399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3>成品区 · deliverables/</h3>
+        <span class="zone-path">technical-document/ taskbook/ opening-report/</span>
+        <span class="zone-path">literature-review/ guidance/ midterm/</span>
+        <ul>
+          <li>正式交付成品按文书类型分目录存放</li>
+          <li>文件名自带版本号：…-v1 / -v2 / -v3</li>
+          <li><b>新版本新文件，永不覆盖、永不删除历史版本</b></li>
+          <li>每版单独登记使用记录（路径 + SHA-256）</li>
+          <li>一目录看全一个项目的所有产出</li>
+        </ul>
+      </div>
+      <div class="card asset-zone">
+        <svg width="46" height="46" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="24" rx="7" fill="#ddf6fb"/><path d="M14 20h12M14 26h8" stroke="#22c5dd" stroke-width="2.4" stroke-linecap="round"/><path d="M32 18l6 6-6 6" stroke="#22c5dd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3>运行区 · .skill-tmp/</h3>
+        <span class="zone-path">.skill-tmp/&lt;skill-name&gt;/&lt;run-id&gt;/</span>
+        <ul>
+          <li>渲染截图、结构审计 JSON、草稿中间件都放这里</li>
+          <li>每个运行目录带所有权标记，互不干扰</li>
+          <li>运行结束自动清理本轮临时文件</li>
+          <li>清理只限本 Skill 自己的运行目录</li>
+          <li>绝不触碰原始资料、官方模板、共享资产和正式成品</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="reuse-row">
+      <div class="reuse-item">
+        <span class="big-id">FACT-xxx</span>
+        <p>技术文档 Skill 核实并入库，任务书 / 开题 / 中期按稳定 ID 引用同一事实，状态口吻（已实现 / 声明 / 设计 / 待确认）全链路保持一致。</p>
+      </div>
+      <div class="reuse-item">
+        <span class="big-id">REF-xxx</span>
+        <p>一篇文献只检索核验一次。任务书用 10 篇、综述用其中 8 篇，正文编号各自重排，但都指向同一个稳定 ID 与核验记录。</p>
+      </div>
+      <div class="reuse-item">
+        <span class="big-id">周计划</span>
+        <p>任务书拟定的周计划基线被开题报告复用；中期检查对照它写实际进展——计划归计划、实际归实际，不混为一谈。</p>
+      </div>
+    </div>
+
+    <div class="notice notice-info">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9" stroke="#2c3aa8" stroke-width="2"/><path d="M12 11v5M12 8h.01" stroke="#2c3aa8" stroke-width="2" stroke-linecap="round"/></svg>
+      <div><b>为什么不需要重复录入？</b>项目名称、技术架构、器件选型、文献、进度——这些信息在第一次使用时写入 project-assets/，之后任何文书 Skill 读到的都是同一份。需要修改时必须提供依据并显式更新（--replace --reason），系统绝不静默覆盖已确认的数据。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 板块 5：使用流程 ================= -->
+<section id="workflow">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">使用流程</span>
+      <h2>新手引导：从零到第一份文书</h2>
+      <p>八个步骤，每步都有明确操作。走完一遍即可独立使用全部 Skill。</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>准备环境</h3>
+          <p>安装 Python 3.10+ 与依赖（python-docx、lxml、PyMuPDF）；Word 文书的逐页截图检查需要 LibreOffice 或 Word 兼容渲染器。只有技术文档 / 管理 Skill 时可暂缓 LibreOffice。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>加载插件</h3>
+          <p>在 Claude Code 中指向插件目录启动；看到 9 个 <code>/thesis-doc-suite:…</code> 命令即加载成功。</p>
+          <div class="cmd"><span class="cmd-text">claude --plugin-dir "E:\Code\thesis-doc-suite"</span><button class="copy-btn">复制</button></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>初始化项目资产包</h3>
+          <p>为你的毕业设计项目创建唯一资产包（数据 + 成品 + 运行区骨架），project_id 一经建立不再更改。</p>
+          <div class="cmd"><span class="cmd-text">/thesis-doc-suite:init-project</span><button class="copy-btn">复制</button></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>导入技术资料</h3>
+          <p>把项目源码目录、技术手册、需求文档等放入项目位置并告知 Claude；推荐先跑技术文档 Skill，沉淀 FACT-xxx 技术事实。</p>
+          <div class="cmd"><span class="cmd-text">/thesis-doc-suite:project-technical-doc</span><button class="copy-btn">复制</button></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>检查前置条件</h3>
+          <p>按 PASS / WARN / BLOCK 确认环境、模板哈希与资料齐备度；缺什么、能不能降级执行一目了然。</p>
+          <div class="cmd"><span class="cmd-text">/thesis-doc-suite:check-project</span><button class="copy-btn">复制</button></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>选择要生成的文书</h3>
+          <p>按当前需要挑一个业务 Skill，不必按固定顺序；不确定就用 <code>/thesis-doc-suite:help</code>。</p>
+          <div class="cmd"><span class="cmd-text">/thesis-doc-suite:thesis-taskbook-write</span><button class="copy-btn">复制</button></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>生成文档</h3>
+          <p>Skill 自动完成：读共享资产 → 复用/补充文献 → 官方模板副本填充 → 结构校验 → 逐页截图检查 → 输出执行汇报。中间文件留在运行区并自动清理。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>查看报告和成品</h3>
+          <p>成品在 <code>deliverables/&lt;文书类型&gt;/</code>，执行汇报列出检查结果、待确认事项与 WPS 实测边界；最终内容由你和指导教师验收。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 板块 6：前置准备清单 ================= -->
+<section id="prereq">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">前置准备清单</span>
+      <h2>开跑前要准备什么？</h2>
+      <p>分清必需与可选——不必把所有材料都提前备齐，缺可选项也能降级执行。</p>
+    </div>
+
+    <div class="grid check-grid">
+      <div class="card check-group">
+        <h3><span class="icon-chip chip-blue" style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="11" rx="2" stroke="#4f6df5" stroke-width="2"/><path d="M8 20h8M12 16v4" stroke="#4f6df5" stroke-width="2" stroke-linecap="round"/></svg></span>软件环境</h3>
+        <ul>
+          <li><span class="tick">必</span><div>Python 3.10+（python-docx、lxml、PyMuPDF、markdown-it-py、beautifulsoup4）</div></li>
+          <li><span class="tick">必</span><div>Claude Code（或其他本地 Agent）+ 本插件</div></li>
+          <li><span class="tick">必</span><div>LibreOffice 或 Word 兼容渲染器（Word 文书逐页截图检查）</div></li>
+          <li><span class="tick">选</span><div>WPS 客户端（仅用于最终人工复核，未实测会如实标注）</div></li>
+        </ul>
+      </div>
+      <div class="card check-group">
+        <h3><span class="icon-chip chip-cyan" style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7z" stroke="#22c5dd" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v5h5" stroke="#22c5dd" stroke-width="2"/></svg></span>项目技术材料</h3>
+        <ul>
+          <li><span class="tick">必</span><div>项目源码或技术资料至少一种（MD / DOCX / PDF / 仓库目录）</div></li>
+          <li><span class="tick">选</span><div>测试记录、协议文档、原理图 / BOM、部署说明</div></li>
+          <li><span class="tick">选</span><div>既有 project-assets 资产包（老项目复用）</div></li>
+        </ul>
+      </div>
+      <div class="card check-group">
+        <h3><span class="icon-chip chip-purple" style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2.5" stroke="#7c5cf4" stroke-width="2"/><path d="M9 8h6M9 12h6" stroke="#7c5cf4" stroke-width="2" stroke-linecap="round"/></svg></span>官方模板</h3>
+        <ul>
+          <li><span class="tick">必</span><div>对应文书的学校官方空白 DOCX（插件已内置塔里木大学版本只读副本 + 哈希锁）</div></li>
+          <li><span class="tick">选</span><div>你手上的新版官方模板（提供后以新模板为准，先审计再适配）</div></li>
+          <li><span class="tick">选</span><div>已填写范本（仅学写法，不继承任何个人信息）</div></li>
+        </ul>
+      </div>
+      <div class="card check-group">
+        <h3><span class="icon-chip chip-mint" style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h10M4 12h16M4 18h12" stroke="#22a06b" stroke-width="2" stroke-linecap="round"/></svg></span>参考文献</h3>
+        <ul>
+          <li><span class="tick">必</span><div>任务书 / 开题报告：≥10 篇真实可核验文献（知网、万方、维普等）</div></li>
+          <li><span class="tick">必</span><div>文献综述：默认 ≥8 篇（以学校要求为准）</div></li>
+          <li><span class="tick">选</span><div>已有文献清单 / DOI / 链接（复用 REF-xxx，免重复检索）</div></li>
+        </ul>
+      </div>
+      <div class="card check-group">
+        <h3><span class="icon-chip chip-amber" style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="#c98a12" stroke-width="2"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6" stroke="#c98a12" stroke-width="2" stroke-linecap="round"/></svg></span>项目信息</h3>
+        <ul>
+          <li><span class="tick">必</span><div>课题题目（可从技术资料拟稿，执行汇报会标注）</div></li>
+          <li><span class="tick">选</span><div>姓名 / 学号 / 学院 / 专业 / 班级 / 导师 / 职称（未知留空，不套用他人信息）</div></li>
+          <li><span class="tick">选</span><div>起止日期、当届工作安排</div></li>
+        </ul>
+      </div>
+      <div class="card check-group">
+        <h3><span class="icon-chip chip-rose" style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="15" rx="2.5" stroke="#d8456a" stroke-width="2"/><path d="M8 3v4M16 3v4M4 10h16" stroke="#d8456a" stroke-width="2" stroke-linecap="round"/></svg></span>计划与进度</h3>
+        <ul>
+          <li><span class="tick">必</span><div>中期检查：计划与实际进展的真实证据（否则只出待核实草稿）</div></li>
+          <li><span class="tick">选</span><div>统一周计划基线（缺失时按真实安排拟 draft，确认后才标 confirmed）</div></li>
+          <li><span class="tick">选</span><div>指导记录的真实时间 / 地点 / 方式（缺失一律留空）</div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="notice notice-info" style="max-width:820px;margin-left:auto;margin-right:auto">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9" stroke="#2c3aa8" stroke-width="2"/><path d="M12 11v5M12 8h.01" stroke="#2c3aa8" stroke-width="2" stroke-linecap="round"/></svg>
+      <div><b>可选资料缺失时</b>Skill 会降级执行并在执行汇报中明确说明影响（如「未核实源码，仅依据资料声明」），而不是直接拒绝或编造内容。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 板块 7：命令与实际操作 ================= -->
+<section id="commands">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">命令与实际操作</span>
+      <h2>真实可用的命令速查</h2>
+      <p>以下均为实际实现的命令。命令示例是「命令形状」，项目路径与 ID 需替换为你自己的。</p>
+    </div>
+
+    <div class="card" style="max-width:860px;margin:0 auto 20px">
+      <h3 style="margin-top:0">① 本地加载插件（Windows 示例）</h3>
+      <div class="cmd"><span class="cmd-text">claude --plugin-dir "E:\Code\thesis-doc-suite"</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">claude plugin validate "E:\Code\thesis-doc-suite"</span><button class="copy-btn">复制</button></div>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:0">把路径换成你解压/克隆插件后的实际目录。出现 9 个 <code>/thesis-doc-suite:…</code> 命令即加载成功。</p>
+    </div>
+
+    <div class="card" style="max-width:860px;margin:0 auto 20px">
+      <h3 style="margin-top:0">② 九个斜杠命令</h3>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:init-project</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:check-project</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:project-technical-doc</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:thesis-taskbook-write</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:opening-report-writer</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:literature-review-write</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:thesis-guidance-record-write</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:thesis-midterm-check-write</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">/thesis-doc-suite:help</span><button class="copy-btn">复制</button></div>
+    </div>
+
+    <div class="card" style="max-width:860px;margin:0 auto 20px">
+      <h3 style="margin-top:0">③ 项目资产命令行（进阶 / 脚本化）</h3>
+      <div class="cmd"><span class="cmd-text">python scripts/check_env.py</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">python core/asset-management/project_assets.py init --root "E:\MyThesis" --project-id my-thesis-2026 --name "我的毕业设计"</span><button class="copy-btn">复制</button></div>
+      <div class="cmd"><span class="cmd-text">python core/asset-management/project_assets.py status --root "E:\MyThesis"</span><button class="copy-btn">复制</button></div>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:0">以上命令在插件安装目录下执行；<code>&lt;PROJECT_ROOT&gt;</code> 指向你的项目资产包根目录（存放 project-assets/ 与 deliverables/ 的那一层），不是插件安装目录。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 板块 8：常见问题 ================= -->
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="kicker">常见问题</span>
+      <h2>遇到问题先看这里</h2>
+      <p>八个高频问题的答案；仍无法解决时用 /thesis-doc-suite:check-project 生成检查报告定位原因。</p>
+    </div>
+
+    <div class="faq">
+      <details>
+        <summary><span class="q-badge">Q</span>为什么 Skill 没加载？<span class="arrow">▾</span></summary>
+        <div class="faq-body">确认插件目录指向的是含 <code>.claude-plugin/plugin.json</code> 的根目录（Windows 路径含空格/中文时建议加引号）；重启 Claude Code 后在输入框键入 <code>/thesis-doc-suite:</code>，应出现 9 个命令的自动补全。仍不出现时运行 <code>claude plugin validate</code> 检查清单结构，或执行 <code>/thesis-doc-suite:check-project</code>（若该命令也没有，请检查插件是否加载）。</div>
+      </details>
+      <details>
+        <summary><span class="q-badge">Q</span>为什么缺少模板？<span class="arrow">▾</span></summary>
+        <div class="faq-body">Word 文书 Skill 依赖学校官方空白 DOCX 及其哈希锁（template-lock.json）。插件已内置塔里木大学版本只读副本；如果你的学校使用不同模板，请提供官方空白 DOCX——Skill 会先做只读结构审计再适配填写位置，绝不修改模板原件，也不会拿旧模板冒充新模板。技术文档 Skill 不需要 Word 模板。</div>
+      </details>
+      <details>
+        <summary><span class="q-badge">Q</span>为什么不能自动生成某些内容？<span class="arrow">▾</span></summary>
+        <div class="faq-body">凡是需要真实性的内容——指导教师评价、签名、真实会面日期、已完成的测试结果、未核实的文献——都不会自动生成或编造。教师意见栏输出的是「供教师审定的拟稿」，签字与日期留空；文献查不到就标 verified=false。这是防止学术不端的硬性设计，不是功能缺陷。</div>
+      </details>
+      <details>
+        <summary><span class="q-badge">Q</span>为什么参考文献需要核验？<span class="arrow">▾</span></summary>
+        <div class="faq-body">参考文献必须真实可查：优先知网、万方、维普、期刊官网、学位论文库、Crossref/DOI 等可核验来源，每条记录来源链接与核验时间。CSDN 等技术社区只能作为标注了真实类型的辅助资料，不能冒充期刊论文。无法核实的条目会显式标注，绝不伪装成已核实文献。</div>
+      </details>
+      <details>
+        <summary><span class="q-badge">Q</span>如何复用已有项目？<span class="arrow">▾</span></summary>
+        <div class="faq-body">项目的一切持久数据都在项目资产包（<code>&lt;PROJECT_ROOT&gt;/project-assets/</code>）里。换机器或换会话时，只要把项目目录带过去、在调用 Skill 时指向同一个 <code>&lt;PROJECT_ROOT&gt;</code>，FACT-xxx 事实、REF-xxx 文献、周计划、成品历史（deliverables/ 下的 -vN 文件）全部自动可复用，无需重新检索和录入。</div>
+      </details>
+      <details>
+        <summary><span class="q-badge">Q</span>如何修改项目资产？<span class="arrow">▾</span></summary>
+        <div class="faq-body">已有资产不会被静默覆盖：更新必须提供实际证据和变更原因（命令行对应 <code>--replace --reason</code>），并写入 activity.jsonl 审计流水。项目 ID 不一致时系统直接拒绝合并，防止串项目。普通个人信息（姓名、学院等）可在 project.json 元信息中更新。</div>
+      </details>
+      <details>
+        <summary><span class="q-badge">Q</span>如何避免覆盖正式文档？<span class="arrow">▾</span></summary>
+        <div class="faq-body">成品文件名自带版本号（…-v1 / -v2 / -v3），重新生成永远新建下一个版本文件，历史版本永不覆盖、永不删除；输出路径已存在时脚本直接拒绝写入。官方模板永远只读，所有填写都发生在副本上。</div>
+      </details>
+      <details>
+        <summary><span class="q-badge">Q</span>如何查看生成文件？<span class="arrow">▾</span></summary>
+        <div class="faq-body">打开 <code>&lt;PROJECT_ROOT&gt;/deliverables/</code>，按文书类型子目录（technical-document / taskbook / opening-report / literature-review / guidance / midterm）分门别类；同目录的执行汇报记录了生成路径、检查结论、待确认事项与 WPS 实测边界。技术文档 Skill 还会输出可双击浏览的离线 HTML。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 页脚 ================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <b>Thesis Doc Suite Taru</b>（thesis-doc-suite）v0.1.0<br>
+        毕业设计文书 Skill 六件套 · Claude Code 插件
+      </div>
+      <div>
+        <b>入口</b><br>
+        <a href="#skills">Skill 功能</a> · <a href="#workflow">使用流程</a> · <a href="#commands">命令实操</a> · <a href="#faq">常见问题</a>
+      </div>
+    </div>
+    <div class="disclaimer">
+      <b>重要声明：</b>本插件生成的 Word 文书（含指导教师意见、下达人意见等栏目）均为<b>待审核拟稿</b>，不代表指导教师已审阅或同意，不代签、不代章；最终内容由用户与指导教师验收，签字与日期请本人填写。参考文献与技术事实均要求真实可查，无法核实的内容会显式标注而非编造。
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+{
+  "_readme": "仅显示输入结构；所有占位提示必须由实际项目资料和逐条核查的真实论文替换；此文件不能直接用于生成正式报告。",
+  "cover": {
+    "title": "",
+    "student_name": "",
+    "student_id": "",
+    "college": "",
+    "major": "",
+    "class_name": "",
+    "supervisor": "",
+    "supervisor_title": "",
+    "date_range": ""
+  },
+  "sections": [
+    {
+      "id": 1,
+      "title": "课题研究立项依据",
+      "blocks": [
+        {
+          "type": "heading2",
+          "text": "1.1 课题背景"
+        },
+        {
+          "type": "paragraph",
+          "text": "【这里填入有根据的正文；不得保留占位文本】"
+        },
+        {
+          "type": "heading2",
+          "text": "1.2 研究目的和意义"
+        },
+        {
+          "type": "paragraph",
+          "text": "【依据项目技术文档填写】"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "国内外研究现状及分析",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "【这里填入有根据的正文；不得保留占位文本】"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "课题任务要求及实现预期目标的可行性分析",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "【这里填入有根据的正文；不得保留占位文本】"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "重点研究的问题及解决思路",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "【这里填入有根据的正文；不得保留占位文本】"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "完成课题所需工作条件及解决办法",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "【这里填入有根据的正文；不得保留占位文本】"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "工作方案及进度计划",
+      "blocks": [
+        {
+          "type": "heading2",
+          "text": "6.1 工作方案"
+        },
+        {
+          "type": "paragraph",
+          "text": "【这里填入有根据的正文；不得保留占位文本】"
+        },
+        {
+          "type": "heading2",
+          "text": "6.2 进度计划"
+        },
+        {
+          "type": "schedule",
+          "items": [
+            {
+              "start_week": 1,
+              "end_week": 2,
+              "task": "【依任务书填写】"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "主要参考文献",
+      "blocks": []
+    }
+  ],
+  "references": []
+}

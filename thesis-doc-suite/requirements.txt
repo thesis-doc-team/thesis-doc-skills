@@ -1,0 +1,17 @@
+# Thesis Doc Suite — 聚合依赖（Python 3.10+，实测环境 Python 3.12）
+# 各 Skill 的独立依赖声明见 skills/<name>/requirements.txt；此文件为并集，
+# 版本下界取各 Skill 要求的最大值以同时满足全部 Skill。
+
+# Word 文书类 Skill（thesis-taskbook-write / opening-report-writer /
+# literature-review-write / thesis-guidance-record-write / thesis-midterm-check-write）
+python-docx>=1.1.0,<2
+lxml>=5,<7
+# scripts/render_visual.py：PDF 逐页截图（配合 LibreOffice 使用）
+PyMuPDF>=1.23,<2
+
+# 技术文档 Skill（project-technical-doc：Markdown 解析与离线 HTML 派生）
+markdown-it-py>=3.0,<5
+beautifulsoup4>=4.12,<5
+
+# 运行渲染/截图链路另需系统级依赖（不通过 pip 安装）：
+#   LibreOffice（soffice）— DOCX 渲染 PDF；详见 docs/prerequisites.md
