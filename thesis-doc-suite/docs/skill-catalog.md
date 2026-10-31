@@ -14,7 +14,7 @@
 | `/thesis-doc-suite:literature-review-write` | 业务 | 3.2.1 | 文献综述 DOCX + 执行汇报 | `deliverables/literature-review/` |
 | `/thesis-doc-suite:thesis-guidance-record-write` | 业务 | 1.2.0 | 指导记录 DOCX + 执行汇报 | `deliverables/guidance/` |
 | `/thesis-doc-suite:thesis-midterm-check-write` | 业务 | 1.3.2 | 中期检查记录表 DOCX + 执行汇报 | `deliverables/midterm/` |
-| `/thesis-doc-suite:technical-visual-assets` | 支持 | 0.3.0 | 四类视觉资产（VIS-xxx 索引/.mmd/SVG/实物图）+ 覆盖缺口报告 | `project-assets/visual-assets/` |
+| `/thesis-doc-suite:technical-visual-assets` | 支持 | 1.1.0 | 四类视觉资产（VIS-xxx 索引/.mmd/SVG/实物图）+ 覆盖缺口报告 | `project-assets/visual-assets/` |
 | `/thesis-doc-suite:init-project` | 管理 | 0.1.0 | 项目资产包骨架 | — |
 | `/thesis-doc-suite:check-project` | 管理 | 0.1.0 | PASS/WARN/BLOCK 检查报告 | — |
 | `/thesis-doc-suite:help` | 管理 | 0.1.0 | 命令导航与使用指导 | — |
@@ -87,7 +87,7 @@
 
 ## 支持 Skill 逐项说明
 
-### technical-visual-assets｜技术图示与模块实物图（v0.3.0）
+### technical-visual-assets｜技术图示与模块实物图（v1.1.0）
 
 - **定位**：基于 `project-technical-doc` 的正式技术 MD 与同项目 FACT-xxx，建立系统框架图、功能架构图、关键流程图、核心模块完整实物图四类真实可追溯视觉资产（VIS-xxx）。联网按准确型号核验来源与复用许可，拒绝裸芯片/局部元件/芯片内部框图冒充模块实物图。**只做素材与登记，不负责在 Word/MD 中插图**（插图由下游 Skill 自行决定）。
 - **生成**：`project-assets/visual-assets/`（VIS-xxx 索引、可编辑 `.mmd`/SVG、已授权图片）、四类覆盖与缺口报告。

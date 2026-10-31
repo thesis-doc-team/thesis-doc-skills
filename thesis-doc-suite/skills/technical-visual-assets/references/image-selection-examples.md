@@ -41,7 +41,7 @@
 
 ### 正例 2 — 完整传感器模块/转接小板实物（非裸芯片）
 
-![正例2：三个完整传感器小板/模组外观](../assets/image-selection-examples/positive-02-complete-sensor-breakout-boards.png)
+![正例2：三个完整传感器小板/模组外观](../assets/image-selection-examples/positive-02-complete-breakout-boards.png)
 
 - **实际看到**：几块传感器板卡，能看见完整 PCB 轮廓、模块主体、焊盘/接线端、部分丝印和安装孔；中间搭载的传感器芯片只是模块的一部分。
 - **符合的筛图标准**：每块可作为**完整传感器模块/转接小板**理解，而不是只展示板上芯片、电阻或某个焊盘。

@@ -26,6 +26,8 @@ ITEMS = [
     # per-Skill migrated regression suites (run inside each skill directory)
     ('techdoc: pipeline', ['tests/test_pipeline.py'], ROOT / 'skills' / 'project-technical-doc'),
     ('techdoc: project-assets', ['tests/test_project_assets.py'], ROOT / 'skills' / 'project-technical-doc'),
+    ('techdoc: screenshot-audit', ['tests/test_screenshot_audit.py'], ROOT / 'skills' / 'project-technical-doc'),
+    ('techdoc: svg-pipeline', ['tests/test_svg_pipeline.py'], ROOT / 'skills' / 'project-technical-doc'),
     ('taskbook: pipeline', ['tests/test_pipeline.py'], ROOT / 'skills' / 'thesis-taskbook-write'),
     ('taskbook: reference-samples', ['tests/test_reference_samples.py'], ROOT / 'skills' / 'thesis-taskbook-write'),
     ('taskbook: shared-assets', ['tests/test_shared_assets.py'], ROOT / 'skills' / 'thesis-taskbook-write'),
@@ -41,6 +43,7 @@ ITEMS = [
     ('midterm: shared-assets', ['tests/test_shared_assets.py'], ROOT / 'skills' / 'thesis-midterm-check-write'),
     ('visual: regression', ['tests/test_visual_assets.py'], ROOT / 'skills' / 'technical-visual-assets'),
     ('visual: selection-examples', ['tests/test_user_selection_examples.py'], ROOT / 'skills' / 'technical-visual-assets'),
+    ('visual: v1-capabilities', ['tests/test_v1_new_capabilities.py'], ROOT / 'skills' / 'technical-visual-assets'),
 ]
 
 # tests that exercise rendering without LibreOffice may print WARN-style notes;

@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
-"""Optional, read-only image candidate search; NEVER downloads or installs packages.
+"""Find *leads*, not trusted photos. No pip/npx, no image downloads.
 
-Providers:
-  ddgs: uses an already installed ddgs Python module. Never runs pip.
-  commons: Wikimedia Commons public API via Python standard library only.
-  auto: ddgs if available, otherwise commons.
-
-These are search leads, NOT verified original photos and NOT permission grants.
-Official sites, CSDN, and Baidu can be inspected via the Claude Code's existing
-WebSearch/WebFetch/browser capability, if present. Don't fabricate unavailable tools.
+Provider `auto` tries an already-installed DDGS and then the stdlib-only
+Wikimedia Commons API. Empty/blocked results fall through. All failures are
+reported; no invented or silently 'verified' image results.
 """
 from __future__ import annotations
 import argparse
 import importlib.util
 import json
-from pathlib import Path
 import sys
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -22,76 +16,137 @@ from urllib.request import Request, urlopen
 
 def ddgs_search(query, limit):
     if importlib.util.find_spec('ddgs') is None:
-        raise RuntimeError('ddgs 未安装。本 Skill 禁止自动安装依赖；改用已有 WebSearch/WebFetch 或 commons。')
+        raise RuntimeError('DDGS_NOT_INSTALLED')
     from ddgs import DDGS
-    results = DDGS().images(query, max_results=limit)
-    return [{'title':v.get('title'), 'source_page_url':v.get('url'),
-             'image_url':v.get('image'), 'thumbnail_url':v.get('thumbnail'),
-             'publisher':None, 'license':'unverified', 'status':'candidate', 'provider':'ddgs'}
-            for v in results if isinstance(v,dict)]
+    rows=DDGS().images(query,max_results=limit)
+    return [{'title':x.get('title'), 'source_page_url':x.get('url'),
+        'image_url':x.get('image'), 'thumbnail_url':x.get('thumbnail'),
+        'publisher':None,'license':'unverified','status':'candidate',
+        'provider':'ddgs','model_verified':False,'source_verified':False}
+        for x in rows if isinstance(x,dict) and x.get('url') and x.get('image')]
 
 
-def commons_search(query, limit):
-    params = urlencode({'action':'query','format':'json','generator':'search',
-                        'gsrsearch':query,'gsrnamespace':'6','gsrlimit':str(limit),
-                        'prop':'imageinfo','iiprop':'url|extmetadata'})
-    url = 'https://commons.wikimedia.org/w/api.php?' + params
-    request = Request(url,headers={'User-Agent':'ThesisDocSuite/0.2 (academic source discovery; no bulk downloads)'})
-    with urlopen(request,timeout=15) as response:
-        blob = response.read(2_000_000)
-    doc=json.loads(blob)
+def commons_search(query,limit):
+    params=urlencode({'action':'query','format':'json','generator':'search',
+        'gsrsearch':query,'gsrnamespace':'6','gsrlimit':str(limit),
+        'prop':'imageinfo','iiprop':'url|extmetadata'})
+    url='https://commons.wikimedia.org/w/api.php?'+params
+    req=Request(url,headers={'User-Agent':'ThesisDocSuite/0.4 (academic image lead discovery; no media download)'})
+    with urlopen(req,timeout=12) as resp:
+        doc=json.loads(resp.read(1_500_000))
     result=[]
-    for page in doc.get('query',{}).get('pages',{}).values():
-        info=(page.get('imageinfo') or [{}])[0]
-        if not info.get('url') or not info.get('descriptionurl'):
-            continue
+    for p in doc.get('query',{}).get('pages',{}).values():
+        info=(p.get('imageinfo') or [{}])[0]
+        if not info.get('url') or not info.get('descriptionurl'):continue
         meta=info.get('extmetadata') or {}
-        license_info={key:meta.get(key,{}).get('value') for key in ('LicenseShortName','LicenseUrl','UsageTerms')}
-        result.append({'title':page.get('title'), 'source_page_url':info['descriptionurl'],
-             'image_url':info['url'], 'thumbnail_url':None,'publisher':'Wikimedia Commons',
-             'license_metadata_unverified':license_info,'license':'unverified',
-             'status':'candidate','provider':'commons'})
+        result.append({'title':p.get('title'), 'source_page_url':info['descriptionurl'],
+            'image_url':info['url'],'thumbnail_url':None,'publisher':'Wikimedia Commons',
+            'license_metadata_unverified':{key:meta.get(key,{}).get('value')
+                for key in ('LicenseShortName','LicenseUrl','UsageTerms')},
+            'license':'unverified','status':'candidate','provider':'commons',
+            'model_verified':False,'source_verified':False})
     return result
 
 
+def openverse_search(query,limit):
+    """Public API metadata only. Cataloged license is NOT automatic reuse approval."""
+    params=urlencode({'q':query,'page_size':str(min(limit,20)),'page':'1'})
+    req=Request('https://api.openverse.org/v1/images/?'+params,
+        headers={'User-Agent':'ThesisDocSuite/1.0 (academic image lead discovery; no downloads)',
+                 'Accept':'application/json'})
+    with urlopen(req,timeout=12) as resp:
+        data=json.loads(resp.read(2_000_000))
+    out=[]
+    for row in data.get('results',[]):
+        if not isinstance(row,dict):continue
+        page=row.get('foreign_landing_url') or row.get('detail_url')
+        media=row.get('url')
+        if not page or not media:continue
+        out.append({'title':row.get('title'),'source_page_url':page,
+            'image_url':media,'thumbnail_url':row.get('thumbnail'),
+            'publisher':row.get('provider') or row.get('source'),
+            'creator_metadata_unverified':row.get('creator'),
+            'license_metadata_unverified':{'license':row.get('license'),
+                'license_version':row.get('license_version'),
+                'license_url':row.get('license_url')},
+            'license':'unverified','status':'candidate','provider':'openverse',
+            'model_verified':False,'source_verified':False})
+    return out
+
+
+def plan_queries(module,engine,limit):
+    # The *only* identifiers in generated queries come from the upstream MD + FACT.
+    # Search modifiers describe image viewpoint; they are NOT project claims.
+    if engine=='commons':
+        return [module, module+' module', module+' board'][:limit]
+    return [module+' full module product photo', module+' breakout board complete product',
+            module+' 官方 模块 整板 实物图'][:limit]
+
+
+def gather(module, provider='auto',limit=6,query=None,max_queries=3):
+    channels=([provider] if provider!='auto' else
+        (['ddgs','openverse','commons'] if importlib.util.find_spec('ddgs') else ['openverse','commons']))
+    attempts=[]; results=[]; seen=set()
+    for engine in channels:
+        if len(results)>=limit:break
+        queries=[query] if query else plan_queries(module,engine,max_queries)
+        for q in queries:
+            if len(results)>=limit:break
+            try:
+                matches=(ddgs_search(q, min(limit-len(results),10)) if engine=='ddgs'
+                         else openverse_search(q,min(limit-len(results),10)) if engine=='openverse'
+                         else commons_search(q,min(limit-len(results),10)))
+                attempts.append({'provider':engine,'query':q,'count':len(matches),'status':'OK'})
+                for cand in matches:
+                    key=cand.get('image_url')
+                    if not key or key in seen:continue
+                    seen.add(key);cand['query_used']=q;results.append(cand)
+            except Exception as e:
+                attempts.append({'provider':engine,'query':q,'count':0,'status':'ERROR',
+                                 'reason':str(e)[:250]})
+        if engine=='ddgs' and not results and provider=='auto':
+            continue
+    return attempts,results[:limit]
+
+
 def main():
-    ap=argparse.ArgumentParser(description='只读搜图，不下载文件，不安装包，不代表图片已核验')
-    ap.add_argument('--root',required=True,help='现有项目资产包根目录')
-    ap.add_argument('--technical-md',required=True,help='正式 project-technical-doc 技术 Markdown')
-    ap.add_argument('--module',required=True,help='技术 MD 与关联 FACT 均出现的精确模块/型号')
-    ap.add_argument('--fact-ids',required=True,help='用逗号分隔的真实 FACT ID')
-    ap.add_argument('--query',help='不填则自动使用模块名+官方整模块实物图；自定义查询必须包含模块原名')
-    ap.add_argument('--provider',choices=('auto','ddgs','commons'),default='auto')
+    ap=argparse.ArgumentParser(description='保守搜索图片候选 URL，不下载文件、不安装软件、不核准授权')
+    ap.add_argument('--root',required=True)
+    ap.add_argument('--technical-md',required=True)
+    ap.add_argument('--module',required=True)
+    ap.add_argument('--fact-ids',required=True)
+    ap.add_argument('--query',help='自定义关键词必须含有已确认的模块原名')
+    ap.add_argument('--provider',choices=('auto','ddgs','openverse','commons'),default='auto')
     ap.add_argument('--limit',type=int,default=6)
+    ap.add_argument('--max-queries',type=int,default=3)
     args=ap.parse_args()
-    if not (1<=args.limit<=15):ap.error('结果上限非法')
+    if not (1<=args.limit<=15 and 1<=args.max_queries<=3):ap.error('结果/查询次数超限')
     try:
-        # Search terms can NEVER be inferred from search results. They must be
-        # explicitly present in the upstream project-technical-doc and FACT.
         from visual_assets import context, technical_md, ALLOWED_FACT_STATES
         root,_,_,_,facts=context(args.root)
         md=technical_md(root,args.technical_md)
         module=args.module.strip()
         if len(module)<3 or module.casefold() not in md.read_text('utf-8-sig').casefold():
-            raise ValueError('搜索模块未出现在 project-technical-doc 的正式技术 MD 中')
-        ids=[x.strip() for x in args.fact_ids.split(',') if x.strip()]
-        if not ids or any(x not in facts or facts[x].get('status') not in ALLOWED_FACT_STATES for x in ids):
-            raise ValueError('搜索必须绑定可核验的真实 FACT ID')
-        if not any(module.casefold() in facts[x].get('statement','').casefold() for x in ids):
-            raise ValueError('关联 FACT 中未出现对应模块/型号，拒绝查询无事实依据的图片')
-        query=args.query.strip() if args.query else module+' 官方 整体 模块 实物图'
-        if module.casefold() not in query.casefold():
-            raise ValueError('图片搜索关键词必须包含已确认模块或型号原名')
-        engine=args.provider
-        if engine=='auto':engine='ddgs' if importlib.util.find_spec('ddgs') else 'commons'
-        results=ddgs_search(query,args.limit) if engine=='ddgs' else commons_search(query,args.limit)
-        print(json.dumps({'status':'CANDIDATES','provider':engine,'query':query,'module':module,'fact_ids':ids,
-             'downloaded':0,'installed_packages':0,'results':results,
-             'warning':'搜索结果仅是候选；须打开来源页、目视确认完整模块、验证许可后才能另行入库。'},ensure_ascii=False,indent=2))
+            raise ValueError('检索对象必须确实出现在正式技术 MD 中')
+        ids=[i.strip() for i in args.fact_ids.split(',') if i.strip()]
+        if not ids or any(fid not in facts or facts[fid].get('status') not in ALLOWED_FACT_STATES for fid in ids):
+            raise ValueError('检索必须关联非 unverified 的 FACT ID')
+        if not any(module.casefold() in facts[i].get('statement','').casefold() for i in ids):
+            raise ValueError('关联的 FACT 未出现该对象，无法验证目标模块')
+        if args.query and module.casefold() not in args.query.casefold():
+            raise ValueError('自定义搜索词必须保留已确认的模块名称')
+        attempts, results=gather(module,args.provider,args.limit,args.query,args.max_queries)
+        status='CANDIDATES' if results else 'WARN'
+        print(json.dumps({'status':status,'module':module,'fact_ids':ids,
+            'attempts':attempts,'downloaded':0,'installed_packages':0,
+            'results':results,'notice':'这里只得到搜索线索。项目实物型号、完整主体、原图和版权须分别核实；不要用相似板卡冒充项目硬件。'},
+            ensure_ascii=False,indent=2))
+        return 0
     except Exception as ex:
-        print(json.dumps({'status':'WARN','downloaded':0,'installed_packages':0,'reason':str(ex),
-              'suggestion':'使用现有 Claude Code WebSearch/WebFetch 或已连接浏览器核查来源；不要自动安装依赖。'},ensure_ascii=False),file=sys.stderr)
+        print(json.dumps({'status':'WARN','reason':str(ex),'downloaded':0,
+            'installed_packages':0,'results':[],
+            'suggestion':'利用已有 WebSearch/浏览器继续找来源；本程序绝不安装额外包。'},
+            ensure_ascii=False),file=sys.stderr)
         return 2
-    return 0
 
 if __name__=='__main__':sys.exit(main())

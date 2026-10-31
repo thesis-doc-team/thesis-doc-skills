@@ -1,193 +1,186 @@
 ---
 name: technical-visual-assets
-version: 0.3.0
+version: 1.1.0
 disable-model-invocation: true
-description: 只基于 project-technical-doc 的正式技术 Markdown 与同项目 FACT-xxx，建立系统框架图、功能架构图、关键流程图、核心模块完整实物图四类真实可追溯的视觉资产；按准确型号在线搜索官网、CSDN、百度等原始来源并核验，按用户提供的五张正反例识别完整功能对象与裸芯片、局部组件、芯片内部框图的区别，不使用局部元件或意义不明图片；禁止自动安装软件包和下载无关文件，不改业务 Word 文档。
+description: 毕业设计公共视觉素材 Skill；只依据 project-technical-doc 正式 Markdown 及同项目 FACT-xxx，主动整理系统总体框架、功能架构、核心流程与完整硬件模块实物图。优先复用 Mermaid 和原图，从可证实 ASCII 关系生成缺少的图表；模块照片按完整主体/准确型号/来源许可逐张核验，官网、Bing、百度、CSDN 等仅作候选线索；按 VIS 稳定 ID 管理图片。禁止擅自安装软件、下载无关文件、虚构技术事实或修改业务 Word 文档。
 ---
 
-# technical-visual-assets | 技术图示与模块实物图公共 Skill
+# technical-visual-assets v1.1.0 — 真实技术视觉资产公共 Skill
 
-## 0. 执行范围与红线（必须先读）
+## 0. 唯一任务与直接执行原则
 
-本 Skill 只负责**识别技术图需求 → 复用原技术图 → 查找完整模块照片 → 验证 → 分类 → 持久资产登记 → 覆盖检查**。不写任务书/开题报告/文献综述/中期检查/指导记录正文，不修改官方模板，不执行 DOCX 插图，不修改 6 个业务 Skill。其他 Skill 负责最终“适当位置放适当图片”。
+**本 Skill 独立完成：从已写好的技术文档认知项目 → 主动补齐有事实依据的技术图 → 检索准确完整的实物图片 → 查验与登记 → 输出四类图片清单及缺口。**
 
-**选图前的必读资料**：`references/image-selection-examples.md`（用户真实提供的前 3 张反例、后 2 张正例；包含图片本体与判断依据）。涉及模块/电机/传感器实物图时，必须实际查看五张案例，而不是仅阅读文件名或自动相信搜索标题。
+用户已有技术 MD 时，**直接启动全链路**，不要反复要求重写技术文档、逐阶段追问或只给开发建议。已有条件能完成的立即完成；不可完成的节点准确报告缺口，不造假。
 
-**不可突破的要求：**
+- 技术内容唯一上游：`<PROJECT_ROOT>/deliverables/technical-document/` 下 `project-technical-doc` 的**正式最终 Markdown**，以及同项目 `<PROJECT_ROOT>/project-assets/facts.json` 的 `FACT-xxx`。`implemented / declared / proposed / unverified` 状态必须如实保留。
+- 用户输入只能选择项目根目录与技术 MD、批准本轮行为，不允许来自网上图片的内容反向补造项目事实；网络网页只证明候选图片/产品信息，**不能证明本项目使用了该型号板卡或实测成功**。
+- 本 Skill 不创建六类业务 Word 文书、不修改官方模板、不修改 `project-technical-doc` 的正式 MD/HTML、不替业务 Skill 执行 DOCX 插图。各业务 Skill 后续根据官方模板自行选择是否插图。
+- 一个项目一个资产包：共享事实 `project-assets/`；本 Skill 的图片长期资产为 `project-assets/visual-assets/`；中间文件只在 `.skill-tmp/technical-visual-assets/<run-id>/`；保留历史、不覆盖。
+- **最小引入绝对规则**：不得执行 `pip install`、`npm install`、`npx` 拉包、浏览器/驱动/模型安装、`git clone` 任意网络仓库，不得自动下载 PDF、文档、脚本、压缩包、软件或无关图片。可调用已存在的 Python 标准库和既有 Claude Code 网络工具；DDGS 仅当本机已安装才尝试。不安装也应能做信息分析和普通图形绘制。
 
-1. **技术事实只来自上游**：`<PROJECT_ROOT>/deliverables/technical-document/` 中由 `project-technical-doc` 生成的最终技术 MD，和同项目 `project-assets/facts.json` 的 `FACT-xxx`。技术事实中的型号、模块组成、功能、接口、流程、已实现状态只能来自它们。网络页面、CSDN、百度、器件厂商资料**只能核对外部图片及其所描绘的设备**，不能将网上找到的新模块反向添加为“本项目使用/实现的模块”。缺少技术 MD 时 BLOCK；同项目事实冲突时 BLOCK 相关素材。
-2. **四类必检**：①系统框架/总体架构图 `system-framework`；②功能架构/功能模块关系图 `functional-architecture`；③具有真实步骤/分支/数据关系的关键流程图 `flowchart`；④每个**已确认核心硬件模块**的整体实物图 `module-photo`。四类**分别检查，不得互相冒充**。仅允许真实项目支持的图；缺失须标记 MISSING / 待补证据，不得“凑图”。纯软件项目的硬件照片可单独报告 N/A，但禁止伪造硬件。
-3. **图片主体要完整且对象层级正确**：模块实物图必须清晰显示**整个对应功能模块/开发板/传感器模组/整机单元（例如完整步进电机）**，且能核对准确型号/版本/厂家和主体是否真实。**单张电阻、电容、裸芯片封装、芯片引脚局部、PCB 某角、无关配件、芯片内部功能框图、教程装饰图、广告、截断/模糊图、只有背景的照片，不能充当模块实物图**。完整电机虽然是单一器件，但作为独立执行器整体是合格的实物图层级；整块传感器小板是合格的传感器模组层级。透明/白底不是拒绝理由。例如技术 MD 只说明使用 STM32F407 主控芯片，不得直接用另一型号 STM32 开发板照片来冒充项目的开发板；未确认实际板型时可找准确芯片的**官方完整产品封装图**并标注“芯片产品图（非项目实拍）”，但是否足以满足模块实物图需按真实模块定义审核。
-4. **严格最小引入**：只使用当前 Claude Code **已经可用**的 WebSearch/WebFetch/浏览器能力和本插件既有渲染程序、Python 标准库。**绝对不执行 `pip install`、`npm install`、`npx` 自动拉包、`apt install`、`brew install`、下载模型权重、爬虫框架或插件安装**。DDGS 仅当用户环境**已安装**时可选调用；没有就用现有搜索能力或标准库 Commons API；完全不可用如实 WARN，不得自动补环境。
-5. **外部检索 ≠ 自动下载**：先搜索并检查原始来源/许可；`search_candidates.py` 只返回候选 URL，不下载文件。只有当前用户明确允许“保存该图”时，才允许下载**选中的图片文件**到当前项目受控运行区，并在调用 `download_selected_image.py` 时显式提供 `--allow-image-download`。不得下载其他文档、PDF、压缩包、脚本、未知文件或整个网页资产包；不得绕过验证码、登录、版权和访问限制。
-6. **授权与事实分开核验**：图片在网上真实存在不等于技术型号正确，也不代表允许复用或公开论文转载。未经确认的保留候选，不得标记 `approved`。禁止假装看过图片、查过原网址或获得授权。
-7. **只写项目资产**：一个项目 = `project-assets/` 数据 + `deliverables/` 成品 + `.skill-tmp/` 运行；不修改上游技术 MD、原始图片、六个业务 Skill、官方模板，也不保存到插件安装目录。保留资产版本与审计。
+**首轮默认：允许网络检索候选元数据，不授权下载图像文件。** 网络图像只有用户针对本轮明确要求“下载/保存图片”才可受控下载、审核；单纯执行 Skill、希望“找图”不等于允许下载。
 
-## 1. 输入与前置检查
+## 1. 必要输入与核验门槛
 
-必须有：
-- 当前项目绝对路径 `<PROJECT_ROOT>`、同项目有效 `project_id`。
-- `project-technical-doc` 完成的正式技术 MD 的明确文件路径（若有 v1/v2，按用户/项目确认版本选择，不凭修改时间猜）。
-- `<PROJECT_ROOT>/project-assets/project.json` 和 `facts.json`。
+- `<PROJECT_ROOT>` 是用户明确指定的项目根目录，已初始化 `project-assets/project.json`。必须校验 `schema_version = 1`、`project_id` 与 `facts.json` 的项目归属一致。
+- `<TECH_MD>` 是上述目录下**已生成并确定版本**的技术 MD；不能读取别的项目、网上通用模板或 AI 编造的伪技术文档替代。
+- `facts.json` 中确有与图对应的 `FACT-xxx`。未入库的技术推断不可替代事实。若项目已有 MD 但部分 FACT 缺失：先保留图形候选与待核验关系，需上游补齐 FACT 后才可批准；不得擅自将推断写成已实现。
+- 逐项记录文档路径、SHA-256、章节/行号、`FACT ID` 与事实状态。上游修改后相应图片必须重新复核，不得静默沿用旧的 `approved`。
 
-可选：联网工具、已安装 DDGS、原有 Mermaid CLI/Graphviz、上游 MD 引用的本地图像。**这些是可选能力，不允许因此擅自安装依赖。**
+## 2. 必须覆盖的 4 类技术图（不是“找几张图片就算完事”）
 
-入场检查：
-1. 运行公共 `core/asset-management/project_assets.py status` 或读取同一项目资产；确认 `schema_version=1` 和一致的 `project_id`。
-2. 读取最终技术 MD 的章节、`FACT-xxx`、Mermaid 与已有图片引用；保存 MD SHA-256、行号与章节。
-3. 仅从这些资料整理**受证据约束的视觉需求表**：图类别、图要说明什么、相关模块、准确型号、FACT ID、事实状态和来源定位。
-4. 严格区分**整机/系统**、**功能模块**、**模块整板**、**单个器件/PCB 元件**的层次，不能把物理器件列表当作功能架构图，也不能把一张器件照片当成系统框架图。
-
-`implemented` 有实现证据；`declared` 是资料声明；`proposed` 是方案；`unverified` 不可作为已审核正式图的事实依据。任一外部网页不得提升这些状态。
-
-## 2. 四类视觉资产的判断标准与五张实图对照
-
-| 类型 | 必须说明的内容 | 合格形式 | 一律不合格的替代品 |
+| 类型 | 需要展示的真实内容 | 优先成图路径 | 禁止的替代品 |
 |---|---|---|---|
-| 系统框架图 | 项目主要层次、真实子系统、接口和数据/控制边界 | 结构框图、系统拓扑、已核验的 Mermaid/SVG | 单个开发板产品照、无来源的通用物联网架构图 |
-| 功能架构图 | 功能分组、从属关系与各功能职责 | 功能树、功能模块关系图、按真实需求绘制的框图 | 硬件 BOM 列表、随意连接的功能卡片、系统框架图直接改名 |
-| 关键流程图 | 起点→实际步骤/分支→结果，符合执行/交互/数据先后顺序 | 可编辑 Mermaid + 正确渲染的 SVG；已有合格图优先 | 缺失真实分支的套话流程、无语义箭头和装饰图 |
-| 模块实物图 | 核心实体模块的完整外观；型号/版本/供应商是否匹配 | 原厂产品整图、项目自有完整实拍（如确实存在） | 单个电阻/电容、局部引脚、同系列但不同型号、教程图、不清楚的缩略图 |
+| `system-framework` 系统总体框架 | 系统边界、硬件/软件/通信主要子系统、**有证据的**连接和数据边界 | 复用 MD → ASCII 严格关系转换 → 人工核对后绘制 Mermaid | 一张芯片内部资源框图、单独主控板照片 |
+| `functional-architecture` 功能架构 | 项目功能树/功能域、子功能与层级关系 | 复用功能树 → ASCII 转换 → 按事实新建功能图 | 把硬件型号清单改名为功能架构 |
+| `flowchart` 核心流程 | 真正的启动/采集/决策/通信/异常处理等步骤、分支与顺序 | 复用技术 MD 的 Mermaid；按明确节点和箭头补图 | 空泛“开始→处理→结束”装饰图 |
+| `module-photo` 模块整体实物图 | 每一个**真正核心**硬件功能单元的整体外观，准确型号/板型/版本与真实层级匹配 | 官方/分销商/公开资料原图线索 → 逐图目视核验 | 裸传感器 IC、板上电阻、局部零件、芯片内部框图、错型号板卡 |
 
-**用户五张图片的判例**（必须打开 `references/image-selection-examples.md` 中的图片对照）：反例①裸传感器芯片封装、反例②孤立小部件特写、反例③ MCU 内部资源框图——这三张**不能**代替当前项目的完整模块实物图/系统或功能架构；正例④整台步进电机外观、正例⑤整块传感器 PCB 模组——两张符合用户期望的**整体主体层级**。但正例也必须匹配当前项目实际型号及复用许可，不能直接放入任意项目。第三张在准确芯片型号且文档需要“芯片内部功能框图”时可能有别的合法用途，不得将其一概判为无用。
+四类单独审核。**一图一主类别**：不能把系统框图同时记为功能图或流程图凑覆盖率；同一图可在多个文书中引用，但不能刷类别完成度。纯软件项目没有核心硬件的情况标记 `N/A` 并写依据，不能强造模块照片。
 
-关键规则：
-- **一图一主目的**，不得同一张图同时记为系统框架、功能架构、流程图来满足覆盖率。图可在多个文档中复用，但不得跨类别刷数。
-- 系统框架/功能架构/流程图原则上先复用最终技术 MD 中的 Mermaid 或已引用本地图；确需新图时只用真实 FACT+MD 内容绘制、生成可编辑 `.mmd`，经审核和渲染后入库。不能联网找一张与项目不一致的通用技术图冒充自研架构。
-- “模块”是能独立承担功能的系统组成，如通信模组、驱动板、传感器模组、主控板、工业终端，而不是任意元器件。若项目实际上就是单个电子元件的设计研究，应按真实项目情况标注产品整体图，不得强行套“模组”说法。
-- 硬件很多时，只为**技术 MD/FACT 已确认且与正文有关的核心模块**登记查图任务；无需给每个电阻或每个引脚找图，不为数量制造工作。
-- 若无法确认精确模块/板型，不以近似型号冒充；标记 `MISSING` 并说明缺少型号或实物证据。
+### 2.1 用户五张正反例是硬性判例
 
-## 3. 工作流（固定）
+开始筛选实物照前，**必须阅读** `references/image-selection-examples.md` 并实际查看 `assets/image-selection-examples/` 内五张用户图片：
 
-### 阶段 A：真实识别与需求覆盖
+- **反例 1**：只有 SH4X 裸芯片封装，即使名称相符，也不是“完整 SHT40 功能模块实物照”。
+- **反例 2**：孤立小部件（无法证明其为目标完整功能单元），不合格。
+- **反例 3**：MCU 内部存储/接口资源框图，不是项目级系统架构、功能架构或板卡实物照。准确芯片的内部原理说明任务可另用，但不计入本四类。
+- **正例 4**：完整步进电机（外壳、输出轴、主体清晰可见），主体层级合格；但仍必须核对具体型号。
+- **正例 5**：完整的传感器 PCB 小板/模组（整板、接脚、元件关系可见），主体层级合格；图中若出现多个板型必须选对真实版本。
 
-1. 从已确认技术 MD 抽取系统边界、功能层次、主要业务流程及物理模块清单；每个结论关联 FACT-xxx。
-2. 现有图优先：`scan-md` 发现 Mermaid 和 MD 本地图片引用；此操作只登记**候选**，自动提示类别仅供参考，不能免人工检查。
-3. 为每一个需要实物图的**核心模块**调用 `scope-module`，写入名称、FACT IDs、准确型号与为何属于核心模块；不允许范围泛化到电阻等小元件。
-4. 输出“四类素材需求与缺口”：系统框架、功能架构、关键流程、每个核心模块完整实物照。先检查当前索引是否已有合格资产；不满足才开始补全。
+合格强调**有意义的完整功能对象**，而不是“拍到了关键词”。单件电机可以是完整执行器；单颗传感器芯片若只是板上的元件，就不能冒充功能模块。透明底/白底可接受，不能因样式拒绝；模糊、截断、广告、水印、非主体配件不合格。
 
-### 阶段 B：复用与绘制图表（不安装绘图包）
+### 2.2 模块识别层级
 
-1. 逐图查看原 Markdown 中 Mermaid 的章节、节点、箭头和语义是否正确，与事实状态一致。
-2. 借用已经存在的 `skills/project-technical-doc/scripts/diagram_svg.py` 渲染，优先使用**已经安装**的 `mmdc`，否则若 Graphviz `dot` 已存在则走其受限回退；**不允许安装**。不支持的 Mermaid 语法保存 `.mmd` 并 WARN；不生成假 SVG。
-3. 若 MD 缺少四类中的某种结构图、但已具备足够真实事实，允许本 Skill 根据真实 MD + FACT **新增独立技术示意图候选**（不回写 MD）。必须带准确节点、关系、图注、源事实映射，不允许补虚构节点；先产生 `.mmd` 再按现有渲染器真实渲染。新增图的人工确认和版本持久化规则必须与原图一致。
-4. 系统框架图和功能架构图须分别审查表达层次是否正确，不能仅修改标题后重复使用一张图。
+先创建审阅表：`技术MD原名 | 系统角色 | 完整目标层级（设备/模组/整板/仅芯片）| FACT ID | 型号证据 | 图片必须展示的范围`。
 
-### 阶段 C：网络模块实物图查找（先核准检索对象层级，仅真实模块）
+- 确认完整模块/板卡型号时，优先找同型号完整实物图。
+- 若只确认“STM32F103 芯片”而未确认开发板或核心板，**不能挑一块 STM32F103C8T6 小板说项目用了它**。可保留“同类开发板示意/仅供参考”，但不能批准为该项目的 `module-photo`。
+- 若只确认 SHT40 裸芯片，不要为了凑图强找某品牌 SHT40 breakout 小板冒充项目模块。此时正确结果是“板型待确认，缺真实整体照片”。
+- 代表性照片与实际设备照片必须分开标记：`exact-project-module / reference-only / model-unknown`。**reference-only 永不计入正式模块照覆盖率**。
+- 例如 SIM900A 与“4G DTU”同时出现在 MD，应先反馈上游核对二者是否为不同模块；不得根据网络信息直接篡改上游事实。
 
-每个核心模块单独检索。先从技术 MD 和 FACT 提取**真实完整型号/板型/厂家**，再生成准确中英文查询。
+## 3. 主动执行的完整流程
 
-**搜图前必须建立正确的“目标对象”认知**：先写出本项目需要的是「整套功能模组/PCB 整板」「完整独立执行器（电机等）」「完整控制板/通信模块」还是「芯片/零件本体」。**不要看到型号关键词就把搜索结果第一张芯片封装图当成传感器模块**。若 MD 只确认芯片型号而未确认板型，不能自动确定一块网售 breakout board 就是实际模块；标注缺证据。
+### A. 先识别，不直接搜图
 
-对照用户五张实例：
-- **反例 1**：只拍裸传感器芯片封装，没有整个传感器模块/PCB/接口，淘汰作为模块实物图。
-- **反例 2**：只拍一个小型孤立配件，无法证明是目标完整模块，淘汰。
-- **反例 3**：展示 MCU/芯片内部功能模块，不是项目整体系统框架、功能架构，也不是模块产品外观，不能用来满足四类覆盖；对准确芯片的专门内部框图任务可另行考虑。
-- **正例 1**：完整步进电机，输出轴、壳体、连接接口等主体清楚，是合理的完整执行器照片形态。
-- **正例 2**：整块传感器模组/小板（图片中有多个完整板卡）；能看见整体 PCB、引脚/焊盘和模块构造，是合理的整模组照片形态。实际应用仍须确认具体板卡版本，不能混用图中不同变体。
+1. 运行 `scripts/plan_visuals.py` 或等价只读分析：识别技术 MD 章节、Mermaid、ASCII 树/箭头的证据行号和可用 `FACT-xxx`。
+2. `visual_assets.py scan-md` 提取已存在 Mermaid 和本地图片到候选库。**图仅是候选，不能凭名字批准。**
+3. 依据事实识别**核心**硬件功能单元，按需用 `scope-module` 登记查图目标；元器件清单中的电阻/电容/局部附件不是模块查图清单。
+4. 运行 `coverage` 初检，列出 `system-framework / functional-architecture / flowchart / module-photo` 的真实缺口。
 
-执行 `scope-module` 前，把每个对象写成「原文名称｜完整目标层级｜核心功能｜已确认型号｜证据 FACT｜期望图片完整范围」，没有证据的对象不得查图充数。
+### B. 优先补全本地技术图，无需联网或安装
 
-检索顺序：
-1. 厂家官网的型号产品页、规格书关联媒体图（优先“整板/整模组”官方产品图）。
-2. 公开可验证的专业分销商产品页及官方授权媒体。
-3. CSDN、百度图片、Bing 等第三方搜索用于**发现线索**，须点击溯源到图片原始页面，不能以百度缩略图或 CSDN 的不明转载作为授权证据。
-4. 可用开放许可图片资源如 Wikimedia Commons，但仍需核对准确型号、作者和单文件许可。
+1. 检查已存在 Mermaid 是否能对应真实架构、功能、流程。与 MD/FACT 不一致的不能批准。
+2. 如果系统框架/功能架构只存在 ASCII（如 `├──` 功能树或有明确箭头的文本链），**不要直接报告必须重跑上游**：依据行号运行 `draft-from-ascii` 生成候选 Mermaid。先核对根节点、父子关系和方向；无充分证据的连线不得添加。
+3. 如果 ASCII 混合、没有明确箭头、关系歧义或无法可靠转换：依据已证实的段落+FACT 写一个可编辑 `.mmd` 草稿，使用 `add-diagram` 登记；只有节点/连线都能对应事实时才可审查通过。没有证据就报告缺口。
+4. `render` 优先复用项目已存在的 Mermaid 渲染器及本机 `mmdc/dot`；**如果没有这些程序，内置 `svg_fallback.py` 使用 Python 标准库渲染简单 DAG 流程图**。复杂语法、环路、长标签或布局不可靠则 WARN，绝不伪称渲染成功。
+5. 必须保存 `.mmd` 原始源代码与可显示 `.svg`。对每张图进行实际目视检查：是否完整、文字是否被遮挡、箭头是否清楚、节点是否与事实对应。批准前写明 `visual-evidence` 和 FACT。**仅程序生成 SVG 不表示技术审核完成**。
+6. 系统框架与功能架构**必须分开判断**，不能给一张图换个标题当两张。
 
-**可用工具顺序**：Claude Code 当前已有的 WebSearch/WebFetch/浏览器 → `scripts/search_candidates.py`（已安装 DDGS 时可使用；否则仅 Python 标准库 Wikimedia Commons API）→ 网络不可用时 WARN。不得擅自装 DDGS/Playwright/Crawl4AI 或调用 `npx` 拉取 MCP。
+### C. 多渠道联网搜核心模块实物图（不下载）
 
-对每个候选逐个核对：
-- `subject_is_whole_module`：完整设备、完整电机、整板、整模组是否可见？仅裸芯片、孤立零件、板上电阻、局部电路或芯片内部框图，**淘汰作为模块实物图**。
-- `exact_model_match`：厂商/完整型号/板卡修订版可证实吗？系列相似图或型号不符，**淘汰**。
-- `image_is_explanatory`：清楚展示模块本体且能说明对应技术内容吗？只有外包装、配套线材或无关场景，**淘汰**。
-- `source_is_real`：实际访问原网页和原图了吗？只看到搜索摘要，**候选未核实**。
-- `rights_are_known`：有可定位许可证、授权声明或权利人许可吗？不明确则 `unverified`，不得当作可公开发表的插图。
+1. 仅从 MD 和 FACT 生成查询词：真实名称、厂家、准确型号、目标层级（whole module/complete board/full stepper motor）以及“整板/实物/完整模块”。**不把来源网页发现的新型号添加到上游技术事实**。
+2. 按证据优先级使用：**原厂产品/型号页面 → 正规元器件分销商页面 → 公开图片平台 → 百度/CSDN/Bing 等搜索线索**。百度/CSDN 的搜索缩略图需要回到原网页核验，不能仅靠标题批准。
+3. 如果 Claude Code 已具备 WebSearch/WebFetch/浏览器，使用现有能力；遇网络策略拦截，不得绕过验证码/登录/反爬。`search_candidates.py --provider auto` 先使用当前 Python 已安装的 DDGS；否则/之后尝试**Python 标准库** Openverse、Wikimedia Commons 图片元数据 API。两个公共渠道覆盖精确硬件型号可能有限；结果为 0 就如实报告。
+4. 每个候选记录：`title / precise_model / target_object_level / source_page_url / original_image_url / publisher / author / license_evidence / actual_viewed / fact_ids / decision`。若仅搜到搜索摘要，标为线索，**不可声称已经看到图片**。
+5. **主体检查**：是否展示完整电机/整板/完整模组，还是裸芯片、局部元件、芯片内部框图？**型号检查**：厂商、完整型号、版本/板型、外观是否一致？**说明价值**：是不是读者能看懂的真实整体部件？不满足任何一个则淘汰作正式 `module-photo`。
+6. 图片版权与型号分开审查；网络上有图不等于允许公开转载。无可核对许可则保持 `candidate`，不得标记 `approved`。第三方的 CC 元数据也必须回到原页面核对，并按许可署名。
+7. **有效探索，而非机械重试**：一种引擎失效后使用另一种已有渠道；不要把 Bing 无关噪声或百度反爬结果当作成功。对仅有芯片型号但无板型的模块，报告缺少的事实字段，允许保留“reference-only”线索但不计覆盖。
 
-**禁止**“搜到几张就算完成”。当只有无关/局部图，返回 `MISSING` 并继续尝试其他已有检索渠道；没有合格图就诚实报告，而非拼凑一张电阻照片。
+### D. 保存、审核与共享（仅已授权图片）
 
-### 阶段 D：可控保存与审核登记
+- 用户明确同意**本轮保存指定图像**后，方可 `workdir` → `download_selected_image.py --allow-image-download` **单张**下载 PNG/JPEG/WEBP 到受控运行区（脚本不装任何依赖），然后 `add-external` 复制到 `project-assets/visual-assets/images/` 候选库；不下载任何其他网络文件。不要自动批量下载。
+- `review` 对每张可用图片分别绑定 `FACT-xxx`、实际观察说明、确切主体层级、原始来源和复用权限。外部图必须提供 `--source-checked-at --checked-by --model-evidence --permission-evidence --subject-level --full-module-confirmed`；缺任何可信依据就保持未批准。
+- 一个 `VIS-...` 资产一个真实主类别；批准图形时还须确认渲染文件已生成，批准模块图需确认尺寸/整体主体。审计信息写入 `project-assets/activity.jsonl`；引用来源须保存可回查 URL。
+- 执行后 `verify` 和 `coverage`：已有正式图片与“仅候选/型号待核/授权待核/不适用”分开；不要强迫所有类别 PASS。**只有真实且经过审核的资源才能供下游文书使用。**
+- 结束时只清理本人创建的 `.skill-tmp/technical-visual-assets/<run-id>`，不能清理用户原文件、其它 Skill 运行目录或任何历史 `VIS` 资产。
 
-1. 搜索阶段只查看链接和必要页面内容，不自动保存任何无关文件。必要时使用 `search_candidates.py` 的只读候选结果；不得以搜索摘要代替逐图查看。
-2. 当前任务**明确允许下载/保存图片时**，在核对原图 URL 后先创建 `workdir`，使用已有浏览器下载能力，或使用**需要显式 `--allow-image-download`** 的安全脚本，仅抓一张选中的 PNG/JPG/WEBP 到该运行区；不下载其他格式或依赖。
-3. `add-external` 检查真实文件头、项目 MD 中的模块名、原始来源页面 URL 与图片 URL，保存为候选。不得把一张局部电阻图改名为“模块实物图”通过检查。
-4. 模型必须**实际查看图片**才能执行 `review --approve`，明确确认四类之一、技术事实 IDs、图形内容说明。对于模块实物图，只有完整主体经核实才传 `--full-module-confirmed --subject-level complete-device|complete-module|complete-board`，同时写明识别依据；这是审核声明，不是程序自动视觉识别的证明。
-5. 外部候选必须还要有真实的来源核验日期、核验人、许可及复用依据才能批准。无法获取许可则保留候选。避免把“教学/内部研究可看”错误等同于“公开发表可转载”。
-6. 所有临时文件执行后安全清理；正式索引和已批准图片、可编辑 Mermaid、历史版本**绝不删除**。
+## 4. CLI 速查（全部使用现有 Python，不安装新包）
 
-### 阶段 E：四类覆盖与交付
+从 `thesis-doc-suite/` 插件根执行；Windows 为例，尖括号表示真实路径占位：
 
-执行 `coverage` 和 `verify`。**只有**系统框架、功能架构、流程图及每个登记的核心硬件模块都存在对应合格且批准资产时，覆盖状态才为 `PASS`。若某类别没有足够事实、工具或许可，必须如实输出 `INCOMPLETE` 和缺失原因，不能强行补图。
+```powershell
+# 只读发现 MD 中的图示/ASCII/FACT（不会下载或创建资产）
+python skills/technical-visual-assets/scripts/plan_visuals.py --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>"
 
-交付：资产索引 `VIS-xxx`、可编辑 `.mmd`/SVG、实物图片（已获合法保存权限的）、每图的 FACT 链接和原始来源/许可、完整性/缺口报告。下游业务 Skill 在模板允许时自行决定插图和图注，本 Skill **不负责插图**。
+# 将 MD 已有 Mermaid/本地图登记为候选（不会联网）
+python skills/technical-visual-assets/scripts/visual_assets.py scan-md --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>"
 
-## 4. 现有 CLI（仅 Python 标准库，不调用安装器）
+# 如果原文第62至82行是事实明确的功能树/箭头段，可以直接生候选（先核对真正行号）
+python skills/technical-visual-assets/scripts/visual_assets.py draft-from-ascii --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>" --category functional-architecture --start-line 62 --end-line 82 --title "功能架构图" --fact-ids FACT-001 --reason "对应技术MD及FACT真实关系"
 
-从插件目录或使用绝对路径调用：
+# 对没有可安全自动转换 ASCII 的结构，手写经事实核对的 Mermaid 源稿再登记
+python skills/technical-visual-assets/scripts/visual_assets.py add-diagram --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>" --file "<临时源稿.mmd>" --title "系统总体框架图" --category system-framework --fact-ids FACT-001 --reason "节点连线均来自技术MD与FACT"
 
-```bash
-# 发现已有 Mermaid 与 MD 中的本地图像引用（只登记候选）
-python skills/technical-visual-assets/scripts/visual_assets.py scan-md --root "<PROJECT_ROOT>" --technical-md "<PROJECT_ROOT>/deliverables/technical-document/项目-技术文档.md"
+# 渲染选中的候选图（先看 list 获得真实 VIS-ID）；自动尝试零依赖 SVG 回退
+python skills/technical-visual-assets/scripts/visual_assets.py render --root "<PROJECT_ROOT>" --id VIS-真实ID
 
-# 将实际确认的核心模块登记为“需要整模块实物图”的任务
-python skills/technical-visual-assets/scripts/visual_assets.py scope-module --root "<PROJECT_ROOT>" --technical-md "<PROJECT_ROOT>/deliverables/technical-document/项目-技术文档.md" --module "<来自MD的真实模块名称>" --fact-ids FACT-001 --reason "核心主控模块，技术文档第3章"
+# 渲染后必做：SVG 自检 + 按真实尺寸出验收预览 PNG（禁止固定画布截图制造空白）
+python skills/technical-visual-assets/scripts/visual_assets.py preview --root "<PROJECT_ROOT>" --id VIS-真实ID --run-id "<真实run-id>"
 
-# 如果现有技术 MD 缺少某一类图，先核实 FACT，自己写可编辑 Mermaid 候选（不修改技术 MD）
-python skills/technical-visual-assets/scripts/visual_assets.py add-diagram --root "<PROJECT_ROOT>" --file "<本轮运行区>/new-framework.mmd" --technical-md "<正式技术MD>" --title "系统总体框架图" --category system-framework --fact-ids FACT-001,FACT-002 --reason "节点与关系分别来自技术文档及事实登记"
+# 登记完整实体模块检索目标，不能登记没有上游事实的板卡
+python skills/technical-visual-assets/scripts/visual_assets.py scope-module --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>" --module "<技术MD中的真实模块名>" --fact-ids FACT-001 --reason "核心硬件功能单元"
 
-# 复用已有 Mermaid SVG 渲染器；缺少已安装的引擎只保留源码并报告
-python skills/technical-visual-assets/scripts/visual_assets.py render --root "<PROJECT_ROOT>" --id VIS-XXXXXXXXXXXX
+# 搜索 URL 元数据，默认 DDGS(已安装时) → Openverse → Commons，绝不下载图
+python skills/technical-visual-assets/scripts/search_candidates.py --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>" --module "<技术MD中的真实模块名>" --fact-ids FACT-001 --provider auto --limit 6
 
-# 搜索候选：只查链接，绝不安装包、下载图片
-python skills/technical-visual-assets/scripts/search_candidates.py --root "<PROJECT_ROOT>" --technical-md "<正式技术MD>" --module "<准确型号/模块名称>" --fact-ids FACT-001 --provider auto --limit 6
-
-# 明确允许保存候选原图后才可执行下载（不下载 PDF/软件包/脚本）
+# 只有本轮用户明确允许保存指定候选图，才可创建临时运行区并显式下载选中单张图
 python skills/technical-visual-assets/scripts/visual_assets.py workdir --root "<PROJECT_ROOT>"
-python skills/technical-visual-assets/scripts/download_selected_image.py --root "<PROJECT_ROOT>" --run-id "<上一步run-id>" --image-url "https://真实原图地址" --allow-image-download
+python skills/technical-visual-assets/scripts/download_selected_image.py --root "<PROJECT_ROOT>" --run-id "<真实run-id>" --image-url "https://真实选定的图片URL" --allow-image-download
+# 对已保存的图，继续使用 visual_assets.py add-external / review 审核登记（见 references/asset-contract.md）
 
-# 将已经取得且真正核查的图像加入项目候选库
-python skills/technical-visual-assets/scripts/visual_assets.py add-external --root "<PROJECT_ROOT>" --file "<当前运行区中已保存的图片>" --title "<准确图片标题>" --module "<技术MD中的模块原名>" --technical-md "<正式技术MD>" --source-page "https://真实来源页" --image-url "https://真实原图" --author "<实际权利人>" --license "<真实许可证或unknown>"
-
-# 最后逐图审查后批准。图片类型必须分别记录；不要只为了PASS而勾选
-python skills/technical-visual-assets/scripts/visual_assets.py review --root "<PROJECT_ROOT>" --id VIS-XXXXXXXXXXXX --fact-ids FACT-001 --category system-framework --rights owned --reason "<真实审核依据>" --visual-evidence "<至少16字，实际所见主体、框和关系的核验记录>" --approve
-
-# 核查四类覆盖与资产一致性
+python skills/technical-visual-assets/scripts/visual_assets.py list --root "<PROJECT_ROOT>"
 python skills/technical-visual-assets/scripts/visual_assets.py coverage --root "<PROJECT_ROOT>"
 python skills/technical-visual-assets/scripts/visual_assets.py verify --root "<PROJECT_ROOT>"
-python skills/technical-visual-assets/scripts/visual_assets.py list --root "<PROJECT_ROOT>" --approved-only
 ```
 
-外部模块图片的审批还必须提供：`--category module-photo --full-module-confirmed --model-evidence <真实型号核验依据> --source-checked-at <实际日期> --checked-by <实际核验者> --permission-evidence <许可依据> --visual-evidence <观察依据>`，并根据实际许可填写 `--rights`。不得使用示例占位文字充当实际核验结果。
+**不要直接照抄示例行号或 FACT-001**：命令只是格式参考，必须替换成当前项目真实行号和真实关联 FACT。`--rights owned` 等审批声明必须有真实著作权事实，不得默认使用。
 
-`render` 使用的外部命令若不存在，不要补装；`search_candidates.py` 的 `auto` 在已安装 DDGS 时调用 DDGS，否则使用 Commons API（需要网络）。百度/CSDN/官方网页通过现有的网页搜索/浏览器能力调查。没有工具就报告不可用。运行脚本**不会自行安装任何软件**。
-
-**复核记录范例（示意格式，不得拿示例填真实审计）：** `目标=完整步进电机｜图中=壳体+轴+接线接口整体｜主体层级=complete-device｜型号=待核验｜判断=结构合格但型号未核验，保持候选`。裸传感器 IC、孤立小部件、芯片内部框图分别作为以上三类**反例**处理，不得复用为“模块整体照”。
-
-**视觉边界说明**：本地脚本只能检查图片格式、大小、元数据与审核字段，不能通过简单规则真正识别照片是否拍了整个电机或模块。审批前由具备视觉能力的 Agent 或用户实际检查图像，并写下具体观察依据。`--full-module-confirmed` 等标志是审核记录，绝不是计算机视觉自动判定。
-
-## 5. 资产目录与契约
+## 5. 已有项目资产契约与系统边界
 
 ```text
 <PROJECT_ROOT>/
 ├── project-assets/
-│   ├── project.json, facts.json, references.json, schedule.json, activity.jsonl
+│   ├── project.json / facts.json / references.json / schedule.json / activity.jsonl
 │   └── visual-assets/
-│       ├── index.json                    # 唯一 VIS 索引、批准状态、来源/许可
-│       ├── requirements.json             # 核心模块范围，须绑定真实 FACT
-│       ├── diagrams/                     # Mermaid/.svg 和 MD 现有本地图副本
-│       └── images/                       # 已授权登记的模块实物图副本
-├── deliverables/technical-document/      # 只读上游正式 MD、HTML
-└── .skill-tmp/technical-visual-assets/<run-id>/  # 受控图片下载临时区
+│       ├── index.json                  # 稳定 VIS-ID、哈希、FACT、版权和来源
+│       ├── requirements.json           # 已核实核心模块清单与待找照片范围
+│       ├── diagrams/                   # 可编辑 .mmd 与有效 SVG、已引用本地图
+│       └── images/                     # 本轮明确授权入库的候选或批准照片
+├── deliverables/technical-document/    # 上游正式技术MD/HTML（严格只读）
+└── .skill-tmp/technical-visual-assets/<run-id>/ # 可清理过程目录
 ```
 
-`visual-assets/` 是兼容原 `schema_version=1` 的新子资产，不把视觉内容硬塞进现有 `core/asset-management/project_assets.py merge --kind`。共用 `.asset-write.lock` 与 `activity.jsonl`；同内容哈希去重，不能静默覆盖批准后的旧资产。详见 `references/asset-contract.md`。
+- 兼容原 `core/contracts/shared-project-assets-contract.md` v1，**不修改**原 `project_assets.py` 的 `KINDS`，复用 `.asset-write.lock` 和 `activity.jsonl`。勿把图像写进插件安装目录。
+- `VIS-...` 每个内容 SHA 稳定去重；已批准旧资产及历史文件不静默覆盖。源 MD SHA 改变时列为重新审阅事项。
+- 所有来源页面和图片 URL 必须真实可回访；原图、候选与最终批准不等价。
 
-## 6. 汇报格式与失败条件
+## 6. 最终一次性执行汇报格式（必须）
 
-每次汇报必须包括：上游 MD 路径与 SHA、`project_id`、本次实际调用的搜索渠道、安装的包数（默认 **0**）、下载的候选图片数、实际核查原网页数、四类覆盖表、核心模块逐一图像匹配结果、批准/待审/缺失、每张图片的 `VIS` ID、图注建议/来源/权限/FACT、存在的不确定项与未执行项目。
+**不要只说“找不到图片”。** 按下列结构提供每一个已经完成、未完成和阻塞的结果：
 
-**FAIL / BLOCK**：没有技术 MD、项目 ID 错、技术 MD 与 FACT 冲突、疑似跨项目数据、故意伪造来源/版权/实拍、下载未授权的文件、执行未经许可的软件安装。
+1. 项目 ID、实际技术 MD 路径/SHA、事实数、被使用的 `FACT-xxx`。
+2. 本轮真实使用的网络搜索渠道、每种结果数、失败原因；安装第三方包数（默认 `0`）、下载图片数（默认 `0`）。
+3. 系统框架图、功能架构图、核心流程图、模块整体实物图四类**逐类** PASS/PENDING/MISSING/N/A；包括新绘可编辑 `.mmd` 和实际渲染 SVG 的文件位置。
+4. 每个核心模块逐项列出：**目标主体/真实型号、FACT、搜索候选 URL、实物图完整性、来源与许可核验、最终 VIS ID 与状态**。
+5. 明确区分通过的图片、仅供参考但不代表本项目的图片、未验证型号的图片、无授权的图片；给出不能批准的确切理由。
+6. 不触碰上游 MD/Word，不改项目事实，没有用户授权绝不下载外部图片；仅在确有可核验资产时登记。
+7. 校验脚本真实运行结果、未完成的环境限制及**用户应该验收的实际图像**。
 
-**WARN / INCOMPLETE**：只有流程图但缺功能架构图、只找到局部电阻照片、网上无法确认精确型号、无明确许可证、已安装图形渲染器不可用、网络工具不可用。遇到缺口不要“拿通用图片填满四类”。
+**严格失败**：缺少当前项目正式技术 MD、跨项目 FACT、伪造来源/授权/测试、未经许可安装软件或下载。**允许 WARN**：网络失效、缺少精确硬件板型、ASCII 语义含糊、图表渲染器不支持复杂语法、未找到可复用授权图片；不得为了提高通过率瞒报。
 
-无实际人工/模型视觉检查，不得宣称“实物主体准确”；无实际联网结果，不得宣称“网上已核验”；自动测试成功不代表插图内容正确。最终人工验收归用户。
+## 7. 按需读取的本地资源
+
+- `references/image-selection-examples.md`：用户五张真实正反例和完整主体判断办法。
+- `assets/image-selection-examples/`：五张用户当次提供的视觉案例，**不代表公开再分发许可**。
+- `references/asset-contract.md`：VIS 索引/审核/项目隔离契约和 CLI 详情。
+- `references/network-image-research.md`：DDGS、Openverse、Commons、搜索工具降级与原图来源审计。
+- `scripts/plan_visuals.py`：只读真实技术需求盘点。
+- `scripts/visual_assets.py`：候选、Mermaid/ASCII、渲染、事实审核、索引、去重和覆盖。
+- `scripts/svg_fallback.py`：仅为安全、简单的有向无环图提供零依赖 SVG 渲染。
+- `scripts/search_candidates.py`：仅检索 URL 元数据；不自动安装任何依赖、不下载图片。
+- `scripts/download_selected_image.py`：用户明确许可的单张 HTTPS 图片受控保存；默认拒绝。
+
+项目最终业务验收属于用户；本 Skill 的本地自动测试**不能代替**视觉、技术事实与图片授权的实际人工核验。

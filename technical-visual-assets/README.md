@@ -1,28 +1,43 @@
-# technical-visual-assets v0.3.0
+# Technical Visual Assets v1.0.0
 
-本 Skill 是 `thesis-doc-suite` 的公共图片资料层，**不是 Word 插图器**。它基于 `project-technical-doc` 的技术 Markdown + 同项目 FACT，建立四类素材：系统框架图、功能架构图、真实关键流程图、完整核心模块实物图。拒绝电阻等意义不明的局部器件图。
+`thesis-doc-suite` 的公共技术视觉素材 Skill。输入已发布的 `project-technical-doc` Markdown 和同项目 `FACT-xxx`，一次性检查并尽量完善**系统总体框架、功能架构、关键流程图、完整核心模块实物照片**，按项目保存 `VIS-...` 资产及核验记录。六个文书 Skill 的 Word 插图由它们自己负责。
 
-## 最小依赖
+## 不装包、不乱下载
 
-- Python 3.10+ 标准库，已有插件及 `project-technical-doc` 绘图脚本。
-- **没有任何自动 pip/npm/apt 安装操作**。`search_candidates.py` 的可选 DDGS 只有预先安装时可用；否则尝试 Commons API 或让 Claude Code 使用已经存在的网页浏览工具。
-- 图形渲染只使用已安装的 Mermaid CLI/Graphviz；不存在就保留源码与 WARN，不安装。
-- 不自动下载图片；图片下载需用户明确许可，并显式 `--allow-image-download`。
+**Python 3.10+ 标准库即能运行基本识别、候选登记、ASCII 转图、简单 SVG 渲染、资产审核。** Mermaid CLI、Graphviz、DDGS 只是可选的已有能力：不会自动安装、下载模型、安装浏览器或爬虫。Openverse / Wikimedia Commons 元数据查询只消耗网络 API，图片文件默认不下载。对百度/CSDN 等网站仅用 Claude Code 已有浏览/搜索工具，不绕过反爬。只有用户本轮明确允许保存具体图片时，才能显式调用选中单张图的安全下载命令。
 
-## 主要命令
+## 使用前准备
 
-`visual_assets.py`: `scan-md`, `scope-module`, `render`, `add-external`, `review`, `list`, `coverage`, `verify`, `workdir`, `cleanup`。
+1. 原项目已经通过 `/thesis-doc-suite:init-project` 初始化。
+2. 已有 `<PROJECT_ROOT>/deliverables/technical-document/` 中的一份正式 Markdown 技术文档。
+3. `<PROJECT_ROOT>/project-assets/facts.json` 已有对应事实及可信来源。没有支持图片内容的 FACT 就只保留候选，不可批准。
+4. 本 Skill **必须**复制到 `thesis-doc-suite/skills/technical-visual-assets/`，并在现有 `core/contracts/skill-catalog.json` 注册；从该插件目录启动 Claude Code。
 
-`search_candidates.py`: 只搜候选 URL，无写入、无下载、无安装。
+## 一键测试命令示例（Claude Code 中调用）
 
-`download_selected_image.py`: 明确授权后才下载一张真正图片到本轮运行区，验证实际图片格式。
+```text
+/thesis-doc-suite:technical-visual-assets
 
-完整运行规则见 [`SKILL.md`](SKILL.md)，使用前需存在正式技术 MD 和 `project-assets/facts.json`。
+项目根目录：E:\thesis-work\my-project
+正式技术MD：E:\thesis-work\my-project\deliverables\technical-document\项目-技术文档.md
 
-## 新增：用户五张正反例（v0.3.0）
+根据当前 MD 和 FACT 一次性完整执行：
+先复用六张已有 Mermaid，识别并将可证实的 ASCII 系统框架、功能树主动绘制为候选图；
+再对核心硬件逐项检索完整模块实物图，严格遵守五张正反例，验证准确型号、原始来源和版权。
+本轮仅允许网络检索，不允许下载图片，不安装任何软件包。
+交付四类图资产/缺口表，列出实际脚本、结果和未通过原因。
+```
 
-见 [`references/image-selection-examples.md`](references/image-selection-examples.md)，内含用户上传的原始截图 5 张（`assets/image-selection-examples/`），前 3 张反例、后 2 张正例。
+## 主要工具
 
-判断依据是**图片展示对象是否为当前项目所需的完整功能模块/完整执行器**，而不是图片是否干净、是否透明背景。裸传感器 IC、孤立小配件、芯片内部框图不能充当模块/电机整体照片；完整步进电机、完整传感器小板符合期望的主体层级，但**型号与版权仍需另行核验**。
+| 脚本 | 作用 | 是否联网/修改文件 |
+|---|---|---|
+| `scripts/plan_visuals.py` | 只读定位 Mermaid、ASCII 区块与 FACT | 不联网，默认不修改 |
+| `scripts/visual_assets.py` | 扫描、ASCII 转候选、渲染、审核、登记、覆盖与清理 | 本地管理，不联网 |
+| `scripts/svg_fallback.py` | 简单流程图/架构图零依赖 SVG 渲染 | 不联网，仅受支持图语法 |
+| `scripts/search_candidates.py` | DDGS（若已安装）/Openverse/Commons 公开图片线索检索 | 请求元数据；不下载图片 |
+| `scripts/download_selected_image.py` | 用户已授权的选定单张图片受控下载 | 仅 HTTPS 图片，需要显式许可 |
 
-审批网络图片需 `--subject-level` 明示主体层级；不引入新第三方依赖，也不会自动下载额外文件。
+完整业务规则在 [SKILL.md](SKILL.md)，选图标准在 [image-selection-examples.md](references/image-selection-examples.md)，资产格式在 [asset-contract.md](references/asset-contract.md)。
+
+**特别声明：** 本地测试不代表真实图片、型号、版权或外部网页访问已经通过人工核验。五张用户截图只用于本地选图对照，公开分发到 GitHub 前要核对图片再分发权限；也可删除样例 PNG，保留文字判例。

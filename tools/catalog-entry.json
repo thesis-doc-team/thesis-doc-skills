@@ -1,0 +1,33 @@
+{
+  "name": "technical-visual-assets",
+  "command": "/thesis-doc-suite:technical-visual-assets",
+  "version": "1.1.0",
+  "category": "shared",
+  "title": "技术图示与完整模块实物图管理",
+  "positioning": "从 project-technical-doc 正式技术 MD 和 FACT-xxx 主动整理四类技术视觉资产；复用 Mermaid、本地 ASCII 可证实关系可重建系统框架与功能架构，已有环境可查官方/百度/CSDN 等图片线索，可选 DDGS/Openverse/Commons 标准库搜索，完整主体、准确型号、来源及授权审核后共享；不安装依赖、不擅自下载图片或插入 Word。",
+  "generates": [
+    "项目可追溯视觉需求清单（只读）",
+    "project-assets/visual-assets/index.json 与 requirements.json",
+    "系统总体框架/功能架构/核心流程图（可编辑 Mermaid 和有效 SVG）",
+    "已授权登记的完整模块实物图",
+    "四类图片覆盖/来源授权/缺口报告"
+  ],
+  "inputs_required": [
+    "项目根目录 <PROJECT_ROOT> 与 project_id",
+    "project-technical-doc 已生成的正式技术 Markdown",
+    "同项目 FACT-xxx"
+  ],
+  "inputs_optional": [
+    "已获取且允许使用的网络模块图片",
+    "现有 VIS-xxx 索引"
+  ],
+  "prerequisites": [
+    "Python 3.10+ 标准库，无强制第三方依赖",
+    "已生成的正式技术 Markdown 与同项目 FACT-xxx",
+    "不安装 DDGS、Graphviz、Playwright；均为可选既有环境能力",
+    "模块照片下载需要本次任务单独授权"
+  ],
+  "deliverable_dir": "project-assets/visual-assets/",
+  "doc_type": "visual-asset",
+  "scenario": "需要从真实技术文档识别四类技术图，复用系统/功能/流程架构图并查找精确型号的整模块实物照，建立跨业务文档共享图片资产库。"
+}

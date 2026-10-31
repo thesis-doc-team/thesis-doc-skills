@@ -38,6 +38,20 @@ def digest(blob: bytes) -> str:
     return hashlib.sha256(blob).hexdigest()
 
 
+def lf_bytes(text: str) -> bytes:
+    """UTF-8 bytes with LF newlines: the single hash canonical form for text sources.
+
+    Windows text I/O rewrites LF as CRLF; hashing raw bytes then diverges from the
+    registered digest. Every Mermaid/text source hash MUST go through here.
+    """
+    return text.replace('\r\n', '\n').encode('utf-8')
+
+
+def read_lf(path: Path) -> bytes:
+    """File bytes with CRLF normalized to LF before hashing/compare (text sources only)."""
+    return path.read_bytes().replace(b'\r\n', b'\n')
+
+
 def jread(path: Path):
     return json.loads(path.read_text('utf-8'))
 
@@ -216,6 +230,36 @@ def technical_md(root: Path, md_arg: str):
     return md
 
 
+def browser_candidates():
+    """Installed Chrome executables that headless rendering can drive.
+
+    Edge is deliberately excluded: its single-instance forwarding makes
+    `--headless` exits return code 0 with empty output on this platform.
+    """
+    out = [Path(r'C:\Program Files\Google\Chrome\Application\chrome.exe'),
+           Path(r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe')]
+    local = os.environ.get('LOCALAPPDATA')
+    if local:
+        out.append(Path(local) / 'Google' / 'Chrome' / 'Application' / 'chrome.exe')
+    return out
+
+
+def resolve_renderer(plugin_root: Path) -> Path:
+    """Locate diagram_svg.py without installing anything.
+
+    Packaged sibling (INTEGRATION.md layout) first, then TVA_DIAGRAM_SVG override
+    and known pre-existing trees, so a missing copy fails loudly but recoverably.
+    """
+    candidates = [plugin_root / 'skills' / 'project-technical-doc' / 'scripts' / 'diagram_svg.py']
+    env = os.environ.get('TVA_DIAGRAM_SVG')
+    if env:
+        candidates.append(Path(env))
+    candidates += [plugin_root.parent / 'project-technical-doc' / 'scripts' / 'diagram_svg.py',
+                   plugin_root.parent.parent / 'project-technical-doc-skill-v4' /
+                   'project-technical-doc' / 'scripts' / 'diagram_svg.py']
+    return next((c for c in candidates if c.is_file()), candidates[0])
+
+
 def scan(args):
     root, base, vas, pid, facts = context(args.root, args.project_id)
     md = technical_md(root, args.technical_md)
@@ -244,7 +288,8 @@ def scan(args):
                 continue
             target = vas / 'diagrams' / f'{id_}.mmd'
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(code, 'utf-8', newline='\n') if not target.exists() else None
+            # LF bytes on disk == registered content_sha256, even on Windows.
+            target.write_bytes(lf_bytes(code)) if not target.exists() else None
             item = {
                 'id': id_, 'kind': 'technical-diagram', 'title': previous_heading(body, m.start()),
                 'visual_category': None, 'category_hint': category_hint(previous_heading(body, m.start())),
@@ -356,43 +401,76 @@ def external(args):
 
 
 def render(args):
-    """Use project-technical-doc's existing Mermaid renderer; never fake an SVG."""
+    """Render with the existing project-technical-doc engine, or strict stdlib SVG.
+
+    Only a source-preserving render. Neither path confirms the technical meaning.
+    No package is installed or fetched.
+    """
     import importlib.util
+    from svg_fallback import render as fallback_render
     root, base, vas, pid, facts = context(args.root, args.project_id)
     plugin_root = Path(__file__).resolve().parents[3]
-    renderer = plugin_root / 'skills' / 'project-technical-doc' / 'scripts' / 'diagram_svg.py'
-    if not renderer.is_file():
-        raise ValueError('找不到当前插件的 project-technical-doc/scripts/diagram_svg.py')
-    spec = importlib.util.spec_from_file_location('project_technical_diagram_svg', renderer)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    renderer = resolve_renderer(plugin_root)
+    if not os.environ.get('PUPPETEER_EXECUTABLE_PATH'):
+        found = next((str(c) for c in browser_candidates() if c.is_file()), None)
+        if found:
+            # mermaid-cli's puppeteer cache is often empty on this platform; point
+            # it at the already-installed system Chrome (Edge silently exits).
+            os.environ['PUPPETEER_EXECUTABLE_PATH'] = found
     with lock(base):
         data = load_manifest(vas, pid)
         target = next((x for x in data['items'] if x['id'] == args.id), None)
         if target is None or target.get('kind') != 'technical-diagram':
-            raise ValueError('未找到技术流程图资产 ID')
+            raise ValueError('未找到技术图示资产 ID')
         src = (root / target['source_path']).resolve()
-        if not src.is_relative_to(vas.resolve()) or not src.is_file() or digest(src.read_bytes()) != target['content_sha256']:
-            raise ValueError('Mermaid 源码丢失或被修改')
+        # LF口径哈希：Windows 下文本工具写回 CRLF 不算「已经修改」。
+        if not src.is_relative_to(vas.resolve()) or not src.is_file() or digest(read_lf(src)) != target['content_sha256']:
+            raise ValueError('Mermaid 源码丢失、路径不安全或已经修改')
         out = vas / 'diagrams' / f"{target['id']}.svg"
-        if out.exists() and target.get('render_sha256') and digest(out.read_bytes()) != target['render_sha256']:
-            raise ValueError('已有 SVG 内容已被改变，禁止静默覆盖')
-        if not out.exists():
-            engine, err = mod.render_one(src.read_text('utf-8'), out)
-            if not engine:
-                print(json.dumps({'status':'WARN','id':args.id,'reason':err,'message':'渲染未成功，保留 Mermaid 源码，不生成伪图像'},ensure_ascii=False))
-                return
-        else:
+        if out.exists() and not target.get('render_sha256'):
+            raise ValueError('发现未登记的同名 SVG，禁止无记录覆盖')
+        if out.exists() and digest(out.read_bytes()) != target.get('render_sha256'):
+            raise ValueError('已有 SVG 与登记的哈希不同，禁止覆盖')
+        if out.exists():
             engine = 'reuse-existing-render'
+        else:
+            engine, reason = None, None
+            if renderer.is_file():
+                try:
+                    spec = importlib.util.spec_from_file_location('project_technical_diagram_svg', renderer)
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    engine, reason = mod.render_one(src.read_text('utf-8'), out)
+                    raw = src.read_bytes()
+                    if b'\r\n' in raw:
+                        # render_one 写回 .mmd 会引入 CRLF；登记哈希按 LF 口径，立即归一。
+                        src.write_bytes(raw.replace(b'\r\n', b'\n'))
+                except Exception as exc:
+                    reason = str(exc)[:400]
+            if not engine:
+                # Prior render may leave an invalid intermediate. It has not been
+                # approved or registered and is safe to remove from THIS asset path.
+                if out.exists() and not target.get('render_sha256'):
+                    out.unlink()
+                try:
+                    info = fallback_render(src.read_text('utf-8'), out)
+                    engine = info['engine']
+                except ValueError as exc:
+                    print(json.dumps({'status':'WARN','id':args.id,
+                        'reason':str(exc),'previous_engine_reason':reason,
+                        'message':'复杂图无法由现有引擎或零依赖回退渲染；保留可编辑源文件'},
+                        ensure_ascii=False))
+                    return
         if not out.exists() or '<svg' not in out.read_text('utf-8', errors='replace'):
-            raise ValueError('生成结果不包含有效 SVG 根元素')
+            raise ValueError('生成结果缺少 SVG 根元素')
         target['image_path'] = rel(root, out)
         target['render_engine'] = engine
         target['render_sha256'] = digest(out.read_bytes())
         target['updated_at'] = utc()
         write_manifest(vas, data)
         audit(base, pid, 'visual-asset-rendered', {'ids':[args.id], 'engine':engine})
-    print(json.dumps({'status':'PASS','id':args.id,'svg':rel(root,out),'engine':engine},ensure_ascii=False))
+    print(json.dumps({'status':'PASS','id':args.id,'svg':rel(root,out),
+        'engine':engine,'installed_packages':0},ensure_ascii=False))
 
 
 def set_review(args):
@@ -421,6 +499,9 @@ def set_review(args):
         if target is None: raise ValueError('未知的视觉资产 ID')
         if not target.get('evidence_locations'):
             raise ValueError('缺少上游技术 Markdown 证据定位，禁止批准')
+        if (args.approve and target.get('category_hint') and args.category != target.get('category_hint')
+                and not args.category_override_reason):
+            raise ValueError('审批类别与图原始候选类型冲突；必须提供 --category-override-reason 并核对技术含义')
         if target['origin'] == 'external-web':
             if args.category and args.category != 'module-photo':
                 raise ValueError('外部网络模块实物图只允许按 module-photo 分类；其他技术图必须从事实绘制')
@@ -455,6 +536,8 @@ def set_review(args):
             target['visual_category'] = args.category
         if args.visual_evidence:
             target['visual_evidence'] = args.visual_evidence
+        if args.category_override_reason:
+            target['category_override_reason'] = args.category_override_reason
         if target['origin']=='external-web' and args.model_evidence:
             target['model_evidence'] = args.model_evidence
         if target['origin'] == 'external-web' and args.full_module_confirmed:
@@ -493,8 +576,11 @@ def verify(args):
             failures.append(f"{rec['id']}: 资源文件丢失或路径越界"); continue
         if digest(local.read_bytes()) != rec.get('content_sha256') and rec['kind'] == 'external-module-image':
             failures.append(f"{rec['id']}: 图片内容哈希已变化")
-        if rec['kind'] in ('technical-diagram','technical-figure') and digest(local.read_bytes()) != rec.get('content_sha256'):
+        # .mmd 文本源用 LF 口径哈希；technical-figure 是真实图像文件，保持原始字节哈希。
+        if rec['kind'] == 'technical-diagram' and digest(read_lf(local)) != rec.get('content_sha256'):
             failures.append(f"{rec['id']}: Mermaid 源码哈希变化")
+        if rec['kind'] == 'technical-figure' and digest(local.read_bytes()) != rec.get('content_sha256'):
+            failures.append(f"{rec['id']}: 图像内容哈希已变化")
         if rec.get('image_path') and rec.get('render_sha256'):
             rend = (root / rec['image_path']).resolve()
             if not rend.is_relative_to(root) or not rend.is_file() or digest(rend.read_bytes()) != rec['render_sha256']:
@@ -588,7 +674,7 @@ def add_diagram(args):
             raise ValueError('目标同名图内容冲突')
         if not target.exists():
             with target.open('xb') as f:f.write(code.encode('utf-8'))
-        item={'id':vid,'kind':'technical-diagram','origin':'project-technical-doc',
+        item={'id':vid,'kind':'technical-diagram','origin':'derived-from-technical-doc',
               'title':args.title,'visual_category':None,'category_hint':args.category,
               'subject_scope':'full-diagram','technical_module':None,'fact_ids':ids,
               'fact_status':'linked','source_path':rel(root,target),'image_path':None,
@@ -596,13 +682,60 @@ def add_diagram(args):
               'copyright_holder':'project-author-to-confirm','license':'unknown',
               'rights_status':'unverified','web_verified_at':None,
               'review_status':'pending-review', 'evidence_locations':[{'technical_md':rel(root,md),
-                     'technical_md_sha256':digest(md.read_bytes()),'source_note':args.reason}],
+                     'technical_md_sha256':digest(md.read_bytes()),'source_note':args.reason,
+                     'source_line_range':getattr(args,'source_line_range',None),
+                     'strict_conversion_provenance':getattr(args,'strict_conversion_provenance',None)}],
               'created_at':utc(),'updated_at':utc(),
               'notes':'基于用户最终技术MD/FACT新绘制的技术图候选。仍需审查每个节点和连接，并渲染。'}
         data['items'].append(item)
         write_manifest(vas,data)
         audit(base,pid,'visual-diagram-drafted',{'ids':[vid],'fact_ids':ids,'category_hint':args.category})
     print(json.dumps({'status':'CANDIDATE','id':vid,'source_path':rel(root,target)},ensure_ascii=False))
+
+
+
+def draft_from_ascii(args):
+    """Draft a candidate diagram from *explicit* relations in exact MD source lines.
+
+    No relation is added without a source line. The actual graph needs review
+    and subsequent render; it never becomes approved automatically.
+    """
+    import tempfile
+    import io
+    from contextlib import redirect_stdout
+    from ascii_to_mermaid import build_mermaid
+    root, base, vas, pid, facts = context(args.root, args.project_id)
+    md = technical_md(root, args.technical_md)
+    lines = md.read_text('utf-8-sig').splitlines()
+    if args.start_line < 1 or args.end_line < args.start_line or args.end_line > len(lines):
+        raise ValueError('指定的技术 MD 行号无效')
+    if args.end_line - args.start_line + 1 > 55:
+        raise ValueError('单次最多处理55行，请缩小选区')
+    ids = [x.strip() for x in args.fact_ids.split(',') if x.strip()]
+    if not ids or any(x not in facts or facts[x].get('status') not in ALLOWED_FACT_STATES for x in ids):
+        raise ValueError('必须绑定已存在且非 unverified 的 FACT')
+    code, provenance = build_mermaid(lines[args.start_line-1:args.end_line], args.start_line, args.category)
+    if not args.reason.strip():
+        raise ValueError('必须说明所选原文和 FACT 与此图的关联')
+    with tempfile.TemporaryDirectory(prefix='visual-draft-') as tmp:
+        candidate = Path(tmp)/'source.mmd'
+        candidate.write_text(code, 'utf-8')
+        # Reuse the same candidate and audit path; never directly write to MD.
+        import argparse as ap
+        new_args=ap.Namespace(root=args.root, project_id=args.project_id, technical_md=args.technical_md,
+            file=str(candidate), title=args.title, category=args.category, fact_ids=args.fact_ids,
+            reason=args.reason, source_line_range=[args.start_line,args.end_line],
+            strict_conversion_provenance=provenance)
+        output = io.StringIO()
+        with redirect_stdout(output):
+            add_diagram(new_args)
+        added = json.loads(output.getvalue())
+    print(json.dumps({'status':'DRAFT_ONLY','id':added.get('id'),
+        'source_path':added.get('source_path'),
+        'source_lines':[args.start_line,args.end_line],
+        'method':provenance['method'], 'nodes':len(provenance['nodes']),
+        'edges':len(provenance['edges']), 'must_review_before_approval':True,
+        'message':'已提交候选；请核对原文、FACT、图义及渲染效果。'},ensure_ascii=False))
 
 
 def scope_module(args):
@@ -615,7 +748,8 @@ def scope_module(args):
     md = technical_md(root, args.technical_md)
     md_text = md.read_text('utf-8-sig')
     name = args.module.strip()
-    if len(name) < 3 or name.casefold() not in md_text.casefold():
+    # ≥2 字符：像 D1 这样的真实位号/型号必须可登记；仍然禁止单字符占位。
+    if len(name) < 2 or name.casefold() not in md_text.casefold():
         raise ValueError('核心模块名称必须在正式技术 Markdown 中明确出现')
     ids = [x.strip() for x in args.fact_ids.split(',') if x.strip()]
     if not ids or any(fid not in facts or facts[fid].get('status') not in ALLOWED_FACT_STATES for fid in ids):
@@ -670,16 +804,99 @@ def coverage(args):
                       'note':'四类图必须在真实技术事实允许的范围内完成；缺少证据不能凑图。若为纯软件项目，应在执行汇报中说明 module-photo 不适用，不能伪造。'},ensure_ascii=False,indent=2))
 
 
+def preview(args):
+    """Self-check a rendered SVG, then rasterize an exact-size PNG preview.
+
+    v1.0.0 的预览截图用固定画布截 SVG，mmdc 的 width="100%" 输出被截成大片
+    空白。本命令先校验 XML/根元素并推算真实像素尺寸（显式 width/height 优先，
+    否则 viewBox 第 3/4 值），再按该尺寸无头截图；每次调用都打印自检报告。
+    仅调用本机已安装 Chrome；不安装任何依赖、不联网。
+    """
+    import subprocess
+    from xml.etree import ElementTree as ET
+    root, base, vas, pid, facts = context(args.root, args.project_id)
+    data = load_manifest(vas, pid)
+    target = next((x for x in data['items'] if x['id'] == args.id), None)
+    if target is None or not target.get('image_path'):
+        raise ValueError('该资产没有已渲染 SVG：先执行 render')
+    svg = (root / target['image_path']).resolve()
+    if not svg.is_relative_to(root.resolve()) or not svg.is_file() or svg.suffix.lower() != '.svg':
+        raise ValueError('SVG 路径不安全或文件缺失')
+    text = svg.read_text('utf-8', errors='replace')
+    try:
+        xml_root = ET.fromstring(text)
+    except ET.ParseError as exc:
+        raise ValueError(f'SVG 不是合法 XML：{exc}') from exc
+    if xml_root.tag.split('}')[-1] != 'svg':
+        raise ValueError('文件根元素不是 <svg>')
+    tag_m = re.search(r'<svg\b[^>]*>', text, re.S)
+    tag = tag_m.group(0) if tag_m else ''
+    w_m = re.search(r'\swidth="([\d.]+)(?:px)?"', tag)
+    h_m = re.search(r'\sheight="([\d.]+)(?:px)?"', tag)
+    if w_m and h_m:
+        width, height, size_source = float(w_m.group(1)), float(h_m.group(1)), 'width/height'
+    else:
+        vb_m = re.search(r'\sviewBox="([^"]+)"', tag)
+        if not vb_m:
+            raise ValueError('SVG 无显式 width/height 也无 viewBox，无法确定真实尺寸')
+        parts = re.split(r'[\s,]+', vb_m.group(1).strip())
+        if len(parts) != 4:
+            raise ValueError('viewBox 不是四个数值')
+        try:
+            width, height = float(parts[2]), float(parts[3])
+        except ValueError as exc:
+            raise ValueError('viewBox 含非数值') from exc
+        size_source = 'viewBox'
+    w, h = int(round(width)), int(round(height))
+    if not (40 <= w <= 8000 and 40 <= h <= 8000):
+        raise ValueError(f'推算尺寸 {w}x{h} 超出可预览范围（40..8000）')
+    browser = args.browser or os.environ.get('PUPPETEER_EXECUTABLE_PATH') \
+        or next((str(c) for c in browser_candidates() if c.is_file()), None)
+    if not browser or not Path(browser).is_file():
+        raise ValueError('未找到可驱动的本机 Chrome；请用 --browser 指定已安装浏览器可执行文件')
+    run_id = args.run_id or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid.uuid4().hex[:7]
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,63}', run_id) or run_id in ('.', '..'):
+        raise ValueError('非法 run-id')
+    parent = root / '.skill-tmp' / 'technical-visual-assets'
+    parent.mkdir(parents=True, exist_ok=True)
+    run = parent / run_id
+    if run.exists() and not (run / '.owned-by-technical-visual-assets').is_file():
+        raise ValueError('运行目录缺少所有权标记，拒绝写入')
+    if not run.exists():
+        run.mkdir()
+        (run / '.owned-by-technical-visual-assets').write_text(pid, 'utf-8')
+    out_dir = run / 'preview'
+    out_dir.mkdir(exist_ok=True)
+    png = out_dir / f"{target['id']}.png"
+    proc = subprocess.run([browser, '--headless=new', '--disable-gpu', '--hide-scrollbars',
+                           '--force-device-scale-factor=1', f'--screenshot={png}',
+                           f'--window-size={w},{h}', svg.as_uri()],
+                          capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=90)
+    if not png.is_file() or png.stat().st_size < 200:
+        raise ValueError('浏览器截图失败：' + (proc.stderr or proc.stdout or '')[-300:])
+    audit(base, pid, 'visual-asset-previewed', {'ids': [target['id']], 'run_id': run_id,
+          'width': w, 'height': h, 'size_source': size_source})
+    print(json.dumps({'status': 'PASS', 'id': target['id'], 'svg': rel(root, svg),
+                      'xml_wellformed': True, 'root': 'svg',
+                      'size_source': size_source, 'width': w, 'height': h,
+                      'preview_png': str(png), 'preview_bytes': png.stat().st_size,
+                      'installed_packages': 0}, ensure_ascii=False, indent=2))
+
+
 def build_parser():
     p=argparse.ArgumentParser(description='项目范围内的技术图示与外部模块图片资产管理（不执行文书插图）')
     sub=p.add_subparsers(dest='command', required=True)
-    for name,fn in [('scan-md',scan),('add-external',external),('render',render),('review',set_review),('list',report),('verify',verify),('workdir',workdir),('cleanup',cleanup),('scope-module',scope_module),('coverage',coverage),('add-diagram',add_diagram)]:
+    for name,fn in [('scan-md',scan),('add-external',external),('render',render),('review',set_review),('list',report),('verify',verify),('workdir',workdir),('cleanup',cleanup),('scope-module',scope_module),('coverage',coverage),('add-diagram',add_diagram),('draft-from-ascii',draft_from_ascii),('preview',preview)]:
         q=sub.add_parser(name);q.add_argument('--root',required=True);q.add_argument('--project-id');q.set_defaults(func=fn)
         if name=='scan-md':q.add_argument('--technical-md',required=True)
         if name=='add-diagram':
             q.add_argument('--file',required=True);q.add_argument('--technical-md',required=True)
             q.add_argument('--category',required=True,choices=CATEGORIES);q.add_argument('--title',required=True)
             q.add_argument('--fact-ids',required=True);q.add_argument('--reason',required=True)
+        if name=='draft-from-ascii':
+            q.add_argument('--technical-md',required=True);q.add_argument('--category',required=True,choices=('system-framework','functional-architecture','flowchart'))
+            q.add_argument('--start-line',type=int,required=True);q.add_argument('--end-line',type=int,required=True)
+            q.add_argument('--title',required=True);q.add_argument('--fact-ids',required=True);q.add_argument('--reason',required=True)
         if name=='scope-module':
             q.add_argument('--technical-md',required=True);q.add_argument('--module',required=True)
             q.add_argument('--fact-ids',required=True);q.add_argument('--reason',required=True)
@@ -687,13 +904,17 @@ def build_parser():
             for key in ['file','title','module','technical-md','source-page','image-url']:
                 q.add_argument('--'+key,required=True)
             q.add_argument('--author');q.add_argument('--license')
-        if name=='render': q.add_argument('--id',required=True)
+        if name in ('render','preview'): q.add_argument('--id',required=True)
+        if name=='preview':
+            q.add_argument('--run-id',help='写入既有运行区（须含所有权标记），缺省新建')
+            q.add_argument('--browser',help='本机 Chrome 可执行文件路径；缺省自动探测')
         if name in ('workdir','cleanup'): q.add_argument('--run-id',required=(name=='cleanup'))
         if name=='review':
             q.add_argument('--id',required=True);q.add_argument('--fact-ids',required=True)
             q.add_argument('--rights',required=True);q.add_argument('--reason',required=True)
             q.add_argument('--approve',action='store_true')
             q.add_argument('--category', choices=CATEGORIES, help='图像经核验后的四大类别')
+            q.add_argument('--category-override-reason', help='类别与候选提示不符时，说明实际图义并承担审核责任')
             q.add_argument('--visual-evidence', help='实际查看图片后对图中主体/模块/节点的核对说明')
             q.add_argument('--full-module-confirmed', action='store_true', help='已逐图确认展示完整功能单元，而非裸芯片/电阻或局部零件')
             q.add_argument('--subject-level',choices=('complete-device','complete-module','complete-board'), help='实际目视确认的完整主体层级：独立设备/模组/整板')
