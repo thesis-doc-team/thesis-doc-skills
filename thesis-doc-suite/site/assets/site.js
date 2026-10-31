@@ -64,28 +64,6 @@
     });
   });
 
-  /* ---------- Skill 卡片展开 / 折叠 ---------- */
-  document.querySelectorAll('.skill-top').forEach(function (top) {
-    function toggle() {
-      var card = top.closest('.skill-card');
-      var open = card.classList.toggle('open');
-      top.setAttribute('aria-expanded', open ? 'true' : 'false');
-      var hint = top.querySelector('.expand-hint span');
-      if (hint) hint.textContent = open ? '收起详细说明' : '展开详细说明';
-    }
-    top.addEventListener('click', toggle);
-    top.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggle();
-      }
-    });
-    // 初始化按钮文案
-    var card = top.closest('.skill-card');
-    var hint = top.querySelector('.expand-hint span');
-    if (hint && card.classList.contains('open')) hint.textContent = '收起详细说明';
-  });
-
   /* ---------- 滚动高亮当前导航 ---------- */
   var sectionIds = ['home', 'skills', 'relations', 'assets', 'workflow', 'prereq', 'commands', 'faq'];
   var linkBySection = {};
