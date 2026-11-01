@@ -124,8 +124,9 @@ def check(original, target, data):
                     err(errors,'参考文献悬挂缩进不符：'+text_of(p)[:30])
                 if p.xpath('./w:pPr/w:numPr',namespaces=N):
                     err(errors,'文献不允许额外启用自动列表编号，避免重复 [n] [n]')
-            if re.search(r'\[\d+\]\s*\[\d+\]',text):
-                err(errors,'参考文献或正文中出现重复 [n] [n] 编号')
+            # 只有相邻同号 [n][n] 才是重复编号；[6][12] 异号并排合法（多文献并引），不判错
+            if re.search(r'\[(\d+)\]\s*\[\1\]',text):
+                err(errors,'参考文献或正文中出现相邻同号重复 [n][n] 编号')
             for p in generated:
                 spacing=p.xpath('./w:pPr/w:spacing',namespaces=N)
                 if len(spacing)!=1 or spacing[0].get(Q('line'))!='360' or spacing[0].get(Q('lineRule'))!='auto':

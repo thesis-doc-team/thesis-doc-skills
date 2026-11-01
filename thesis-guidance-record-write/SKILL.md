@@ -46,6 +46,7 @@ description: 只编写塔里木大学毕业论文（设计）指导记录（不�
 - **计划**只在 `schedule.json` 一处维护，不能据此伪造已进行的会面和项目完成度；
 - **拟稿**仅进入本轮运行区和最终DOCX；经教师确认的真实指导信息以后才可据来源补充到项目资产中；
 - **成品**按 `v1/v2/...` 不覆盖；结构检查与逐页截图检查通过后才能 `record-use --doc-type guidance`；
+- **最终版本唯一（每次执行只交付一份最终版本）**：执行内发现缺陷需修复时，修复完成后生成修正版（如 `-v2`），随即将其**改名为本轮应交付的版本名**（如 `-v1`，先删缺陷稿再改名）；一次执行结束时交付目录里本次成品只保留一份最终版，过程稿、缺陷稿不与最终版并存。缺陷稿不是历史版本，按此回收不算违反"永不覆盖、永不删除"；若缺陷稿曾 `record-use` 登记，回收后以最终定名文件 `--replace --reason` 补登记。跨次执行不受影响：内容变更或用户要求重新生成时仍递增产出 `-v2`、`-v3`…并各自登记。
 - **中间文件**必须安全清理本轮有所有权标记的 `run-id` 目录；不许删模板、资料、资产、历史成果、其他 Skill 的工作目录。
 
 ## 2. 原始材料及模板锁定
@@ -89,11 +90,12 @@ description: 只编写塔里木大学毕业论文（设计）指导记录（不�
 
 **学校官方模板原来的固定行高总和可超过单页可打印高度，导致一条记录跨页。这是源模板特性，不是靠缩字号或改页边距可以私自修复的问题。** **实质性分页门禁：页数本身不是目标，按当次内容的自然排布判断**——用户已明确“空白模板页数仅参考、按实际需要扩展”，所以：
 
-1. **绝不限制成品必须2、3或10页**；8次记录按真实排版产生实际页数；**不得为凑足或压缩到某个页数而增删事实、稀释或堆砌文字**。硬性 FAIL 只有两类：为凑/压页数增删事实或改动官方固定框架；最后一页整页空白或只剩签字/评价的孤页且未先通过调整措辞与段落分配消除、也未如实报告。
+1. **绝不限制成品必须2、3或10页**；8次记录按真实排版产生实际页数；**不得为凑足或压缩到某个页数而增删事实、稀释或堆砌文字**。硬性 FAIL 只有两类：为凑/压页数增删事实或改动官方固定框架；最后一页整页空白或只剩签字/评价的孤页且未先通过调整措辞与段落分配消除、也未如实报告（若已按第 4 项“空白原件对照”证明属模板固有几何，则判 WARN 如实披露，不算此类 FAIL）。
 2. 渲染后每页查：文本被截断、单元格内容溢出、题目超宽、边框断裂、跨页评价/签字、最后签名孤页、中文标点或乱码。
 3. 如官方原本自然跨页，须在检查报告中标 `WARN—官方固定行高跨页`，不是虚报视觉完美；优先减少不必要冗词（不删技术必要内容）。**禁止未经用户授权压缩或改变固定框架**；如跨页妨碍提交，报告模板天然冲突，由用户/学校决定是否允许衍生排版版式。
-4. 若技术文字超出正文区域造成遮挡/丢字 → `FAIL` 并重写正文；不能通过缩到8pt、调表格框架“修图”。
-5. 结构验证通过≠视觉验收通过；必须渲染全部页 PNG，Agent/人工逐张审阅并报告张数和异常。WPS 未实际打开则注明“WPS未实测”。
+4. **版式异常先跑“空白原件对照”再定性（防误判孤页）**：成品末页整页空白这类版式疑点，既不直接认作孤页 FAIL 返工（行高全 exact 时措辞增删改变不了分页），也不得装作没看见——先用同一渲染器渲染**官方空白原件**作对照组：若原件同样自带尾随空白页（实测本模板：空白原件 5 页、第 5 页同样空白；复盘几何账见 `references/official-template-layout.md`），判 `WARN—模板固有几何` 如实披露并附几何账，**不返工，也不为消空白页增删事实、改框架或缩字号**；仅当对照组没有该空白页时，才按内容排布/孤页路径排查。
+5. 若技术文字超出正文区域造成遮挡/丢字 → `FAIL` 并重写正文；不能通过缩到8pt、调表格框架“修图”。
+6. 结构验证通过≠视觉验收通过；必须渲染全部页 PNG，Agent/人工逐张审阅并报告张数和异常。WPS 未实际打开则注明“WPS未实测”。
 
 ## 5. 参考资料的来源及复用（没有参考文献栏时绝不擅自添加）
 
@@ -112,9 +114,9 @@ description: 只编写塔里木大学毕业论文（设计）指导记录（不�
 5. **编写草稿**：根据技术资料和事实矩阵设计不少于8次的独立主题，填写各自 `issue_pairs`（problem/action）并做“对象/动作/验证”的语义检查，记录阶段事实级别；严格保持草稿标识。
 6. **形成输入**：运行区内写 JSON，按 `templates/input.schema.json`；可调用 `project_assets.py compose` 验证共享资产ID（只组合已有字段不自动代写正文）。
 7. **生成DOCX**：`fill_guidance.py` 将源表26行保留，按需复制其13行模板块，填写封面及每次记录的可填区域；保留导师评价空白、勾选空白、签字空白。输出 `deliverables/guidance/<课题>-指导记录-vN.docx`，禁止覆盖已有版本。
-8. **验证**：运行 `validate_guidance.py` 对比结构/固定栏目/字段、问题与修改意见一一对应、首行缩进、记录次数；随后进入**截图验证分析（Screenshot Verification Analysis，交付前硬性环节，缺一不可）**——**截图**（`render_visual.py` 出全部页 PNG/PDF，只存本轮运行目录，不进交付目录）→ **逐张分析**（缺一张即未完成：字形缺损、字符裁切、溢出/遮挡、边框、表头、签字栏、跨页评价/签字、孤页、过密/过空）→ **留痕汇报**（执行汇报固定填写截图引擎/工具、截图张数、实看张数、逐张结论 PASS/WARN/FAIL 与问题清单、返工复检次数、WPS 实测边界声明）。未逐张分析不得宣称视觉验收通过、不得登记 record-use；截图是验证手段不是交付物。若跨页源自官方原本，则要真实披露，不假装已经修复。
+8. **验证**：运行 `validate_guidance.py` 对比结构/固定栏目/字段、问题与修改意见一一对应、首行缩进、记录次数；随后进入**截图验证分析（Screenshot Verification Analysis，交付前硬性环节，缺一不可）**——**截图**（`render_visual.py` 出全部页 PNG/PDF，只存本轮运行目录，不进交付目录）→ **逐张分析**（缺一张即未完成：字形缺损、字符裁切、溢出/遮挡、边框、表头、签字栏、跨页评价/签字、孤页（尾随空白页先按 §4 第 4 项“空白原件对照”定性）、过密/过空）→ **留痕汇报**（执行汇报固定填写截图引擎/工具、截图张数、实看张数、逐张结论 PASS/WARN/FAIL 与问题清单、返工复检次数、WPS 实测边界声明）。未逐张分析不得宣称视觉验收通过、不得登记 record-use；截图是验证手段不是交付物。若跨页源自官方原本，则要真实披露，不假装已经修复。
 9. **归档**：完成结构+视觉复核后 `record-use` 只登记最终正式版本路径、SHA256及**实际引用的**REF-ID；用户保留验收权，输出最终 DOCX 和短版执行报告。
-10. **清理**：`finally` 里 `project_assets.py cleanup` 仅删除有本 Skill 所有权标记的 `.skill-tmp/.../<run-id>`；不删用户输入、原官方表、持久资产、成品版本和其他 Skill 运行文件。失败也要清理并如实汇报。
+10. **清理**：`finally` 里 `project_assets.py cleanup` 仅删除有本 Skill 所有权标记的 `.skill-tmp/.../<run-id>`；不删用户输入、原官方表、持久资产、成品版本和其他 Skill 运行文件。失败也要清理并如实汇报。**清理前 shell 先退回项目根（或运行区之外）并全程用绝对路径调用，不把 shell 常驻运行区内**：Windows 下若有进程以运行区为当前目录，`rmtree` 会先删光子文件（含所有权标记 `.owned-by-*`）再在删目录壳时报 WinError 32，二次调用即因“目录缺少合法所有权标记”fail-closed。若已发生：确认目录确已为空后仅 `rmdir` 空壳收尾，报告如实留痕，**绝不因此扩大删除范围**。
 
 ## 7. 快速调用
 
@@ -124,6 +126,8 @@ python -m pip install -r requirements.txt
 python scripts/project_assets.py status --root "$PROJECT_ROOT"
 # 若尚未初始化：
 # python scripts/project_assets.py init --root "$PROJECT_ROOT" --project-id "$PROJECT_ID" --name "$TITLE"
+# workdir 单独先跑，拿到真实 WORKDIR/RUN_ID 再跑后续命令；严禁同一命令链里用占位 run-id 路径
+# （template-audit.json 曾因此落错位置）。后续命令一律绝对路径，shell 不常驻运行区。
 python scripts/project_assets.py workdir --root "$PROJECT_ROOT"     # 保存输出的 RUN_ID 和 WORKDIR
 python scripts/inspect_template.py assets/official-guidance-template.docx --json "$WORKDIR/template-audit.json"
 # Agent 基于真实资料编写 $WORKDIR/guidance-draft.json，不凭测试数据直接生成正式项目报告
@@ -133,7 +137,8 @@ python scripts/validate_guidance.py --template assets/official-guidance-template
 python scripts/render_visual.py --file "$FINAL_DOCX" --outdir "$WORKDIR/render"
 # Agent 必须逐张打开 render/page-*.png，处理问题，记录检查结果
 python scripts/project_assets.py record-use --root "$PROJECT_ROOT" --file "$FINAL_DOCX" --doc-type guidance --ref-ids "$ACTUALLY_USED_REF_IDS"
+# 清理前先 cd 回项目根——shell 停在运行区内会 WinError 32 删壳失败，且所有权标记可能已被 rmtree 先行删除（见 §6 第 10 步）
 python scripts/project_assets.py cleanup --root "$PROJECT_ROOT" --run-id "$RUN_ID"
 ```
 
-使用范例见 `README.md`、`templates/execution-report.md` 与 `references/integration.md`。**用户拥有最终验收权；AI对执行、真实写作依据、结构/截图检查和风险汇报负责。**
+使用范例见 `README.md`、`templates/execution-report.md` 与 `references/integration.md`。zh-CN GBK 控制台偶发中文乱码是**显示层环境特性**（不影响落盘文件内容）；判读输出先 UTF-8 落盘再读取，不据乱码判定内容错误。**用户拥有最终验收权；AI对执行、真实写作依据、结构/截图检查和风险汇报负责。**

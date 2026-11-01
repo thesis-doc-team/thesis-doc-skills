@@ -45,7 +45,7 @@ description: 仅依据用户本次提供的项目技术文档、同项目可追�
 1. `project_assets.py status --root <PROJECT_ROOT>`，确认 project_id 匹配，旧库先读后写；不存在时才 `init`。**不在 Skill 安装目录初始化项目包。**
 2. 读取同项目 FACT、REF、唯一 schedule（及存在的 progress）；本次新提取且能溯源的 FACT/REF 才执行 `merge`；同一 REF-ID 不重复插入，已有条目改动必须 `--replace --reason` 留审计。`schedule.status=draft` 不能冒称已确认；计划并不等于实际进度。
 3. 论文数据库中的“记录存在”不等于“正文论点获证实”；每次实际引用仍必须核对摘要/内容支持范围。正文 `[1]` 仅为本次排版号，不代表长期 REF-ID。
-4. `workdir --root` 建本轮运行区，正文 JSON/检查报告/检索记录和渲染图都在其中。输出 `<课题简称>-毕业设计开题报告-vN.docx`，重生成递增 N、**绝不覆盖删除历史版本**。
+4. `workdir --root` 建本轮运行区，正文 JSON/检查报告/检索记录和渲染图都在其中。成品为 `<课题简称>-毕业设计开题报告-vN.docx`，跨次重生成递增 N、**绝不覆盖删除合格历史版本**；执行内缺陷修复的改名回收见第 5 节"最终版本唯一"。
 5. 结构与逐页验收通过后对该版本 `record-use --doc-type opening-report` 登记实际使用的 REF-ID、成品 SHA256；写执行汇报与文献台账。之后 `cleanup --run-id` 只清本轮有所有权标记的运行区。成功失败均应尝试安全清理，不能扩大清理范围。
 
 详见 `references/shared-project-assets-contract.md`、`references/intermediate-cleanup-policy.md`、`references/integration-contract.md`。**不能跨调用中期检查 Skill 的 `compose` 或填充脚本**；只共享资产，不共享文书生成坐标。
@@ -113,14 +113,25 @@ description: 仅依据用户本次提供的项目技术文档、同项目可追�
 
 **分项起草、分批写入（硬性，禁止一次性整篇生成）**：七项内容逐项起草并写入本轮 `报告内容.json`——立项依据 → 研究现状 → 任务与可行性 → 重点问题 → 工作条件 → 进度计划 → 参考文献，一项成文落盘后再写下一项；教师意见拟稿单独作为最后一批。**禁止一次性生成全部七项**。全部落盘后 `build_report.py` 一次性填充，第 7 步双重验收即**唯一终检**，写作中途不反复全文重检；终检问题定点修订后交付。执行汇报注明分几项/几批写入与一次终检结论。
 
+**并引写法与校验器预检（防"验收器口味"在最后一步才暴露）**：
+
+- **并列多文献引用优先合并或分隔，不禁止连排**：推荐 `[[cite:6,12,15]]` / `[[cite:6-7]]`（渲染为上标 `[6,12,15]` / `[6-7]`），或标记间插顿号 `[[cite:6]]、[[cite:12]]`；`[[cite:6]][[cite:12]]` 连排同样渲染为合法上标，不禁止但排版上不推荐。校验只拦**相邻同号** `[n][n]` 的重复编号，异号并排不判错；成稿后自查一遍同号连排再交付。
+- **动笔前先摸校验器**：分项起草前先过一遍 `check_report.py` 的断言清单，或先用"3 条文献 + 1 段正文"的最小样例跑一次 `build_report.py` → `check_report.py` 冒烟，确认引用渲染与校验行为后再写长文。校验器本身过宽/过严时按硬约束遵守并在执行汇报注明，不为绕过校验而歪曲内容。
+
+**最终版本唯一（每次执行只交付一份最终版本）**：
+
+- 无论中途修复几轮，本次执行结束时 `deliverables/opening-report/` 只保留一份最终成品（同号三件套：DOCX + `执行汇报-vN.md` + `文献核验台账-vN.md`）；过程稿、缺陷稿不与最终版并存。
+- **缺陷修复改名回收**：合格成品交付后才发现问题时，修复重建得到新号文件（如 v2），随即将其**改名为本轮应交付的版本号**（如 v1，先删缺陷稿再改名，同号三件套一起删旧换新）；执行汇报注明修复轮次与回收操作。"永不覆盖、永不删除"保护的是合格成品版本史，执行内缺陷稿不是历史版本；若缺陷稿曾 `record-use` 登记，回收后以最终定名文件 `--replace --reason` 补登记。
+- 跨次执行不受影响：因内容变更或用户要求重新生成时，仍递增产出 `-v2`、`-v3`…并各自登记。
+
 1. **确认输入和身份**：本次真实技术 MD/DOCX/PDF、当前官方空白模板、项目根及 project_id；个人信息未知留白，不从匿名范本猜。阅读并复用既有 `project-assets`；同 ID 才能操作。
 2. **锁官方模板并逆向范本**：运行 `python scripts/inspect_template.py`、`python scripts/check_reference_example.py`；读官方锁文件与样本清单、范本逆向规则；项目类型不符时只学抽象写法。
 3. **提取事实/来源与区分状态**：本轮在自己的工作区建立“项目事实→技术文档具体章节/证据→可写口吻”的矩阵。识别设计、声明、实测、计划；与共享事实冲突时留痕，不静默覆盖。
 4. **核验文献并映射论点**：先复用 `references.json` 核实且适用的 REF，必要时补充正式检索。按实际正文首次引用顺序编号；生成本轮持久化文献核验台账，未核验条目不能冒充已核实。
 5. **撰写七章草稿与教师意见拟稿**：至少3000汉字，研究现状来源对应、预期目标可验收、问题与解决思路成对、条件与周计划一致；按"教师意见拟稿统一规范"写 `teacher_opinion`（≥50字）；使用 `references/report-json-contract.md`、`templates/input.schema.json` 构造本轮 `报告内容.json`，存 `.skill-tmp/opening-report-writer/<run-id>/`，不是公共事实仓库。
-6. **原版填充**：`python scripts/build_report.py <本轮报告内容.json> --output <PROJECT_ROOT>/deliverables/opening-report/<课题简称>-毕业设计开题报告-vN.docx`。同版本路径已存在即改用下一个 N；禁止覆盖历史文件（外部 Agent 必须预检目录）。
-7. **双重验收**：先运行 `python scripts/check_report.py <成品.docx> --json <本轮报告内容.json> --output-report <本轮结构校验.json>`，再运行 `python scripts/render_visual.py --file <成品.docx> --outdir <本轮render/>`。后者需 LibreOffice + PyMuPDF，生成所有页 PNG/PDF 和孤页预检；**Agent 必须逐张真正打开并记录每页 PASS/WARN/FAIL**。预检 OK≠视觉 PASS。未能渲染时必须说未完成视觉验收，不能报完全通过。
-8. **记录与交付**：将 `<课题简称>-毕业设计开题报告-vN.docx`、`执行汇报-vN.md`、`文献核验台账-vN.md` 放入 `deliverables/opening-report/`，**本轮恰好三项**；历史版本保留。仅合格成品使用 `project_assets.py record-use` 登记实际引用的 REF-ID。过程 JSON、截图、PDF 和日志不进入成品区。
+6. **原版填充（两段式出片：先运行区、后交付区）**：`python scripts/build_report.py <本轮报告内容.json> --output <本轮运行区>/<课题简称>-毕业设计开题报告.docx`——先构建到 `.skill-tmp/opening-report-writer/<run-id>/`，**不直接写交付目录、不带 -vN**；定稿版本号在第 8 步交付时才确定，失败稿不进交付目录、不占版本号。
+7. **双重验收（对运行区构建件）**：先运行 `python scripts/check_report.py <运行区构建件.docx> --json <本轮报告内容.json> --output-report <本轮结构校验.json>`，再运行 `python scripts/render_visual.py --file <运行区构建件.docx> --outdir <本轮render/>`。后者需 LibreOffice + PyMuPDF，生成所有页 PNG/PDF 和孤页预检；**Agent 必须逐张真正打开并记录每页 PASS/WARN/FAIL**。预检 OK≠视觉 PASS。未能渲染时必须说未完成视觉验收，不能报完全通过。校验 FAIL 时定点修订 JSON 后在运行区重建复验，不产生版本号。
+8. **记录与交付（验收通过才落交付区）**：把运行区通过验收的构建件复制为 `deliverables/opening-report/<课题简称>-毕业设计开题报告-vN.docx`（N=交付目录已有最大版本号+1；预检目录，禁止覆盖历史文件），并写 `执行汇报-vN.md`、`文献核验台账-vN.md` 放入同目录，**本轮恰好三项**；历史版本保留。仅合格成品使用 `project_assets.py record-use` 登记实际引用的 REF-ID。过程 JSON、截图、PDF 和日志不进入成品区。交付后才发现缺陷时按上文"最终版本唯一"改名回收。
 9. **清理运行区**：`project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>` 仅删本轮拥有的临时目录；无论成功/失败都做安全清理并如实报告。最终验收只由用户判断，不由 Agent 代替确认。
 
 **截图验证分析（三步硬门禁）**：截图（逐页渲染）→ 对所有图片检查封面、正文字距/缩进、上标、分点、长 URL/文献悬挂、页末章题、签字孤页、字体缺失 → 按 `templates/execution-report.md` 记录每页图号、检查结论、返工轮数。不能因为生成脚本无报错就跳过视觉检查。最终成品只有三项，不交付截图/检索缓存。

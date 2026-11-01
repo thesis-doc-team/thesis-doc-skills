@@ -85,4 +85,28 @@ class TestPipeline(unittest.TestCase):
                 jc=p.xpath('./w:pPr/w:jc',namespaces=N)
                 self.assertEqual([x.get(Q('val')) for x in jc],['left'],text_of(p)[:30])
 
+class TestAdjacentCitations(unittest.TestCase):
+    """并引回归：异号并排 [1][2] 是合法多文献并引；只有相邻同号 [1][1] 才是重复编号。"""
+
+    def _run(self, cite_text):
+        payload=synthetic_payload()
+        para=payload['sections'][0]['blocks'][1]
+        self.assertEqual(para['type'],'paragraph')
+        para['text']=para['text'].replace('[[cite:1-2]]',cite_text)
+        with tempfile.TemporaryDirectory() as d:
+            dest=Path(d)/'cite.docx'
+            build(payload,TEMPLATE,dest)
+            return check(TEMPLATE,dest,payload)
+
+    def test_adjacent_different_numbers_are_valid_citations(self):
+        """并引连排异号不得被"重复编号"误杀（旧正则过宽、验收器口味在最后一步才暴露的事故回归）。"""
+        report=self._run('[[cite:1]][[cite:2]]')
+        self.assertEqual(report['status'],'PASS',report)
+
+    def test_adjacent_same_number_still_duplicate(self):
+        """相邻同号 [n][n] 仍是重复编号错误，不得放行。"""
+        report=self._run('[[cite:1]][[cite:1]]')
+        self.assertEqual(report['status'],'FAIL',report)
+        self.assertTrue(any('重复' in e for e in report['errors']),report)
+
 if __name__=='__main__':unittest.main()

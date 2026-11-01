@@ -142,7 +142,11 @@ def fill_docx(template,data,output):
     if not isinstance(data,dict) or not data.get('title'):
         raise ValueError('必须提供本项目题目，禁止继承范本课题')
     if data.get('teacher_opinion_is_draft') is not True:
-        raise ValueError('教师意见仅为拟稿，必须显式标注待教师审核')
+        raise ValueError('教师意见仅为拟稿：须声明 teacher_opinion_is_draft=true（拟稿属性走数据与执行报告，不在正文写提示语）')
+    tparts=data.get('teacher_opinion_paragraphs') or []
+    if isinstance(tparts,str):tparts=[tparts]
+    if any(('本栏为拟稿' in str(p) or '供教师审定拟稿' in str(p)) for p in tparts):
+        raise ValueError('教师意见正文禁止拟稿提示语（本栏为拟稿/供教师审定拟稿）：正文以收束句自然结束，拟稿属性由 teacher_opinion_is_draft 与执行报告声明')
     if data.get('college_opinion_paragraphs') and data.get('college_opinion_authorized') is not True:
         raise ValueError('学院意见未经授权禁止预填')
     parsed={}

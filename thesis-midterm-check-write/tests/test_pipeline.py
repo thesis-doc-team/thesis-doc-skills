@@ -129,4 +129,21 @@ class TestStrictTemplate(unittest.TestCase):
             d=draft();d['college_opinion_paragraphs']=['不得擅自填写学院意见']
             with self.assertRaises(ValueError):fill_docx(DEFAULT_TEMPLATE,d,Path(td)/'out.docx')
 
+    def test_teacher_opinion_in_text_hint_rejected(self):
+        # 用户要求：教师意见正文不加“（本栏为拟稿，供指导教师审定）”提示语；拟稿属性走 teacher_opinion_is_draft 与执行报告
+        with tempfile.TemporaryDirectory() as td:
+            d=draft()
+            d['teacher_opinion_paragraphs']=[TEXT1,TEXT2+'（本栏为拟稿，供指导教师审定）']
+            with self.assertRaises(ValueError):fill_docx(DEFAULT_TEMPLATE,d,Path(td)/'out.docx')
+
+    def test_validate_flags_in_text_hint(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=Path(td)/'clean.docx'
+            fill_docx(DEFAULT_TEMPLATE,draft(),f)
+            d2=draft()
+            d2['teacher_opinion_paragraphs']=[TEXT1,TEXT2+'（本栏为拟稿，供指导教师审定）']
+            r=validate(DEFAULT_TEMPLATE,f,d2)
+            self.assertFalse(r['passed'])
+            self.assertTrue(any('提示语' in x for x in r['problems']),r['problems'])
+
 if __name__=='__main__':unittest.main()

@@ -96,6 +96,10 @@ def validate(template,generated,data):
     for key,col in [('student_name',1),('class_name',3)]:
         if nt.cell(0,col).text.strip()!=str(data.get(key,'')).strip():report_error(problems,f'{key} 填写不符合输入')
     if data.get('teacher_opinion_is_draft') is not True:report_error(problems,'未声明教师意见拟稿')
+    tparts=data.get('teacher_opinion_paragraphs') or []
+    if isinstance(tparts,str):tparts=[tparts]
+    if any(('本栏为拟稿' in str(p) or '供教师审定拟稿' in str(p)) for p in tparts):
+        report_error(problems,'教师意见正文含拟稿提示语（本栏为拟稿/供教师审定拟稿），应以收束句自然结束')
     if not data.get('college_opinion_authorized') and not xml_eq(ot.cell(5,0)._tc,nt.cell(5,0)._tc):
         report_error(problems,'学院意见未经授权发生更改')
     with ZipFile(template) as a,ZipFile(generated) as b:

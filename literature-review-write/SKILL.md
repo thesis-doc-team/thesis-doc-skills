@@ -52,6 +52,7 @@ description: 根据本项目真实技术文档和经核验的论文资料，直�
 - `references.json` 不能保存同一 DOI/同题目的重复条目；编号保持 `REF-xxx` 稳定。文书本地 `[1]` 与共享 `REF-xxx` 独立映射。
 - `schedule.json` 只作一致性参考。文献综述不编写或修改项目周计划；其他 Skill 新计划应另走共享维护流程。
 - `record-use --doc-type literature-review` 将最终 DOCX 路径、SHA-256、所用 `REF-xxx` 写入 `activity.jsonl`，新版本各登记一次。
+- **最终版本唯一（每次执行只交付一份最终版本）**：执行内发现缺陷需修复时，修复完成后生成修正版（如 `-v2`），随即将其**改名为本轮应交付的版本名**（如 `-v1`，先删缺陷稿再改名）；一次执行结束时交付目录里本次成品只保留一份最终版，过程稿、缺陷稿不与最终版并存。缺陷稿不是历史版本，按此回收不算违反"永不覆盖、永不删除"；若缺陷稿曾 `record-use` 登记，回收后以最终定名文件 `--replace --reason` 补登记。跨次执行不受影响：内容变更或用户要求重新生成时仍递增产出 `-v2`、`-v3`…并各自登记。
 - 成功或失败都清理**本轮**`.skill-tmp/literature-review-write/<run-id>`，不删源文件、文献库、原模板、已交付历史版本。具体见 `references/shared-project-assets-contract.md` 和 `references/asset-integration.md`。
 
 ## 2｜输入、缺失策略与真实性
@@ -105,13 +106,18 @@ description: 根据本项目真实技术文档和经核验的论文资料，直�
 
 **分节起草、分批写入（硬性，禁止一次性整篇生成）**：正文 `sections` 分批写入 `review-draft.json`——先写 1/2/3 主章标题骨架，再逐节成文（含二级小节），一节落盘后再写下一节；教师意见拟稿与引用映射单独成批。**禁止一次性生成整篇综述**。草稿全部落盘后 `compose_review.py`→`fill_review.py` 一次性填充，第 5/6 步（结构校验 + 逐页渲染分析）为**唯一终检**，写作中途不反复全文重检；终检问题只定点修订可填区内容后重新渲染复检。执行汇报注明分几节写入与一次终检结论。
 
+**动笔前先摸口径，出片走两段式（防"验收器口味"与版本号烧号）**：
+
+- **字数口径以最严者为准**：`compose_review.py` 的 2500 门槛**含标点**（去空白、去 `[[REF:…]]` 标记后计数），`validate_review.py` 的"2500 有效字符"**只算汉字/字母/数字（不计标点与引用编号）**——同一门禁两套口径。动笔前先对比生成/校验脚本的计数实现（先读后写），按**最严口径**写并留余量（余量大小按内容自然，不设死数字）；别按宽松口径压线，否则严格校验必挂、又烧一轮返工。
+- **两段式出片**：先在本轮 `$WORKDIR` 构建运行区构建件（不带 `-vN`、不进交付区），`validate_review.py` + 逐页渲染分析都对构建件执行；**全部通过后**才移入 `deliverables/literature-review/<课题简称>-文献综述-vN.docx`（N=交付目录已有最大版本号+1，预检目录、禁止覆盖历史文件）。失败稿留在运行区随 `cleanup` 删除，**不进交付目录、不占版本号**。交付后才发现缺陷时按第 1 节"最终版本唯一"改名回收。
+
 1. 使用 `scripts/inspect_template.py` 扫描模板，并通过 `scripts/template_tools.py` 与 `assets/template-lock.json` 校验真实 SHA-256；不相同直接拒绝而非猜测。只读保存模板原件。映射应与本次官方模板匹配：封面固定字段、题目两行位置、2节、1张2×1跨页表格、说明及签字区。
 2. 在本次工作区生成 `review-draft.json`：课题题目、可选 **title_lines 必须拼回完整题目**、已知封面字段、正文 `sections`（固定1/2/3三个主章，二级标题可用 `{"text": "2.1 ...", "kind": "subheading"}`）、教师意见拟稿、引用以 `[[REF:REF-xxx]]` 表示。**禁止在草稿手填 `[1]` 等本地编号**。
 3. `scripts/compose_review.py` 从共享 `references.json` 读取核验资料，验证每处引用来源，按**首现顺序编号**并生成本轮 `review-input.json`。**不修改共享项目文献原始编号、引用元数据或周计划**。
 4. `scripts/fill_review.py` 仅在**实际官方模板的已存在段落与表格可填区域**写入：题目按原封面两行，使用居中制表位及制表符线条保持左右端点一致；留空的封面字段保留统一下划线；正文保留原说明段落、原 2 行 1 列表格、教师审阅标签和签字/日期。正文新增段落只在第一行可填区内，教师评语只在第二行可填区内。
 5. `scripts/validate_review.py` 对原始 `sectPr`、官方固定段落 XML、表格/签字/日期 XML、正文 10.5pt 中西文字体、1.5倍行距、2500有效字符、所有 Word 引用上标（含 `[1,2]` 范围）、文后著录逐条验证；**脚本 PASS 只是程序结构通过**，不能代替视觉截图。
-6. **实际渲染每页 DOCX**：`python scripts/render_visual.py --file "$TEMP_DOCX" --outdir "$WORKDIR/render"`（依赖 LibreOffice 和 PyMuPDF；或使用本机等价渲染工具），逐张看图、必要时裁剪放大封面及参考文献/教师意见。检查题目两行是否同中心、下划线是否同起止、线与字是否重叠、页码、字体、表格断裂、乱码、上标、孤行、签名日期。修复只允许动可填区域，修后再全部渲染。若某个一级标题孤立在页末，可先尝试对该节草稿设置 `page_break_before: true`，但某些渲染器会忽略跨页表格中的分页指令；若截图仍有孤立标题，需要调整仅新增的正文分段并复验，未解决时明确报告 FAIL，不得碰官方模板分节/表格。
-7. 全部通过后将版本化 DOCX 移到 `<PROJECT_ROOT>/deliverables/literature-review/`；`record-use` 登记本版 SHA256 与引用 `REF-xxx`；填写执行报告与未知项；最后 `cleanup` 安全清理本轮运行目录。
+6. **实际渲染每页 DOCX**：`python scripts/render_visual.py --file "$TEMP_DOCX" --outdir "$WORKDIR/render"`（依赖 LibreOffice 和 PyMuPDF；或使用本机等价渲染工具），逐张看图、必要时裁剪放大封面及参考文献/教师意见。检查题目两行是否同中心、下划线是否同起止、线与字是否重叠、页码、字体、表格断裂、乱码、上标、孤行、签名日期。修复只允许动可填区域，修后再全部渲染。若某个一级标题孤立在页末，可先尝试对该节草稿设置 `page_break_before: true`，但某些渲染器会忽略跨页表格中的分页指令；若截图仍有孤立标题，需要调整仅新增的正文分段并复验，未解决时明确报告 FAIL，不得碰官方模板分节/表格。**版式几何量测只是辅助，放大目检才是判定依据**：制表位引导线（tab leader）、下划线端点这类元素在 PDF 绘制层常不是整段矩形，`get_drawings`/宽度过滤可能漏测（实测踩过：差点误判"双行题目下划线不等长"，3× 放大目检才确认端点对齐）——"同起止/等长"类判定以裁剪放大目检为准，几何量测可继续用作初筛但不得单独定性；工具量不到 ≠ 版式有问题，量测与目检冲突时先放大复检再定性，不得仅凭残缺量测判 FAIL 或返工。
+7. **全部通过后才定版号、才进交付区**：把运行区构建件移入 `<PROJECT_ROOT>/deliverables/literature-review/<课题简称>-文献综述-vN.docx`，N 在这一刻按交付目录已有最大版本号 +1 确定（预检目录、禁止覆盖历史文件）；`record-use` 登记本版 SHA256 与引用 `REF-xxx`；填写执行报告与未知项；最后 `cleanup` 安全清理本轮运行目录。
 
 **不允许**保留用户可见 Word 的错误后只说“各端软件有差异”。渲染无法修好就如实标明未通过，不可虚报成功。只有**真正使用 WPS**检查后，才可写“WPS 已验证”；用 LibreOffice 等兼容渲染器则必须写“未在 WPS 客户端实测”。
 
@@ -137,21 +143,25 @@ python scripts/inspect_reference_styles.py --report "$WORKDIR/style-audit.json"
 python scripts/compose_review.py --root "$PROJECT_ROOT" \
   --draft "$WORKDIR/review-draft.json" --out "$WORKDIR/review-input.json"
 
-# D. 直接以官方原模板为底稿填充，不会新建封面/表格
+# D. 两段式：先以官方原模板为底稿填充到运行区构建件（不带 -vN、不进交付区），
+#    输出路径不得与官方模板或任何旧版成品相同
 python scripts/fill_review.py --template assets/official-literature-review-template.docx \
-  --data "$WORKDIR/review-input.json" --out "$FINAL_DOCX"
-# 输出路径不得与官方模板或任何旧版成品相同
+  --data "$WORKDIR/review-input.json" --out "$WORKDIR/build.docx"
 python scripts/validate_review.py --template assets/official-literature-review-template.docx \
-  --file "$FINAL_DOCX" --data "$WORKDIR/review-input.json" \
+  --file "$WORKDIR/build.docx" --data "$WORKDIR/review-input.json" \
   --report "$WORKDIR/validation.json"
 
-# E. 逐张打开 render 中的页面 PNG 进行真正视觉分析
-python scripts/render_visual.py --file "$FINAL_DOCX" --outdir "$WORKDIR/render"
+# E. 逐张打开 render 中的页面 PNG 进行真正视觉分析（对运行区构建件执行）
+python scripts/render_visual.py --file "$WORKDIR/build.docx" --outdir "$WORKDIR/render"
 # 需要逐页真正打开渲染 PNG；预检 JSON 中的 PENDING 不是通过
 
-# F. 检查通过才发布和登记：引用 ID 按 review-input.json selected_reference_ids 组装
+# F. 全部通过才发布和登记：此时才移入交付区定 -vN（N=目录已有最大版本号+1，
+#    预检目录、禁止覆盖历史文件；失败稿留在运行区随 G 清理，不占版本号）。
+#    引用 ID 按 review-input.json selected_reference_ids 组装
+mv "$WORKDIR/build.docx" "$PROJECT_ROOT/deliverables/literature-review/<课题简称>-文献综述-vN.docx"
 python scripts/project_assets.py record-use --root "$PROJECT_ROOT" \
-  --file "$FINAL_DOCX" --doc-type literature-review --ref-ids "REF-001,REF-002"
+  --file "$PROJECT_ROOT/deliverables/literature-review/<课题简称>-文献综述-vN.docx" \
+  --doc-type literature-review --ref-ids "REF-001,REF-002"
 
 # G. 最后清理本轮专属运行区（成功/失败均执行，不清理历史版本或资产）
 python scripts/project_assets.py cleanup --root "$PROJECT_ROOT" --run-id "$RUN_ID"

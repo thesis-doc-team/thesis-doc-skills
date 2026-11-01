@@ -113,6 +113,8 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 - **成品集中**：本 Skill 的最终文书交付到 `<PROJECT_ROOT>/deliverables/technical-document/`，不散落其他 output 目录；查一个项目的全部产出只看这一个包。
 - **版本意识**：项目内容变更或调用 Skill 重新生成时，产出 `-v2`、`-v3`…**新文件绝不覆盖历史版本**；每个版本单独 `record-use` 登记（路径 + sha256），`activity.jsonl` 自然形成变更史。数据层（计划/事实/文献）变更走 `--replace --reason`，与成品版本史互相印证。
 - 历史版本属于持久成果，**不在清理范围**；清理只针对 `.skill-tmp` 运行目录。
+- **最终版本唯一（每次执行只交付一份最终版本）**：执行内发现缺陷需修复时，修复完成后生成修正版（如 `-v2`），随即将其**改名为本轮应交付的版本名**（如 `-v1`，先删缺陷稿再改名，同一版本的 MD/HTML/汇报等配套文件一起删旧换新）；一次执行结束时交付目录里本次成品只保留一份最终版，过程稿、缺陷稿不与最终版并存。缺陷稿不是历史版本，按此回收不算违反"绝不覆盖"；若缺陷稿曾 `record-use` 登记，回收后以最终定名文件 `--replace --reason` 补登记。跨次执行不受影响：内容变更或用户要求重新生成时仍递增产出 `-v2`、`-v3`…并各自登记。
+- **两段式出片（失败稿不进交付区、不占版本号）**：MD/HTML/汇报先在**本轮运行区暂存**构建与验收——`publish.py --out-dir` 指向运行区暂存目录，E4 自动检查与 E5 截图逐张目检都对暂存件执行；**全部 PASS 后**才整体移入 `deliverables/technical-document/` 定 `-vN`（N=交付目录已有最大版本号+1，预检目录、禁止覆盖历史文件）。失败/缺陷稿留在运行区随 `cleanup` 删除，**不进交付区、不烧版本号**；交付后才发现缺陷按上条"最终版本唯一"改名回收。（真实事故：发布直接落交付区 `-vN`，截图目检才发现缺陷，v2 永久留档。）
 
 ## 2. 输入识别——用户只需给项目本身
 
@@ -204,6 +206,7 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 
 - **分章分批写入**：MD 正文不得在一个写作动作里整篇倾倒。第一步只写骨架（各章标题 + 每章 2～4 条要点提纲）并保存；之后**逐章**成文——每章用独立的写入动作落盘，一章定稿后再写下一章，按第 1→10 章顺序推进；单章内容多时再分 2～3 批（概述段→要点段→小结段）追加写入。
 - **落盘后再续写**：一批内容没有写入文件之前，不开始下一批；不把多章合并成一次超长写入。
+- **响应异常自愈**：单次超长输出会超出稳定响应窗口（真实事故：822 行 10 章整篇写入致响应长时间等待直至中断）；响应等待明显变长或中断时，**立即自行切更小批次（半章/单节）续写**，不必等用户指示——续写前先读文件现状对齐断点，不重写已落盘内容。
 - **定点修订，不推倒重写**：中途发现已定稿章节有误，只定点修订该处并在执行汇报留痕；不因后文调整回炉重写全文。
 - **一次终检**：全部章节落盘后进入阶段 D，做**一次且仅一次**端到端终检；阶段 D 即唯一终检，写作过程中不反复全文重查。终检发现的问题定点修正后进入 HTML 阶段。
 - HTML 由脚本从最终 MD 一次性派生（阶段 E），`展示配置.json` 按条目逐项填写；不在 HTML 阶段回写或重写 MD。
@@ -306,15 +309,16 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 python <skill-root>/scripts/diagram_svg.py engine
 ```
 
-`svg_capable=true` 才能期待 Mermaid 转为离线 SVG；为 `false` 时**立即告知用户**（不是交付时才说）：本次流程图将保留可展开源码回退、执行汇报记 WARN，并给出安装命令（`npm i -g @mermaid-js/mermaid-cli` 或 Graphviz）。用户装好引擎后重跑 `publish.py` 会自动生成**新版本** HTML 补上 SVG，不覆盖旧版。`publish.py` 本身也会做同样的预检并写入报告的 `svg_engines` 字段。
+`svg_capable=true` 才能期待 Mermaid 转为离线 SVG；为 `false` 时**立即告知用户**（不是交付时才说）：本次流程图将保留可展开源码回退、执行汇报记 WARN，并给出安装命令（`npm i -g @mermaid-js/mermaid-cli` 或 Graphviz）。**安装前先说明并征得同意**：讲清缺的是"Mermaid 文本→SVG 转换器"、要装什么、体量多大、走哪个源，经用户确认再执行，或把命令交给用户自跑——winget/npm 全局安装会触发 UAC/权限提示，用户不知情时容易被取消（真实事故：Graphviz 弹 UAC 被取消、npm 安装被用户中止）。预检也可提前到写作阶段做一次，让用户尽早决定装不装；至少不得晚于本阶段开工。用户装好引擎后重跑 `publish.py` 会自动生成**新版本** HTML 补上 SVG，不覆盖旧版。`publish.py` 本身也会做同样的预检并写入报告的 `svg_engines` 字段。
 
 ```bash
-python <skill-root>/scripts/publish.py "output/technical-document/<项目名>-技术文档.md" \
-  --config "output/technical-document/展示配置.json" \
-  --out-dir "output/technical-document"
+# 两段式（见 1.5）：--out-dir 先指向本轮运行区暂存目录；E5 全部 PASS 后才移入 deliverables/technical-document/ 定 -vN
+python <skill-root>/scripts/publish.py "$WORKDIR/staging/<项目名>-技术文档.md" \
+  --config "$WORKDIR/staging/展示配置.json" \
+  --out-dir "$WORKDIR/staging"
 ```
 
-没有配置时删除 `--config` 参数。发布程序依次：**检查 MD → 解析 Markdown → 转换 Mermaid 为离线 SVG（Mermaid CLI 优先，简单 flowchart 可用 Graphviz 回退）→ 填入用户页面模板 → 输出 HTML → 按 MD 对照全文 → 逐图渲染内容断言（样式闭合 / 标签存活 / 字号可读性代理，防"SVG 渲染损坏却全绿"）→ 生成 JSON 报告**。校验默认落盘同名 `<html>.audit.json` 证据文件，作为 record-use 登记凭证。MD 检查 FAIL 时禁止进入 HTML 阶段；HTML 检查 FAIL（含渲染内容断言失败）时不得以完成状态交付。默认创建带版本号新 HTML，防止覆盖已有成果。
+没有配置时删除 `--config` 参数。发布程序依次：**检查 MD → 解析 Markdown → 转换 Mermaid 为离线 SVG（Mermaid CLI 优先，简单 flowchart 可用 Graphviz 回退）→ 填入用户页面模板 → 输出 HTML → 按 MD 对照全文 → 逐图渲染内容断言（样式闭合 / 标签存活 / 字号可读性代理，防"SVG 渲染损坏却全绿"）→ 生成 JSON 报告**。校验默认落盘同名 `<html>.audit.json` 证据文件，作为 record-use 登记凭证。MD 检查 FAIL 时禁止进入 HTML 阶段；HTML 检查 FAIL（含渲染内容断言失败）时不得以完成状态交付。默认创建带版本号新 HTML，防止覆盖已有成果；按 1.5 两段式出片，发布输出先落运行区暂存，E5 通过后才移交付区定版号。
 
 生成网页后也可以独立复查：
 
@@ -341,6 +345,7 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
   3. **窄视口与章节截图用 iframe**：390px 移动端验证用固定宽度 iframe 强制真实布局视口；章节截图用负偏移 iframe 切片（`screenshot_audit.py harness`），因为 `--screenshot` 永远从文档顶部开始、锚点/`scrollIntoView()` 无效；全页长图有高度上限，超出部分靠章节切片补齐。
   4. **探针脚本红线**：注入 JS 不用带反斜杠转义的 heredoc（会层层转义成语法错误静默失败），用独立 `.js` 文件由 Python 读取；探针立即执行不等事件、只测一次写一次结果；出错先抓浏览器 Console/dump-dom 报错，不对着截图猜。
   5. **动效如实声明**：滚动高亮、阅读进度条等无法逐帧截图时写"代码审查确认，未逐帧实测"，不算截图验证通过项。
+  6. **交互态截图先构造可达状态**：抽屉/搜索/交互态截图必须先把状态真实构造出来（抽屉打开、搜索框可见、目标章节滚动到位）再拍；拍到的不是目标状态＝拍摄失败，按第 2 条重拍，**不得把"拍不到"写成"功能缺失/页面没有"**（真实事故：搜索框在抽屉内、抽屉没开就拍，险些误判）。
 
 如需手工修正布局，只能改 HTML 展示层或通用模板的安全副本；若发现技术事实错误，先依据项目资料修订 MD，再从 MD **重新生成** HTML，禁止直接改 HTML 技术正文形成双版本漂移。
 
@@ -349,6 +354,7 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 - MD 成功但 HTML 失败：保留有效 MD，报告 HTML 阶段失败及原因；不得把任务整体报为完成。
 - 生成成功但有 SVG 回退：HTML 可阅读但图形化部分有 WARN，说明真实数量及原因。
 - 同时生成两份文件后，再完成最终 `执行汇报.md`，列出 MD 与 HTML 的对应路径和检查结果，由用户最终验收。
+- **交付移动（两段式收口）**：E5 全部 PASS 且汇报完成后，才把暂存区的 MD/HTML/`.audit.json`/`.report.json`/`执行汇报.md` 整体移入 `deliverables/technical-document/` 并定 `-vN`（N=已有最大版本号+1）；失败稿留运行区随 `cleanup` 删除，不进交付区、不占版本号。
 
 ## 8. 一次性交付和停止条件
 
