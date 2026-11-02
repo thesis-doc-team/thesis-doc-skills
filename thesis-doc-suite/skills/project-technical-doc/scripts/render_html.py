@@ -2,6 +2,10 @@
 """Render offline HTML from the approved output Markdown, never from independent source claims.
 Content-specific homepage cards are curated in optional showcase configuration.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import base64
 import html

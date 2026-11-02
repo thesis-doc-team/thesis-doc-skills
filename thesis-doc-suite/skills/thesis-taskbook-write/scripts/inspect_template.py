@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """只读分析用户指定的任务书 DOCX；不修改原件。"""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import hashlib
 import json

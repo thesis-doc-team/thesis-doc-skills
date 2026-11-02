@@ -60,7 +60,7 @@ class SampleAndLockTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             project=Path(td)
             def call(*args):
-                p=subprocess.run([sys.executable,str(tool),*args],capture_output=True,text=True,encoding="utf-8",errors="replace")
+                p=subprocess.run([sys.executable,str(tool),*args],capture_output=True,text=True)
                 if p.returncode!=0:raise AssertionError(p.stderr)
                 return p.stdout
             call('init','--root',str(project),'--project-id','SHARED-PROJECT','--name','联调测试')
@@ -81,7 +81,7 @@ class SampleAndLockTests(unittest.TestCase):
             old=json.loads(f.read_text(encoding='utf8'))
             old['items'][0]['description']='冲突修改'
             f.write_text(json.dumps(old,ensure_ascii=False),encoding='utf8')
-            p=subprocess.run([sys.executable,str(tool),'merge','--root',str(project),'--kind','progress','--input',str(f)],capture_output=True,text=True,encoding="utf-8",errors="replace")
+            p=subprocess.run([sys.executable,str(tool),'merge','--root',str(project),'--kind','progress','--input',str(f)],capture_output=True,text=True)
             self.assertNotEqual(p.returncode,0)
             self.assertEqual((aset/'progress.json').read_bytes(),before)
 

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Structural/fixed-label QA (visual render review is an additional mandatory gate)."""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse, json, hashlib, re
 from pathlib import Path
 from docx import Document
@@ -9,13 +13,14 @@ from lxml import etree
 ROOT=Path(__file__).resolve().parents[1]
 
 def norm(s):return re.sub(r'\s+','',s or '')
+VAGUE=('认真研究','继续完善','多查资料','提高质量','进行验证','开展测试','建立机制','设计表格','整理资料','记录返回码','核对流程','设计分步检查表','建立对照机制','加强管理')
 def serialized(obj):return etree.tostring(obj)
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--template',required=True);p.add_argument('--file',required=True)
     p.add_argument('--data',required=True);p.add_argument('--report',required=True);a=p.parse_args()
     lock=json.loads((ROOT/'assets/template-lock.json').read_text(encoding='utf-8'))
-    errs=[];warnings=[]
+    errs=[];warnings=[];vague=[]
     template=Path(a.template);out=Path(a.file)
     if hashlib.sha256(template.read_bytes()).hexdigest()!=lock['sha256']:
         errs.append('源官方模板SHA-256不匹配')
@@ -50,7 +55,10 @@ def main():
             body=t.cell(base+5,1).text
             if '指导教师指出存在问题：' not in body or '指导教师提出修改意见：' not in body:
                 errs.append(f'第{i+1}次缺少两组标签')
-            if '分条列出。如' in body or 'XX' in body:errs.append(f'第{i+1}次留下官方示例占位')
+            if '分条列出。如：' in body:errs.append(f'第{i+1}次残留官方示例引导句：示例开头“分条列出。如：”整句应删除，按两段标签作答')
+            if re.search(r'\d+\.XX',body):errs.append(f'第{i+1}次残留官方示例占位（“数字.XX”样例须替换为真实问题/意见；张XX、20XX 等脱敏名/年份写法不在此限）')
+            hit=[w for w in VAGUE if w in body]
+            if hit:vague.append(f'第{i+1}次疑似空泛元动作/套话命中：{"、".join(hit)}（非阻断提示，命中≠必错，带对象+判据即合格；对照 numbered-pairs.md 三要素人工复核）')
             pairs=rec['issue_pairs']; half=body.split('指导教师提出修改意见：')
             left=half[0].replace('指导教师指出存在问题：','');right=half[1] if len(half)>1 else ''
             for m in range(1,len(pairs)+1):
@@ -71,12 +79,14 @@ def main():
     if any(rec.get('date') and not rec.get('date_verified') for rec in data['records']):errs.append('有未核实指导日期')
     if any(rec.get('location') and not rec.get('location_verified') for rec in data['records']):errs.append('有未核实地点')
     if len(data['records'])<8:errs.append('指导次数不足8次')
+    warnings.extend(vague)
     report={'result':'PASS' if not errs else 'FAIL','records':n,'errors':list(dict.fromkeys(errs)),
-            'warnings':warnings,'input_template_sha256':lock['sha256'],
+            'warnings':warnings,'vague_action_hits':len(vague),'input_template_sha256':lock['sha256'],
             'visual_inspection_required':True}
     Path(a.report).parent.mkdir(parents=True,exist_ok=True)
     Path(a.report).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(report['result'],f'records={n}, errors={len(errs)}')
+    if vague:print('WARN',len(vague),'条疑似空泛元动作/套话（非阻断，见报告 warnings，须人工复核）')
     if errs:
         print('\n'.join(report['errors'][:20]));raise SystemExit(1)
 

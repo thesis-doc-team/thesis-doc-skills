@@ -4,7 +4,7 @@
 
 ## 安装
 
-解压后把整个 `opening-report-writer/` 目录放入 Claude Code 的 `.claude/skills/` 或 Codex 的 `.agents/skills/`。Skill 名保持为 **`opening-report-writer`**，兼容 V3.4 的调用方式。运行脚本需要 Python 3.10+、`python -m pip install -r requirements.txt`；逐页 PNG 检查还需要 `soffice` / LibreOffice 和 `PyMuPDF`。
+解压后把整个 `opening-report-writer/` 目录放入 Claude Code 的 `.claude/skills/` 或 Codex 的 `.agents/skills/`。Skill 名保持为 **`opening-report-writer`**，兼容 V3.4 的调用方式。运行脚本需要 Python 3.10+、`python -m pip install -r requirements.txt`；逐页 PNG 检查还需要 `PyMuPDF`；DOCX→PDF 转换链依次探测 soffice（LibreOffice）→ Word COM → WPS COM，亦可 `--pdf` 直通已转换 PDF。
 
 **不要把项目数据放进 Skills 安装目录**。一个项目用一个 `<PROJECT_ROOT>/` 资产包，包含 `project-assets/`（数据）、`deliverables/`（成品）、`.skill-tmp/`（本轮运行区）。任务书/技术文档/开题/中期等 Skill 共用项目身份、事实、文献和唯一周计划，却分别负责自己的官方模板和填充代码。
 

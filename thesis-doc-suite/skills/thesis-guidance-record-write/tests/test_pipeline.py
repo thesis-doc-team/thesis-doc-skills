@@ -57,5 +57,55 @@ class Tests(unittest.TestCase):
    call(tool,'cleanup','--root',root,'--run-id','unit-test')
    self.assertFalse(Path(run).exists())
    self.assertTrue((root/'project-assets'/'project.json').exists())
+ def test_xx_text_not_false_flagged(self):
+  # 复盘回归：张XX/20XX 等脱敏名与年份是合法正文，不得被宽字面 'XX' 探针误伤
+  with tempfile.TemporaryDirectory() as td:
+   data=json.loads((BASE/'tests/format-smoke-input.json').read_text(encoding='utf-8'))
+   data['records'][0]['issue_pairs'][0]['problem']='联系人张XX的联系电话字段格式需核对，20XX 编码规则尚未在状态字典中定义。'
+   data['records'][0]['issue_pairs'][0]['action']='补充号码字段正则与 20XX 编码对照表，用三条真实号码样本回放校验解析结果。'
+   inp=Path(td)/'draft.json';inp.write_text(json.dumps(data,ensure_ascii=False),encoding='utf-8')
+   out=Path(td)/'guide.docx'
+   call(BASE/'scripts/fill_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--out',out)
+   call(BASE/'scripts/validate_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--file',out,'--report',Path(td)/'qa.json')
+   self.assertEqual(json.loads((Path(td)/'qa.json').read_text(encoding='utf-8'))['result'],'PASS')
+ def test_example_residue_flagged_precisely(self):
+  # 复盘回归：官方示例残留按精确片段拦截并给专属报错（不再宽字面拦 'XX'）
+  with tempfile.TemporaryDirectory() as td:
+   data=json.loads((BASE/'tests/format-smoke-input.json').read_text(encoding='utf-8'))
+   data['records'][0]['issue_pairs'][0]['problem']='分条列出。如：替换后仍保留示例引导句的问题描述占位内容。'
+   data['records'][0]['issue_pairs'][0]['action']='删除示例引导句与 3.XX 占位后按两段标签重写本条真实内容。'
+   inp=Path(td)/'draft.json';inp.write_text(json.dumps(data,ensure_ascii=False),encoding='utf-8')
+   out=Path(td)/'guide.docx'
+   call(BASE/'scripts/fill_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--out',out)
+   r=call(BASE/'scripts/validate_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--file',out,'--report',Path(td)/'qa.json',ok=False)
+   self.assertNotEqual(r.returncode,0)
+   rep=json.loads((Path(td)/'qa.json').read_text(encoding='utf-8'))
+   self.assertEqual(rep['result'],'FAIL')
+   joined=' '.join(rep['errors'])
+   self.assertIn('示例引导句',joined);self.assertIn('示例占位',joined)
+ def test_append_record_tool_end_to_end(self):
+  # 复盘回归：逐条落盘官方工具（--init + --pair x8）替代自造 frag+append 脚本
+  with tempfile.TemporaryDirectory() as td:
+   td=Path(td);draft=td/'draft.json'
+   call(BASE/'scripts/append_record.py','--draft',draft,'--init','--project-id','demo-guidance-002','--title','基于STM32与4G通信的安全监测系统')
+   for i in range(8):
+    call(BASE/'scripts/append_record.py','--draft',draft,'--pair',f'第{i+1}阶段缺少可核对的输出清单，影响进度确认与后续安排。||补充该阶段交付清单与核对方法，用一次完整回放确认结果可复现。')
+   out=td/'guide.docx'
+   call(BASE/'scripts/fill_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',draft,'--out',out)
+   call(BASE/'scripts/validate_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',draft,'--file',out,'--report',td/'qa.json')
+   self.assertEqual(json.loads((td/'qa.json').read_text(encoding='utf-8'))['result'],'PASS')
+ def test_vague_action_warning_non_blocking(self):
+  # 复盘回归：空泛元动作只进 warnings 提示人工复核，不一刀切 FAIL（带判据的“进行验证”属正例）
+  with tempfile.TemporaryDirectory() as td:
+   data=json.loads((BASE/'tests/format-smoke-input.json').read_text(encoding='utf-8'))
+   data['records'][0]['issue_pairs'][0]['action']='认真研究相关资料并继续完善，进行验证后建立机制。'
+   inp=Path(td)/'draft.json';inp.write_text(json.dumps(data,ensure_ascii=False),encoding='utf-8')
+   out=Path(td)/'guide.docx'
+   call(BASE/'scripts/fill_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--out',out)
+   call(BASE/'scripts/validate_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--file',out,'--report',Path(td)/'qa.json')
+   rep=json.loads((Path(td)/'qa.json').read_text(encoding='utf-8'))
+   self.assertEqual(rep['result'],'PASS')
+   self.assertGreaterEqual(rep['vague_action_hits'],1)
+   self.assertTrue(any('空泛' in w for w in rep['warnings']))
 
 if __name__=='__main__':unittest.main()

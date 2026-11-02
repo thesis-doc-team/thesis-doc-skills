@@ -41,7 +41,7 @@ class UpgradedContract(unittest.TestCase):
              [{'type':'paragraph','text':'这个段落只用于验证真实首行缩进属性是否丢失。'*150}])}
              for i,t in enumerate(DEFAULT_TITLES,1)]
         payload={'cover':{},'sections':sections,'references':refs,
-                 'teacher_opinion':'该生围绕自动化测试方向选题，能够查阅并整理相关文献，对国内外研究现状有较为系统的把握；开题报告结构完整、条理清晰，引用文献真实可查，写作规范。建议开题并按计划开展课题工作，最终评价以指导教师审定为准。'}
+                 'teacher_opinion':'该生围绕自动化测试方向选题，能够查阅并整理相关文献，对国内外研究现状有较为系统的把握；开题报告结构完整、条理清晰，引用文献真实可查，写作规范。建议开题并按计划开展课题工作。'}
         with tempfile.TemporaryDirectory() as d:
             d=Path(d); dest=d/'good.docx'; corrupt=d/'bad.docx'
             build(payload,TEMPLATE,dest)

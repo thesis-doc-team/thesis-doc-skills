@@ -17,7 +17,7 @@ class AnonymizedExampleTests(unittest.TestCase):
         sample=ROOT/'assets'/'reference-samples'/'sample-a-smart-interaction-anonymized.docx'
         official=ROOT/'assets'/'official-opening-report-template.docx'
         self.assertNotEqual(hashlib.sha256(sample.read_bytes()).digest(),hashlib.sha256(official.read_bytes()).digest())
-        self.assertEqual(hashlib.sha256(official.read_bytes()).hexdigest(),(ROOT/'assets'/'template.sha256').read_text(encoding='utf-8').strip())
+        self.assertEqual(hashlib.sha256(official.read_bytes()).hexdigest(),(ROOT/'assets'/'template.sha256').read_text().strip())
         self.assertIn('【脱敏写作范本',Document(sample).tables[0].cell(0,0).text)
 
     def test_sample_does_not_ship_source(self):

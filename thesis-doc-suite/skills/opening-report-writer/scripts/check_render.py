@@ -3,6 +3,10 @@
 
 Requires PyMuPDF. This is only a helper; all pages still need human visual QA.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import json
 import re

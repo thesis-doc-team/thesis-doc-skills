@@ -2,6 +2,10 @@
 """Offline import helper. Explicit identifiers become generic strings, metadata is scrubbed.
 Source sample is used only for style study, never as a factual source for another project.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import re,sys
 from pathlib import Path
 from docx import Document

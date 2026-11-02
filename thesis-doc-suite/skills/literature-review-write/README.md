@@ -12,7 +12,7 @@
 
 把本压缩包里的**`literature-review-write/` 目录本身**解压到你的 Claude Code Skills 目录（例如项目 `.claude/skills/literature-review-write/`）或 Codex Skills 搜索目录，读取 `SKILL.md`。不要把 `project-assets/` 放进 Skill 安装目录。
 
-要求本机有 Python 3.10+、`python-docx`、`lxml`；截图预检额外需要 `PyMuPDF` 和可从命令行运行的 `soffice`（LibreOffice）。安装依赖：`python -m pip install -r requirements.txt`。
+要求本机有 Python 3.10+、`python-docx`、`lxml`；截图预检额外需要 `PyMuPDF`；DOCX→PDF 转换链依次探测 soffice（LibreOffice）→ Word COM → WPS COM，亦可 `--pdf` 直通本机已转换的 PDF。安装依赖：`python -m pip install -r requirements.txt`。
 
 参考指令：
 
@@ -48,6 +48,7 @@
 ```bash
 python tests/smoke_test.py
 python tests/test_regression.py
+# 按需：有格式争议时才跑（非固定开销，格式真源是 fill_review/validate_review 校验实现）
 python scripts/inspect_reference_styles.py --report /tmp/literature-sample-audit.json
 ```
 

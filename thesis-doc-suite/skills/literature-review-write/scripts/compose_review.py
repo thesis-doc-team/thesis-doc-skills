@@ -6,6 +6,10 @@ Draft input (JSON): {project_id,title,title_lines?,cover?,sections:[{heading,
 Cite by [[REF:REF-001]] within narrative text; this tool maps to consecutive
 numbers in FIRST-APPEARANCE order. It never invents a citation.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse, json, re
 from pathlib import Path
 
@@ -34,7 +38,9 @@ def compose(root, draft):
         if not re.match(r'^'+str(i)+r'\s+', (sec.get('heading') or '')):
             raise ValueError(f'主章标题须按 1/2/3 连续编号：第{i}章')
     if len(re.sub(r'\s+', '', opinion)) < 50:
-        raise ValueError('指导教师评语拟稿须不少于 50 字')
+        raise ValueError('指导教师评语拟稿须不少于 50 字（本端去空白含标点计数；校验端只算汉字/字母/数字，按最严口径留余量）')
+    if any(h in opinion for h in ('本栏为拟稿','供教师审定拟稿','供指导教师审定','审定为准')) or re.search(r'审定.{0,2}为准',opinion):
+        raise ValueError('指导教师评语禁止拟稿提示语/元话语尾巴（本栏为拟稿/供教师审定拟稿/供指导教师审定/审定为准，覆盖以教师最终审定为准、最终评价以指导教师审定为准等变体，含“审定结果为准”等插字变体）：正文以实质收束句（如"建议按计划进入毕业设计下一阶段工作。"）自然结束')
     all_ids, seen = [], set()
     structured = []
     narrative_chars = 0
@@ -53,7 +59,7 @@ def compose(root, draft):
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f'空的正文段落: {heading}')
             if re.search(r'\[\d+(?:[,，\-–]\d+)*\]', REF_TOKEN.sub('', value)):
-                raise ValueError('草稿中不可直接填写文内 [1] 编号；必须用 [[REF:REF-xxx]] 避免编号漂移')
+                raise ValueError('草稿中的方括号数字已被拦截：若是文内引用编号（如 [1]、[1,2]、[1-3]）必须改用 [[REF:REF-xxx]] 避免编号漂移；若确非引用（如归一化区间 [0,1]、样本编号），改用（0,1）等圆括号或去掉方括号，避免被误判为手填引用')
             if '[[' in REF_TOKEN.sub('', value) or ']]' in REF_TOKEN.sub('', value):
                 raise ValueError('发现不合法或未闭合的参考文献标记，必须使用 [[REF:REF-001]]')
             for rid in REF_TOKEN.findall(value):

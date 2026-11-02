@@ -166,6 +166,21 @@ class SharedAssets(unittest.TestCase):
             mod.create_workdir(NS(root=self.root, run_id='unsafe'))
         self.assertFalse((outside_base/'thesis-taskbook-write'/'unsafe').exists())
 
+    def test_record_use_relative_path_resolves_against_root(self):
+        # 复盘回归：--file 相对路径按 --root 解析，不随进程 cwd 漂移（曾报"最终文件不存在"误导排查）
+        import os
+        self.merge('references', self.fixture_references())
+        final = self.root/'deliverables'/'taskbook'/'final.docx'
+        final.parent.mkdir(parents=True)
+        final.write_bytes(b'SYNTHETIC TEST - NOT DOCX')
+        cwd = Path.cwd()
+        try:
+            os.chdir(tempfile.gettempdir())
+            mod.record_use(NS(root=self.root, file='deliverables/taskbook/final.docx',
+                              doc_type='taskbook', ref_ids='REF-001', actor='test'))
+        finally:
+            os.chdir(cwd)
+
     def test_final_record_only_existing_file(self):
         self.merge('references', self.fixture_references())
         with self.assertRaises(ValueError):

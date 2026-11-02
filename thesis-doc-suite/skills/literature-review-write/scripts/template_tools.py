@@ -1,4 +1,8 @@
 """Locked official DOCX guard. A changed university template requires a new mapping and tests."""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 from pathlib import Path
 import hashlib,json
 from docx import Document

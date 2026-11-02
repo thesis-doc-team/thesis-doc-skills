@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """原位填充官方任务书副本。只触及表内可填写单元格，不调整表格/行列/边框/页边距/附注。"""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import json
 import re
@@ -113,6 +117,10 @@ def validate_input(data):
         raise ValueError('主要参考文献少于 10 条，不能作为合规任务书生成')
     if len(re.sub(r'\s+', '', data['issuer_opinion'])) < 50:
         raise ValueError('任务下达人意见不足 50 字')
+    for k in ('issuer_opinion', 'receiver_opinion'):
+        v = str(data.get(k) or '')
+        if any(h in v for h in ('本栏为拟稿','供教师审定拟稿','供指导教师审定','教师审定为准')) or re.search(r'审定.{0,2}为准',str(v)):
+            raise ValueError(f'{k} 禁止拟稿提示语/元话语尾巴（本栏为拟稿/供教师审定拟稿/供指导教师审定/教师审定为准，含“审定结果为准”等插字变体——正确处置是删尾巴收于实质句，不得插字绕过）：正文以实质收束句（如"同意下达任务书并按计划开展课题工作。"）自然结束，拟稿属性由执行报告与签字留空体现')
     for r in data['references']:
         if not isinstance(r, dict) or not all(r.get(k) for k in ('citation', 'source_url', 'source_type')):
             raise ValueError('每条参考文献必须有 citation/source_url/source_type 证据字段')

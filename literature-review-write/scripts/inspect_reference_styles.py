@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Read-only measurements of de-identified review samples. Measures style, never imports sample claims."""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 from pathlib import Path
 from collections import defaultdict,Counter
 from docx import Document

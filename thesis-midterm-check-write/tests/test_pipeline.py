@@ -146,4 +146,79 @@ class TestStrictTemplate(unittest.TestCase):
             self.assertFalse(r['passed'])
             self.assertTrue(any('提示语' in x for x in r['problems']),r['problems'])
 
+    def test_meta_tail_rejected(self):
+        # 用户反馈：'最终评价以指导教师审定为准。'是画蛇添足元话语，正文不写、脚本拦截
+        with tempfile.TemporaryDirectory() as td:
+            d=draft()
+            d['teacher_opinion_paragraphs']=[TEXT1,TEXT2+'建议按整改意见继续推进下一阶段工作，最终评价以指导教师审定为准。']
+            with self.assertRaises(ValueError):fill_docx(DEFAULT_TEMPLATE,d,Path(td)/'out.docx')
+
+    def test_validate_flags_meta_tail(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=Path(td)/'clean.docx'
+            fill_docx(DEFAULT_TEMPLATE,draft(),f)
+            d2=draft()
+            d2['teacher_opinion_paragraphs']=[TEXT1,TEXT2+'最终评价以指导教师审定为准。']
+            r=validate(DEFAULT_TEMPLATE,f,d2)
+            self.assertFalse(r['passed'])
+            self.assertTrue(any('提示语' in x for x in r['problems']),r['problems'])
+
+    def test_bare_count_ref_warns_non_blocking(self):
+        # 用户截图复盘：'6 个 pytest 测试用例尚未执行'式裸数量/工具名指代意义不明——机器提示命中但不阻断，改写由语义复核判罚
+        with tempfile.TemporaryDirectory() as td:
+            f=Path(td)/'doc.docx'
+            d=draft()
+            d['issue_pairs'][0]['problem']='语音链路的 6 个 pytest 测试用例尚未执行，识别成功率与响应时延没有任何实测记录可供核对，实际效果无法判断。'
+            d['progress_paragraphs']=[TEXT1,'目前 6 个单元测试用例已编写但尚未执行，识别效果与资源占用都还没有实测数据，后续按计划补充。'*2]
+            fill_docx(DEFAULT_TEMPLATE,d,f)
+            r=validate(DEFAULT_TEMPLATE,f,d)
+            self.assertTrue(r['passed'],r['problems'])
+            self.assertGreaterEqual(r['clarity_hits'],2)
+            self.assertTrue(any('pytest' in w for w in r['warnings']),r['warnings'])
+            self.assertTrue(any('点名' in w for w in r['warnings']),r['warnings'])
+
+    def test_named_plain_rewriting_not_flagged(self):
+        # 点名对象的平实改写（'语音唤醒、指令识别等 6 项单元测试'）不命中，防误杀
+        with tempfile.TemporaryDirectory() as td:
+            f=Path(td)/'doc.docx'
+            d=draft()
+            d['issue_pairs'][0]['problem']='语音唤醒、指令识别、JSON 解析等 6 项单元测试已编写但尚未运行，识别成功率与响应时延没有实测数据可核对，实际效果无法判断。'
+            d['progress_paragraphs']=[TEXT1,'目前语音唤醒、端点检测等 6 项单元测试已编写但尚未运行，识别效果与资源占用都还没有实测数据，后续按计划补充。'*2]
+            fill_docx(DEFAULT_TEMPLATE,d,f)
+            r=validate(DEFAULT_TEMPLATE,f,d)
+            self.assertTrue(r['passed'],r['problems'])
+            self.assertEqual(r['clarity_hits'],0,r['warnings'])
+
+    def test_meta_tail_variant_rejected(self):
+        # 用户复盘实撞：'最终评价以指导教师审定结果为准。'（插"结果"骗过子串守卫）同属元话语尾巴，fill 必拒
+        with tempfile.TemporaryDirectory() as td:
+            d=draft()
+            d['teacher_opinion_paragraphs']=[TEXT1,TEXT2+'建议按整改意见继续推进下一阶段工作，最终评价以指导教师审定结果为准。']
+            with self.assertRaises(ValueError):fill_docx(DEFAULT_TEMPLATE,d,Path(td)/'out.docx')
+
+    def test_validate_flags_meta_tail_variant(self):
+        with tempfile.TemporaryDirectory() as td:
+            f=Path(td)/'clean.docx'
+            fill_docx(DEFAULT_TEMPLATE,draft(),f)
+            d2=draft()
+            d2['teacher_opinion_paragraphs']=[TEXT1,TEXT2+'最终评价以指导教师审定结果为准。']
+            r=validate(DEFAULT_TEMPLATE,f,d2)
+            self.assertFalse(r['passed'])
+            self.assertTrue(any('提示语' in x for x in r['problems']),r['problems'])
+
+    def test_spec_sample_closing_passes_gates(self):
+        # 防回归（用户审计）：SKILL §3.2 ⑤ 收束句样例喂给门禁必须通过——规范文案与可执行门禁不得再分叉
+        import re as _re
+        text=(ROOT/'SKILL.md').read_text(encoding='utf-8')
+        m=_re.search(r'→⑤收束`([^`]+)`',text)
+        self.assertIsNotNone(m,'SKILL §3.2 ⑤ 收束句样例未找到')
+        closing=m.group(1)
+        with tempfile.TemporaryDirectory() as td:
+            f=Path(td)/'spec.docx'
+            d=draft()
+            d['teacher_opinion_paragraphs']=[TEXT1,TEXT2+closing]
+            fill_docx(DEFAULT_TEMPLATE,d,f)
+            r=validate(DEFAULT_TEMPLATE,f,d)
+            self.assertTrue(r['passed'],r['problems'])
+
 if __name__=='__main__':unittest.main()

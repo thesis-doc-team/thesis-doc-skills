@@ -13,8 +13,12 @@ class TestGuards(unittest.TestCase):
             'cover':{},
             'sections':[{'id':i,'title':title,'blocks':([] if i==7 else [{'type':'paragraph','text':'仅供测试'}])} for i,title in enumerate(DEFAULT_TITLES,1)],
             'references':[{'text':f'模拟作者{i}. 非真实测试出处[J]. 软件测试, 2020, 1(1):1-2.', 'verified':True,'source_type':'journal','source_url':f'https://example.invalid/{i}'} for i in range(1,11)],
-            'teacher_opinion':'该生围绕软件测试方向选题，能够查阅并整理相关文献，对国内外研究现状有较为系统的把握；开题报告结构完整、条理清晰，引用文献真实可查，写作规范。建议开题并按计划开展课题工作，最终评价以指导教师审定为准。'
+            'teacher_opinion':'该生围绕软件测试方向选题，能够查阅并整理相关文献，对国内外研究现状有较为系统的把握；开题报告结构完整、条理清晰，引用文献真实可查，写作规范。建议开题并按计划开展课题工作。'
         }
+    def test_reject_meta_tail_opinion(self):
+        """用户反馈回归：元话语尾巴（最终评价以指导教师审定为准 等）画蛇添足，validate_input 必须拦截。"""
+        self.data['teacher_opinion']=self.data['teacher_opinion']+'最终评价以指导教师审定为准。'
+        with self.assertRaises(ValueError):validate_input(self.data)
     def test_reject_unverified(self):
         self.data['references'][3]['verified']=False
         with self.assertRaisesRegex(ValueError,'未核查'):validate_input(self.data)
@@ -57,5 +61,43 @@ class TestGuards(unittest.TestCase):
             report=check(TEMPLATE,bad,self.data)
             self.assertEqual(report['status'],'FAIL')
             self.assertTrue(any('左对齐' in e for e in report['errors']),report['errors'])
+
+    def test_reject_meta_tail_variant_opinion(self):
+        # 用户复盘实撞：'最终评价以指导教师审定结果为准。'（插字绕禁语）同属元话语尾巴，validate_input/build 双拦
+        self.data['teacher_opinion']=self.data['teacher_opinion']+'最终评价以指导教师审定结果为准。'
+        with self.assertRaises(ValueError):validate_input(self.data)
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):build(self.data,TEMPLATE,Path(d)/'bad.docx')
+    def test_check_flags_meta_tail_variant(self):
+        from docx import Document
+        with tempfile.TemporaryDirectory() as d:
+            ok=Path(d)/'ok.docx';build(self.data,TEMPLATE,ok)
+            mod=Document(ok)
+            def all_paras(dd):
+                for p in dd.paragraphs:yield p
+                for t in dd.tables:
+                    for row in t.rows:
+                        for c in row.cells:
+                            for p in c.paragraphs:yield p
+            target=next(p for p in all_paras(mod) if '该生围绕软件测试方向选题' in p.text)
+            target.add_run('最终评价以指导教师审定结果为准。')
+            bad=Path(d)/'variant.docx';mod.save(bad)
+            report=check(TEMPLATE,bad,self.data)
+            self.assertEqual(report['status'],'FAIL')
+            self.assertTrue(any('提示语' in e for e in report['errors']),report['errors'])
+    def test_spec_sample_closing_passes_gates(self):
+        # 防回归（用户审计）：SKILL 收束句样例喂给门禁必须通过——规范与门禁不得再分叉
+        import re as _re
+        m=_re.search(r'\*\*收束\*\*：`([^`]+)`',(BASE/'SKILL.md').read_text(encoding='utf-8'))
+        self.assertIsNotNone(m,'SKILL 收束句样例未找到')
+        closing=m.group(1)
+        self.assertTrue(self.data['teacher_opinion'].endswith(closing))
+        validate_input(self.data)
+        data=dict(self.data)
+        filler='本段为自动化测试合成文字，仅用于满足 check 正文 3000 汉字体量门槛，不含任何真实项目内容。'
+        data['sections']=[dict(s,blocks=([{'type':'paragraph','text':filler*20}] if s['blocks'] else [])) for s in self.data['sections']]
+        with tempfile.TemporaryDirectory() as d:
+            ok=Path(d)/'ok.docx';build(data,TEMPLATE,ok)
+            self.assertEqual(check(TEMPLATE,ok,data)['status'],'PASS')
 
 if __name__=='__main__':unittest.main()

@@ -55,5 +55,31 @@ def test():
         broken=dict(draft);broken['sections']=[dict(x) for x in draft['sections']]
         broken['sections'][1]=dict(broken['sections'][1]);broken['sections'][1]['paragraphs']=paragraphs+['未经归档的[12]论文编号']
         should_fail(lambda:compose(root,broken),'未经REF标记的原始编号被接受')
-        print('PASS template hash lock / non-overwrite / citation superscript / fixed teacher cell / raw citation rejection')
+        meta=dict(draft);meta['teacher_opinion']=draft['teacher_opinion']+'最终评价以指导教师审定为准。'
+        should_fail(lambda:compose(root,meta),'元话语尾巴（最终评价以指导教师审定为准）被接受')
+        meta2=dict(draft);meta2['teacher_opinion']=draft['teacher_opinion']+'以教师最终审定为准。'
+        should_fail(lambda:compose(root,meta2),'元话语尾巴变体（以教师最终审定为准）被接受')
+        res2=dict(result);res2['teacher_opinion']=result['teacher_opinion']+'以教师最终审定为准。'
+        out2=td/'test-variant-tail.docx';fill(TEMPLATE,res2,out2)
+        assert validate(TEMPLATE,out2,res2)['result']=='FAIL','validate 未拦元话语尾巴变体'
+        meta4=dict(draft);meta4['teacher_opinion']=draft['teacher_opinion']+'最终评价以指导教师审定结果为准。'
+        should_fail(lambda:compose(root,meta4),'元话语尾巴插字变体（审定结果为准）被接受')
+        res4=dict(result);res4['teacher_opinion']=result['teacher_opinion']+'最终评价以指导教师审定结果为准。'
+        out4=td/'test-variant-slip.docx';fill(TEMPLATE,res4,out4)
+        assert validate(TEMPLATE,out4,res4)['result']=='FAIL','validate 未拦插字变体（审定结果为准）'
+        import re as _re
+        m=_re.search(r'→⑤收束`([^`]+)`',(ROOT/'SKILL.md').read_text(encoding='utf-8'))
+        assert m,'SKILL 收束句样例未找到'
+        meta5=dict(draft);meta5['teacher_opinion']=draft['teacher_opinion']+m.group(1)
+        res5=compose(root,meta5)
+        out5=td/'test-spec-closing.docx';fill(TEMPLATE,res5,out5)
+        assert validate(TEMPLATE,out5,res5)['result']=='PASS','规范收束句样例未过门禁（规范与门禁必须同过）'
+        try:
+            bad2=dict(draft);bad2['sections']=[dict(x) for x in draft['sections']]
+            bad2['sections'][1]=dict(bad2['sections'][1]);bad2['sections'][1]['paragraphs']=paragraphs+['特征归一化到[0,1]区间后比较']
+            compose(root,bad2)
+            raise AssertionError('非引用方括号数字未被拦截')
+        except ValueError as e:
+            assert '[[' in str(e) and '圆括号' in str(e),'误导报错未区分引用/非引用：'+str(e)
+        print('PASS template hash lock / non-overwrite / citation superscript / fixed teacher cell / raw citation rejection / teacher meta-tail rejection / meta-tail variant rejection / meta-tail slip-variant (shen-ding-jie-guo-wei-zhu) rejection / spec sample closing passes gates / non-citation bracket guidance')
 if __name__=='__main__':test()

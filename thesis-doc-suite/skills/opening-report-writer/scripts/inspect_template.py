@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Read-only inspect of the embedded official DOCX template (never rewrite it)."""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import hashlib
 import json
 import re

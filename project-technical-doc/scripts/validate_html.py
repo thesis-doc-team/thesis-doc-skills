@@ -8,6 +8,10 @@ content assertions (style closure, label survival, font-size proxy) plus a
 template CSS scope lint. This cannot replace browser interaction/visual
 checks or verify project factual accuracy.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import json
 import re

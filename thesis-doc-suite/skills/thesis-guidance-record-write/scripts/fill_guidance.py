@@ -4,6 +4,10 @@ The only changed content is in designated original blanks: cover identity fields
 7 cells per 13-row record. All other text and row/cell geometry remains unchanged.
 This tool drafts records: the school requires genuine teacher review/manual signing.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse, json, hashlib, re
 from pathlib import Path
 from copy import deepcopy
@@ -34,8 +38,7 @@ def set_blank(cell, text):
     run.font.name='Times New Roman'
     run.font.size=Pt(11)
     rPr=run._r.get_or_add_rPr()
-    rf=rPr.rFonts
-    if rf is not None: rf.set(qn('w:eastAsia'),'宋体')
+    rPr.get_or_add_rFonts().set(qn('w:eastAsia'),'宋体')
 
 
 def fill_cover(doc, data):
@@ -79,8 +82,7 @@ def fill_issue_cell(cell, pairs):
         run.font.name='Times New Roman'
         run.font.size=Pt(10.5)
         run.bold=txt.startswith('指导教师')
-        rf=run._r.get_or_add_rPr().rFonts
-        if rf is not None:rf.set(qn('w:eastAsia'),'宋体')
+        run._r.get_or_add_rPr().get_or_add_rFonts().set(qn('w:eastAsia'),'宋体')
     # Preserve remaining paragraphs but empty; removing them would alter more of the form.
 
 

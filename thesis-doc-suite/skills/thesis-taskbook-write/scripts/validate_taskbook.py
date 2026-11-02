@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """结构比对＋内容门禁。视觉/WPS 仍需渲染与人工核查；本脚本不会宣称已经 WPS 实测。"""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import json
 import re
@@ -93,6 +97,17 @@ def check_content(doc, data=None):
         op = ''.join(q.text for q in ps[from_i+1:to_i])
         if len(re.sub(r'\s+', '', op)) < 50:
             errors.append('任务下达人意见不足 50 字')
+        if any(h in op for h in ('本栏为拟稿','供教师审定拟稿','供指导教师审定','教师审定为准')) or re.search(r'审定.{0,2}为准',str(op)):
+            errors.append('任务下达人意见含拟稿提示语/元话语尾巴（本栏为拟稿/供教师审定拟稿/供指导教师审定/教师审定为准，含“审定结果为准”等插字变体），应以实质收束句自然结束')
+        bad_font = False
+        for q in ps[from_i+1:to_i]:
+            for r_ in q.runs:
+                if any('一' <= ch <= '鿿' for ch in r_.text):
+                    rf_ = r_._element.get_or_add_rPr().find(qn('w:rFonts'))
+                    if rf_ is None or rf_.get(qn('w:eastAsia')) != '宋体':
+                        bad_font = True
+        if bad_font:
+            errors.append('任务下达人意见含非宋体汉字：汉字官方字体为宋体（除非明确要求），skill 写入必须显式设置 eastAsia=宋体')
     for ri in range(5):
         for ci in range(4):
             cell = t.cell(ri, ci)

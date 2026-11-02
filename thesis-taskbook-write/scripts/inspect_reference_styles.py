@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Read-only empirical style audit of anonymized taskbook examples; not a template mutator."""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse,json,re
 from collections import Counter,defaultdict
 from pathlib import Path

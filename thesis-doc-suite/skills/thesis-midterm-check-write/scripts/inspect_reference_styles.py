@@ -2,6 +2,10 @@
 """Read-only reverse audit of filled midterm DOCX paragraph formatting.
 Do not copy project text/names, only measure role, indent, font and spacing.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import json
 from collections import Counter,defaultdict

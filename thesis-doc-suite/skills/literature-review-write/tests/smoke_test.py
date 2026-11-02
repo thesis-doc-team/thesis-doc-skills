@@ -8,7 +8,7 @@ BASE=Path(__file__).resolve().parent.parent
 SCRIPTS=BASE/'scripts'
 
 def cmd(*args):
-    p=subprocess.run([sys.executable,*map(str,args)],text=True,encoding="utf-8",errors="replace",stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    p=subprocess.run([sys.executable,*map(str,args)],text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     if p.returncode:
         raise AssertionError('CMD FAILED: '+str(args)+'\nSTDOUT '+p.stdout+'\nSTDERR '+p.stderr)
     return p.stdout.strip()

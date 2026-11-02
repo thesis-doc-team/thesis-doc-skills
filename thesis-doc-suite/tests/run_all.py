@@ -35,6 +35,7 @@ ITEMS = [
     ('opening: guards', ['tests/test_guards.py'], ROOT / 'skills' / 'opening-report-writer'),
     ('opening: pipeline', ['tests/test_pipeline.py'], ROOT / 'skills' / 'opening-report-writer'),
     ('opening: project-assets', ['tests/test_project_assets.py'], ROOT / 'skills' / 'opening-report-writer'),
+    ('opening: render-chain', ['tests/test_render_chain.py'], ROOT / 'skills' / 'opening-report-writer'),
     ('opening: upgraded-contract', ['tests/test_upgraded_contract.py'], ROOT / 'skills' / 'opening-report-writer'),
     ('lit-review: smoke', ['tests/smoke_test.py'], ROOT / 'skills' / 'literature-review-write'),
     ('lit-review: regression', ['tests/test_regression.py'], ROOT / 'skills' / 'literature-review-write'),

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Static privacy/role check of the packaged anonymized writing reference."""
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 from pathlib import Path
 import hashlib
 import json

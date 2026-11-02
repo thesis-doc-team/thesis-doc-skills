@@ -24,7 +24,7 @@ def synthetic_payload():
         if j==6:
             blocks.append({'type':'schedule','items':[{'start_week':1,'end_week':2,'task':'准备环境并测试'}]})
         sec.append({'id':j,'title':t,'blocks':blocks})
-    opinion='该生围绕自动化格式校验方向选题，能够查阅并整理相关文献，对国内外研究现状有较为系统的把握；开题报告结构完整、条理清晰，引用文献真实可查，写作规范。建议开题并按计划开展课题工作，最终评价以指导教师审定为准。'
+    opinion='该生围绕自动化格式校验方向选题，能够查阅并整理相关文献，对国内外研究现状有较为系统的把握；开题报告结构完整、条理清晰，引用文献真实可查，写作规范。建议开题并按计划开展课题工作。'
     return {'cover':{'title':'仅用于脚本测试'},'sections':sec,'references':r,'teacher_opinion':opinion}
 
 
@@ -56,13 +56,22 @@ class TestPipeline(unittest.TestCase):
             self.assertEqual(len(sig),1)
             opinion=''.join(text_of(p) for p in ob[1:sig[0]])
             self.assertGreaterEqual(len(re.sub(r'\s+','',opinion)),50)
-            self.assertIn('最终评价以指导教师审定为准',opinion)
+            self.assertNotIn('教师审定为准',opinion)
+            self.assertIn('建议开题并按计划开展课题工作',opinion)
             report=check(TEMPLATE,dest,payload)
             self.assertEqual(report['status'],'PASS',report)
         short=dict(payload); short['teacher_opinion']='太短的拟稿'
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaises(ValueError):
                 build(short,TEMPLATE,Path(d)/'short.docx')
+
+    def test_meta_tail_opinion_rejected(self):
+        """用户反馈回归：'最终评价以指导教师审定为准'等元话语尾巴画蛇添足，build 拦截。"""
+        payload=synthetic_payload()
+        payload['teacher_opinion']=payload['teacher_opinion']+'最终评价以指导教师审定为准。'
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):
+                build(payload,TEMPLATE,Path(d)/'meta.docx')
 
     def test_reference_paragraphs_are_left_aligned(self):
         """v2 回归：文献段落必须显式左对齐，避免两端对齐在长 URL 条目上拉伸大空隙。"""

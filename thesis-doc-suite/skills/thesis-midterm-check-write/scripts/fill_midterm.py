@@ -6,6 +6,10 @@ page setup, tables, signatures, original template bytes and ZIP parts are locked
 Release v1.3: supports strictly numbered, one-to-one issue -> corrective action
 pairs; rejects narrative-only problem sections. Original official framework remains locked.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 from datetime import date
 from io import BytesIO
@@ -24,6 +28,9 @@ FIELDS=[('progress_paragraphs',2,11),('issues_paragraphs',3,10),('teacher_opinio
 BODY_FIRST_LINE_PT_BY_ROW={2:12,3:24,4:24,5:24}
 BODY_FONT_PT=12
 ZERO_INDENT_LABELS=('存在问题：','存在的问题：','整改措施：','下一步计划：')
+# 元话语尾巴插字变体族（"审定结果为准/审定最终为准/审定意见为准"）：用户复盘实撞"插字绕禁语"骗过子串守卫，
+# 按意图拦而不只按字面拦；缺口限 2 字——"以审定的预算为准"式缺口≥3 的实质表述不误伤（不一刀切）。
+META_TAIL_VARIANT=re.compile(r'审定.{0,2}为准')
 
 def paragraphs(data,key):
     value=data.get(key)
@@ -145,8 +152,8 @@ def fill_docx(template,data,output):
         raise ValueError('教师意见仅为拟稿：须声明 teacher_opinion_is_draft=true（拟稿属性走数据与执行报告，不在正文写提示语）')
     tparts=data.get('teacher_opinion_paragraphs') or []
     if isinstance(tparts,str):tparts=[tparts]
-    if any(('本栏为拟稿' in str(p) or '供教师审定拟稿' in str(p)) for p in tparts):
-        raise ValueError('教师意见正文禁止拟稿提示语（本栏为拟稿/供教师审定拟稿）：正文以收束句自然结束，拟稿属性由 teacher_opinion_is_draft 与执行报告声明')
+    if any(h in str(p) for p in tparts for h in ('本栏为拟稿','供教师审定拟稿','供指导教师审定','教师审定为准')) or any(META_TAIL_VARIANT.search(str(p)) for p in tparts):
+        raise ValueError('教师意见正文禁止拟稿提示语/元话语尾巴（本栏为拟稿/供教师审定拟稿/供指导教师审定/教师审定为准，含“审定结果为准”等插字变体——禁语以意图为准，正确处置是删尾巴收于实质句，不得插字绕过）：正文以实质收束句自然结束，拟稿属性由 teacher_opinion_is_draft 与执行报告声明')
     if data.get('college_opinion_paragraphs') and data.get('college_opinion_authorized') is not True:
         raise ValueError('学院意见未经授权禁止预填')
     parsed={}

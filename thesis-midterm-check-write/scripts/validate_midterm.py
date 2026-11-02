@@ -4,8 +4,13 @@
 Checks the regression that v1.0 missed: no first-line indent, font mismatch,
 unused blank-space spillover, fixed text/signatures changed.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import json
+import re
 from pathlib import Path
 from zipfile import ZipFile
 from lxml import etree
@@ -13,7 +18,7 @@ from docx import Document
 from docx.shared import Pt
 from docx.oxml.ns import qn
 from template_tools import DEFAULT_TEMPLATE,lock_check,count_content_chars,unique_cells,sha256
-from fill_midterm import FIELDS,paragraphs,issue_paragraphs,validate_issue_structure,indent_for,BODY_FONT_PT,BODY_FIRST_LINE_PT_BY_ROW
+from fill_midterm import FIELDS,paragraphs,issue_paragraphs,validate_issue_structure,indent_for,BODY_FONT_PT,BODY_FIRST_LINE_PT_BY_ROW,META_TAIL_VARIANT
 
 def xml_eq(a,b):
     if a is None or b is None:return a is None and b is None
@@ -55,6 +60,24 @@ def check_filled_body(original_cell,new_cell,parts,region,row,problems):
             if fonts is None or fonts.get(qn('w:eastAsia'))!='宋体' or fonts.get(qn('w:ascii'))!='Times New Roman':
                 report_error(problems,f'{region} 第{index+1}段第{rid}个run中西文字体错误')
 
+BARE_TOOL_REF=re.compile(r'\d+\s*[个项]\s*[A-Za-z][A-Za-z0-9\-]*\s*(?:测试)?用例')
+BARE_COUNT_REF=re.compile(r'\d+\s*[个项]\s*(?:单元)?测试用例')
+
+def clarity_lint(parts):
+    # 非阻断提示：裸数量/工具名指代（用户截图复盘“6 个 pytest 测试用例尚未执行”）。命中≠必错——
+    # 点名形式（“……等 6 项单元测试（唤醒、端点…）”）由命名线索放行；机器只提示，语义复核判罚。
+    hits=[]
+    body='\n'.join(parts)
+    for m in BARE_TOOL_REF.finditer(body):
+        hits.append(f'疑似裸数量+工具名指代“{m.group(0)}”：未点名测的是什么功能且夹工具黑话，读者无法照着测试与修正；改写为点名对象的平实说法（如“语音唤醒、指令识别等 6 项单元测试”）')
+    for m in BARE_COUNT_REF.finditer(body):
+        tail=body[m.end():m.end()+6]
+        head=body[max(0,m.start()-24):m.start()]
+        if tail.lstrip().startswith('（') or ('、' in head and '等' in head):
+            continue
+        hits.append(f'疑似裸数量指代“{m.group(0)}”：未点名覆盖哪些功能/模块，读者无法照着测试与修正；应点名对象（如“语音唤醒、指令识别等 6 项单元测试”）')
+    return hits
+
 def validate(template,generated,data):
     original,lock=lock_check(template)
     new=Document(generated)
@@ -86,11 +109,13 @@ def validate(template,generated,data):
                 continue
             if ri==1 and ci==1:continue
             if not xml_eq(ca._tc,cb._tc):report_error(problems,f'禁止修改固定区域第{ri}行第{ci}格')
+    clarity=[]
     for k,row,_ in FIELDS:
         try:
             parts=issue_paragraphs(data) if k=='issues_paragraphs' else paragraphs(data,k)
             if count_content_chars(parts)<200:report_error(problems,f'{k}不足200字')
             check_filled_body(ot.cell(row,0),nt.cell(row,0),parts,k,row,problems)
+            clarity+=clarity_lint(parts)
         except (KeyError,ValueError,IndexError) as exc:report_error(problems,str(exc))
     if nt.cell(1,1).text.strip()!=str(data.get('title','')).strip():report_error(problems,'课题题目不符合输入')
     for key,col in [('student_name',1),('class_name',3)]:
@@ -98,8 +123,8 @@ def validate(template,generated,data):
     if data.get('teacher_opinion_is_draft') is not True:report_error(problems,'未声明教师意见拟稿')
     tparts=data.get('teacher_opinion_paragraphs') or []
     if isinstance(tparts,str):tparts=[tparts]
-    if any(('本栏为拟稿' in str(p) or '供教师审定拟稿' in str(p)) for p in tparts):
-        report_error(problems,'教师意见正文含拟稿提示语（本栏为拟稿/供教师审定拟稿），应以收束句自然结束')
+    if any(h in str(p) for p in tparts for h in ('本栏为拟稿','供教师审定拟稿','供指导教师审定','教师审定为准')) or any(META_TAIL_VARIANT.search(str(p)) for p in tparts):
+        report_error(problems,'教师意见正文含拟稿提示语/元话语尾巴（本栏为拟稿/供教师审定拟稿/供指导教师审定/教师审定为准，含“审定结果为准”等插字变体），应以实质收束句自然结束')
     if not data.get('college_opinion_authorized') and not xml_eq(ot.cell(5,0)._tc,nt.cell(5,0)._tc):
         report_error(problems,'学院意见未经授权发生更改')
     with ZipFile(template) as a,ZipFile(generated) as b:
@@ -107,7 +132,9 @@ def validate(template,generated,data):
         for name in a.namelist():
             if name!='word/document.xml' and name in b.namelist() and a.read(name)!=b.read(name):
                 report_error(problems,f'模板静态内容发生更改：{name}')
-    return {'passed':not problems,'problems':problems,'template_sha256':sha256(template),
+    return {'passed':not problems,'problems':problems,
+            'warnings':clarity,'clarity_hits':len(clarity),
+            'template_sha256':sha256(template),
             'output_sha256':sha256(generated), 'rows':len(nt.rows),
             'paragraph_counts':{k:len(nt.cell(row,0).paragraphs) for k,row,_ in FIELDS}, 'formatting':{
                 'first_line_indent_pt_by_row':BODY_FIRST_LINE_PT_BY_ROW,
@@ -130,5 +157,6 @@ if __name__=='__main__':
         out=json.dumps(res,ensure_ascii=False,indent=2)
         if args.report:Path(args.report).write_text(out+'\n',encoding='utf-8')
         print(out)
+        if res.get('warnings'):print(f"WARN {len(res['warnings'])} 条疑似表述不清（非阻断，见报告 warnings，须语义复核）")
         if not res['passed']:raise SystemExit(2)
     except (OSError,ValueError,KeyError) as exc:ap.exit(2,f'ERROR: {exc}\n')

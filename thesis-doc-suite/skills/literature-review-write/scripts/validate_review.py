@@ -2,6 +2,10 @@
 """Fail-closed Word validation: locked official framework, typography, true citation superscripts.
 Static checks cannot replace visual inspection of all rendered pages.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse,hashlib,json,re
 from pathlib import Path
 from lxml import etree
@@ -118,7 +122,8 @@ def validate(template, docx, data):
             counts['section_count']=len(titles)
         opinion=data.get('teacher_opinion','')
         check(opinion in dc1.text,'指导教师评语内容缺失')
-        check(len(re.findall(r'[\u4e00-\u9fffA-Za-z0-9]',opinion))>=50,'指导教师拟稿少于50字')
+        check(len(re.findall(r'[\u4e00-\u9fffA-Za-z0-9]',opinion))>=50,'指导教师拟稿少于50字（只算汉字/字母/数字，为最严口径）')
+        check(not any(h in opinion for h in ('本栏为拟稿','供教师审定拟稿','供指导教师审定','审定为准')) and not re.search(r'审定.{0,2}为准',opinion),'指导教师评语含拟稿提示语/元话语尾巴（本栏为拟稿/供教师审定拟稿/供指导教师审定/审定为准，覆盖以教师最终审定为准、最终评价以指导教师审定为准等变体，含“审定结果为准”等插字变体），应以实质收束句自然结束')
         check(len([p for p in dc1.paragraphs if p.text==opinion])==1,'教师评语应为独立一个自然段')
     else:counts={}
     check(Path(docx).resolve()!=Path(template).resolve(),'禁止直接覆盖官方模板')

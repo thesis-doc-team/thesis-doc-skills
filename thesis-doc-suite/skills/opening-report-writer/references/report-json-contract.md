@@ -94,11 +94,13 @@
 ## 输入文件和运行
 
 ```bash
-python scripts/build_report.py ./output/opening-report/报告内容.json \
-  --output ./output/opening-report/开题报告.docx
-python scripts/check_report.py ./output/opening-report/开题报告.docx \
-  --json ./output/opening-report/报告内容.json \
-  --output-report ./output/opening-report/结构校验.json
+python scripts/build_report.py ./.skill-tmp/opening-report-writer/<run-id>/报告内容.json \
+  --output ./.skill-tmp/opening-report-writer/<run-id>/build.docx
+python scripts/check_report.py ./.skill-tmp/opening-report-writer/<run-id>/build.docx \
+  --json ./.skill-tmp/opening-report-writer/<run-id>/报告内容.json \
+  --output-report ./.skill-tmp/opening-report-writer/<run-id>/结构校验.json
 ```
+
+**路径仅示意运行区**：构建稿只落 `.skill-tmp` 运行区，全部验收 PASS 后才整体移入 `output/opening-report/` 定 `-vN`（两段式出片见 SKILL.md；直接写 `output/` 会烧掉版本号）。
 
 **运行前需准备真实填写完毕的 JSON。** Agent 按 Skill 自动准备，不要求用户手工理解这些字段。

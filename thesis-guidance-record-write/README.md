@@ -4,7 +4,7 @@
 
 ## 安装与使用
 
-1. 将本文件夹放到 Codex/Claude Code 的 Skills 可发现目录（具体路径按客户端配置）。打开 `SKILL.md` 并交给代理执行。依赖 Python 3.10+、`python-docx`、`lxml`、`PyMuPDF`、LibreOffice（截图校验）；`pip install -r requirements.txt`。
+1. 将本文件夹放到 Codex/Claude Code 的 Skills 可发现目录（具体路径按客户端配置）。打开 `SKILL.md` 并交给代理执行。依赖 Python 3.10+、`python-docx`、`lxml`、`PyMuPDF`；截图校验的 DOCX→PDF 依次探测 soffice（LibreOffice）→ Word COM → WPS COM，亦可 `--pdf` 直通已转 PDF；`pip install -r requirements.txt`。
 2. 准备用户当前技术资料、真实项目根目录和学校原版Word；AI先阅读资料并复用项目资产，再写 JSON 草稿，最后运行脚本。
 3. `scripts/fill_guidance.py` **只支持本包 SHA 锁定的官方模板版本**；用户换模板需要重新审计，不能略过 SHA 锁。
 4. 输出示例`deliverables/guidance/<课题简称>-指导记录-v1.docx`。正式归档前由真实教师逐条审阅、按学校要求手写勾选/签名。未经确认的会面日期/地点留空。

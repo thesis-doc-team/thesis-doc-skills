@@ -67,7 +67,7 @@ description: 只编写塔里木大学毕业论文（设计）指导记录（不�
 
 ## 3. 文本逆向：范本求同存异→统一生成规范
 
-逆向前阅读 `references/reverse-engineering.md` 和 `references/numbered-pairs.md`，对照官方表与已填范本。识别**不变项**（每次记录的栏目顺序、两组指导语言、评价、签名）与**可变项**（每次技术主题、2—4个问题、每个整改动作、阶段衔接、字数）。已填范本格式可能有字号、缩进、复选框乱码、表格跨页等差异，这些**不能凌驾官方**。直接提取写作方法，不复制示例句、项目状态、人物或月份。
+逆向前阅读 `references/reverse-engineering.md`（体裁指纹、求同存异、写作推理）和 `references/numbered-pairs.md`（配对规则、具体性三要素、禁止清单、行数预算的**规则真源**，两文件冲突时以它为准），对照官方表与已填范本。识别**不变项**（每次记录的栏目顺序、两组指导语言、评价、签名）与**可变项**（每次技术主题、2—4个问题、每个整改动作、阶段衔接、字数）。已填范本格式可能有字号、缩进、复选框乱码、表格跨页等差异，这些**不能凌驾官方**。直接提取写作方法，不复制示例句、项目状态、人物或月份。
 
 每次统一使用：
 
@@ -90,11 +90,11 @@ description: 只编写塔里木大学毕业论文（设计）指导记录（不�
 
 **强制：** 保持官方模板的标题、填写说明、表格整体结构、A4尺寸、边距、行高、列宽、边框、合并关系和评价选项。可填区域里根据范本采用宋体中文/Times New Roman数字英文、10.5pt左右的编号正文及明确首行缩进；只有可填正文允许增加段落及必要的正文样式设置。`fill_guidance.py` 不修改固定行高或页边距，正文样式只作用于内容单元格。`validate_guidance.py` 比较原本和成品每一行的 `trPr`、每一物理格的 `tcPr`、表格 `tblPr`/`tblGrid`，以及固定文字和评价签字。
 
-**学校官方模板原来的固定行高总和可超过单页可打印高度，导致一条记录跨页。这是源模板特性，不是靠缩字号或改页边距可以私自修复的问题。** **实质性分页门禁：页数本身不是目标，按当次内容的自然排布判断**——用户已明确“空白模板页数仅参考、按实际需要扩展”，所以：
+**单条记录是否跨页取决于正文行数，不是模板常数**——历史“行高合计≈727pt、必然跨页”是长内容样本实测（行撑高后才溢出），已被 8 组每组恰好一页、零跨页的实测修正：内容格 265.6pt 约 23 行预算（10.5pt/1.1 行距），正文在预算内（实测 13~14 行稳）单页排布，超预算才自然跨页（WARN 如实披露）。这是源模板几何，不是靠缩字号或改页边距可以私自修复的问题。** **实质性分页门禁：页数本身不是目标，按当次内容的自然排布判断**——用户已明确“空白模板页数仅参考、按实际需要扩展”，所以：
 
 1. **绝不限制成品必须2、3或10页**；8次记录按真实排版产生实际页数；**不得为凑足或压缩到某个页数而增删事实、稀释或堆砌文字**。硬性 FAIL 只有两类：为凑/压页数增删事实或改动官方固定框架；最后一页整页空白或只剩签字/评价的孤页且未先通过调整措辞与段落分配消除、也未如实报告（若已按第 4 项“空白原件对照”证明属模板固有几何，则判 WARN 如实披露，不算此类 FAIL）。
 2. 渲染后每页查：文本被截断、单元格内容溢出、题目超宽、边框断裂、跨页评价/签字、最后签名孤页、中文标点或乱码。
-3. 如官方原本自然跨页，须在检查报告中标 `WARN—官方固定行高跨页`，不是虚报视觉完美；优先减少不必要冗词（不删技术必要内容）。**禁止未经用户授权压缩或改变固定框架**；如跨页妨碍提交，报告模板天然冲突，由用户/学校决定是否允许衍生排版版式。
+3. 如内容超行数预算自然跨页（或官方原本即跨页），须在检查报告中标 `WARN—表格几何跨页（超行数预算）`，不是虚报视觉完美；优先减少不必要冗词（不删技术必要内容）。**禁止未经用户授权压缩或改变固定框架**；如跨页妨碍提交，报告模板天然冲突，由用户/学校决定是否允许衍生排版版式。
 4. **版式异常先跑“空白原件对照”再定性（防误判孤页）**：成品末页整页空白这类版式疑点，既不直接认作孤页 FAIL 返工（行高全 exact 时措辞增删改变不了分页），也不得装作没看见——先用同一渲染器渲染**官方空白原件**作对照组：若原件同样自带尾随空白页（实测本模板：空白原件 5 页、第 5 页同样空白；复盘几何账见 `references/official-template-layout.md`），判 `WARN—模板固有几何` 如实披露并附几何账，**不返工，也不为消空白页增删事实、改框架或缩字号**；仅当对照组没有该空白页时，才按内容排布/孤页路径排查。
 5. 若技术文字超出正文区域造成遮挡/丢字 → `FAIL` 并重写正文；不能通过缩到8pt、调表格框架“修图”。
 6. 结构验证通过≠视觉验收通过；必须渲染全部页 PNG，Agent/人工逐张审阅并报告张数和异常。WPS 未实际打开则注明“WPS未实测”。
@@ -109,15 +109,17 @@ description: 只编写塔里木大学毕业论文（设计）指导记录（不�
 
 **逐次起草、分批写入（硬性，禁止一次性整篇生成）**：≥8 次指导记录按次推进——每次记录（主题、`issue_pairs`、要点）起草完成即写入草稿文件，一次落盘再写下一次；**禁止一次性倾倒全部次数的内容**。全部记录落盘后再形成输入并一次性生成 DOCX。第 8 步（结构校验 + 截图验证分析）为**唯一终检**，写作中途不反复全文重检；终检问题只定点修可填区内容后重新生成复检，不推倒全部草稿。执行汇报注明分几次写入与一次终检结论。
 
+**两段式出片（防烧号死锁）**：构建件先落 `$WORKDIR/build.docx`，结构校验与逐页渲染分析都对构建件执行；**全部通过后**才移入 `deliverables/guidance/<课题>-指导记录-vN.docx` 定版（N=交付这一刻已有最大版本号+1）。失败/缺陷稿留运行区随 `cleanup` 删除，**不进交付目录、不占版本号**——直接写交付区会在 validate FAIL 后撞 `fill_guidance.py` 的“成品路径已存在，必须新建版本”：手动删成品与“永不覆盖、永不删除”打架，不删就得给缺陷稿烧 `-v2` 号。重建前删除运行区旧构建件即可（构建件不是历史版本）。交付后才发现缺陷按 §1“最终版本唯一”改名回收。
+
 1. **识别项目**：技术 MD/文档、用户原表、已填范本、个人字段、真实指导记录、`PROJECT_ROOT`。信息缺失默认留白并报告；用户没有提供老师/日期就不重复索要，先交草稿。
 2. **资产复用**：`project_assets.py status`；有根目录时无历史才 `init`；先读 `project/facts/references/schedule/progress`，核验同一个 `project_id`。更新事实/计划需真实来源，覆盖需要 `--replace --reason`。
 3. **审计底稿**：运行 `inspect_template.py`；SHA 匹配 `template-lock.json` 才可执行填充脚本。官方原件永远只读。
 4. **逆向范本**：读取去标识化DOCX、`reverse-engineering.md`，必要时运行 `inspect_samples.py`；归纳共性而不是照搬项目细节，审查冲突与负面写法。
-5. **编写草稿**：根据技术资料和事实矩阵设计不少于8次的独立主题，填写各自 `issue_pairs`（problem/action）并做“对象/动作/验证”的语义检查，记录阶段事实级别；严格保持草稿标识。
+5. **编写草稿**：根据技术资料和事实矩阵设计不少于8次的独立主题，填写各自 `issue_pairs`（problem/action）并做“对象/动作/验证”的语义检查，记录阶段事实级别；严格保持草稿标识。其中 `topic`/`evidence_note`/`verification` 是**草稿元数据**（组织写作、语义检查用），**不写入 DOCX**——记录表无主题栏目（第4行 `指导内容` 是官方固定标题，动了就报"官方固定文字被改动"），成品看不到这三字段属预期，不是内容丢失。
 6. **形成输入**：运行区内写 JSON，按 `templates/input.schema.json`；可调用 `project_assets.py compose` 验证共享资产ID（只组合已有字段不自动代写正文）。
-7. **生成DOCX**：`fill_guidance.py` 将源表26行保留，按需复制其13行模板块，填写封面及每次记录的可填区域；保留导师评价空白、勾选空白、签字空白。输出 `deliverables/guidance/<课题>-指导记录-vN.docx`，禁止覆盖已有版本。
-8. **验证**：运行 `validate_guidance.py` 对比结构/固定栏目/字段、问题与修改意见一一对应、首行缩进、记录次数；随后进入**截图验证分析（Screenshot Verification Analysis，交付前硬性环节，缺一不可）**——**截图**（`render_visual.py` 出全部页 PNG/PDF，只存本轮运行目录，不进交付目录）→ **逐张分析**（缺一张即未完成：字形缺损、字符裁切、溢出/遮挡、边框、表头、签字栏、跨页评价/签字、孤页（尾随空白页先按 §4 第 4 项“空白原件对照”定性）、过密/过空）→ **留痕汇报**（执行汇报固定填写截图引擎/工具、截图张数、实看张数、逐张结论 PASS/WARN/FAIL 与问题清单、返工复检次数、WPS 实测边界声明）。未逐张分析不得宣称视觉验收通过、不得登记 record-use；截图是验证手段不是交付物。若跨页源自官方原本，则要真实披露，不假装已经修复。
-9. **归档**：完成结构+视觉复核后 `record-use` 只登记最终正式版本路径、SHA256及**实际引用的**REF-ID；用户保留验收权，输出最终 DOCX 和短版执行报告。
+7. **生成DOCX（两段式出片，见上方专条）**：`fill_guidance.py` 将源表26行保留，按需复制其13行模板块，填写封面及每次记录的可填区域；保留导师评价空白、勾选空白、签字空白。**输出到本轮运行区构建件 `$WORKDIR/build.docx`（不带 `-vN`、不进交付目录）**；重新生成前可删除运行区旧构建件（构建件不是历史版本，删了不违反"永不覆盖、永不删除"）。
+8. **验证**：对构建件 `$WORKDIR/build.docx` 运行 `validate_guidance.py` 对比结构/固定栏目/字段、问题与修改意见一一对应、首行缩进、记录次数；随后进入**截图验证分析（Screenshot Verification Analysis，交付前硬性环节，缺一不可）**——**截图**（`render_visual.py` 出全部页 PNG/PDF，只存本轮运行目录，不进交付目录）→ **逐张分析**（缺一张即未完成：字形缺损、字符裁切、溢出/遮挡、边框、表头、签字栏、跨页评价/签字、孤页（尾随空白页先按 §4 第 4 项“空白原件对照”定性）、过密/过空）→ **留痕汇报**（执行汇报固定填写截图引擎/工具、截图张数、实看张数、逐张结论 PASS/WARN/FAIL 与问题清单、返工复检次数、WPS 实测边界声明）。未逐张分析不得宣称视觉验收通过、不得登记 record-use；截图是验证手段不是交付物。若跨页源自官方原本，则要真实披露，不假装已经修复。**全部通过后**才把构建件移入交付区定版（见第 9 步）。另：`structure-report.json` 的 `warnings`（空泛元动作/套话机器命中，**非阻断**提示——命中≠必错，带对象+判据的"…日志进行验证"属合格写法）须逐条人工对照 `references/numbered-pairs.md` 三要素复核并把处置结论写入执行汇报，不得忽略——机器只提示，合格与否由人工判。
+9. **定版归档**：完成结构+视觉复核后，才把运行区构建件移入 `deliverables/guidance/<课题>-指导记录-vN.docx`（N=移动这一刻按交付目录已有最大版本号+1 确定，预检目录、禁止覆盖历史文件）；`record-use` 只登记最终正式版本路径、SHA256及**实际引用的**REF-ID；用户保留验收权，输出最终 DOCX 和短版执行报告。交付后才发现缺陷按 §1"最终版本唯一"改名回收。
 10. **清理**：`finally` 里 `project_assets.py cleanup` 仅删除有本 Skill 所有权标记的 `.skill-tmp/.../<run-id>`；不删用户输入、原官方表、持久资产、成品版本和其他 Skill 运行文件。失败也要清理并如实汇报。**清理前 shell 先退回项目根（或运行区之外）并全程用绝对路径调用，不把 shell 常驻运行区内**：Windows 下若有进程以运行区为当前目录，`rmtree` 会先删光子文件（含所有权标记 `.owned-by-*`）再在删目录壳时报 WinError 32，二次调用即因“目录缺少合法所有权标记”fail-closed。若已发生：确认目录确已为空后仅 `rmdir` 空壳收尾，报告如实留痕，**绝不因此扩大删除范围**。
 
 ## 7. 快速调用
@@ -133,11 +135,17 @@ python scripts/project_assets.py status --root "$PROJECT_ROOT"
 python scripts/project_assets.py workdir --root "$PROJECT_ROOT"     # 保存输出的 RUN_ID 和 WORKDIR
 python scripts/inspect_template.py assets/official-guidance-template.docx --json "$WORKDIR/template-audit.json"
 # Agent 基于真实资料编写 $WORKDIR/guidance-draft.json，不凭测试数据直接生成正式项目报告
+# 逐条落盘用 append_record.py（先 --init 建骨架，再每条一次 --pair "问题||建议"，不必自造 frag+append 脚本）：
+# python scripts/append_record.py --draft "$WORKDIR/guidance-draft.json" --init --project-id "$PROJECT_ID" --title "$TITLE"
+# python scripts/append_record.py --draft "$WORKDIR/guidance-draft.json" --pair "问题||建议"
 python scripts/project_assets.py compose --root "$PROJECT_ROOT" --draft "$WORKDIR/guidance-draft.json" --out "$WORKDIR/guidance-input.json"
-python scripts/fill_guidance.py --template assets/official-guidance-template.docx --data "$WORKDIR/guidance-input.json" --out "$FINAL_DOCX"
-python scripts/validate_guidance.py --template assets/official-guidance-template.docx --data "$WORKDIR/guidance-input.json" --file "$FINAL_DOCX" --report "$WORKDIR/structure-report.json"
-python scripts/render_visual.py --file "$FINAL_DOCX" --outdir "$WORKDIR/render"
+# 两段式出片：构建件先落运行区；重建前可删运行区旧构建件（构建件非历史版本，不违反"永不删除"）
+python scripts/fill_guidance.py --template assets/official-guidance-template.docx --data "$WORKDIR/guidance-input.json" --out "$WORKDIR/build.docx"
+python scripts/validate_guidance.py --template assets/official-guidance-template.docx --data "$WORKDIR/guidance-input.json" --file "$WORKDIR/build.docx" --report "$WORKDIR/structure-report.json"
+python scripts/render_visual.py --file "$WORKDIR/build.docx" --outdir "$WORKDIR/render"
 # Agent 必须逐张打开 render/page-*.png，处理问题，记录检查结果
+# 全部通过后才定版移入交付区（N=此时交付目录已有最大版本号+1）：
+# mv "$WORKDIR/build.docx" "$FINAL_DOCX"
 python scripts/project_assets.py record-use --root "$PROJECT_ROOT" --file "$FINAL_DOCX" --doc-type guidance --ref-ids "$ACTUALLY_USED_REF_IDS"
 # 清理前先 cd 回项目根——shell 停在运行区内会 WinError 32 删壳失败，且所有权标记可能已被 rmtree 先行删除（见 §6 第 10 步）
 python scripts/project_assets.py cleanup --root "$PROJECT_ROOT" --run-id "$RUN_ID"

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Structural QA for official-template-filled opening report (no actual research claims)."""
 from __future__ import annotations
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import hashlib
 import json
@@ -60,6 +64,8 @@ def check(original, target, data):
             metrics['teacher_opinion_chars']=len(re.sub(r'\s+','',opinion_text))
             if metrics['teacher_opinion_chars']<50:
                 err(errors,'指导教师审阅意见拟稿不足50字或未填写')
+            if any(h in opinion_text for h in ('本栏为拟稿','供教师审定拟稿','供指导教师审定','教师审定为准')) or re.search(r'审定.{0,2}为准',opinion_text):
+                err(errors,'教师意见正文含拟稿提示语/元话语尾巴（本栏为拟稿/供教师审定拟稿/供指导教师审定/教师审定为准，含“审定结果为准”等插字变体），应以实质收束句自然结束')
             for p in ob[1:ib]:
                 spacing=p.xpath('./w:pPr/w:spacing',namespaces=N)
                 if len(spacing)!=1 or spacing[0].get(Q('line'))!='360' or spacing[0].get(Q('lineRule'))!='auto':

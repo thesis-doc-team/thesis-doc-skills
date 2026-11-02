@@ -45,7 +45,7 @@ python -m pip install -r requirements.txt
 - **旧版错误**：只设文本 run，正文 `first_line_indent=None`，生成内容从行首顶格；且旧校验器保护空白 `pPr` 的逻辑反过来禁止恢复正文缩进。
 - **当前修复**：完成进度12pt、问题整改及教师意见24pt的分栏缩进（问题/整改小标签0pt），逐段自动核验；可编辑区多余空行回收，降低孤立签章页风险。
 - **两个必须通过的关卡**：结构+排版属性自动校验 → 每页截图+孤页自动预检 → Agent逐页看图。源文稿太长时要重新写得简洁，而不是缩字。
-- **运行环境**：`pip install -r requirements.txt`，需LibreOffice可执行程序 `soffice` 用于截图转换。仅能运行Python却不能渲染时，严禁报“视觉验收通过”。
+- **运行环境**：`pip install -r requirements.txt`，截图转换（DOCX→PDF）依次探测 soffice（LibreOffice）→ Word COM → WPS COM，亦可 `--pdf` 直通已转 PDF。仅能运行Python却不能渲染时，严禁报“视觉验收通过”。
 
 ## v1.3 新增使用要求
 

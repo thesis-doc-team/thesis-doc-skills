@@ -45,7 +45,7 @@ python scripts\verify_plugin.py
 
 **原因**：未安装 LibreOffice（或不在 PATH）。
 
-**处理**：安装 LibreOffice（免费）后重试；或提供本机 Word/WPS 的等价渲染方式。无法渲染时 Skill 会如实报告"未完成视觉验收"——此时请务必人工逐页检查排版后再提交。**不能把"脚本无报错"当视觉检查通过。**
+**处理**：转换链已依次探测 soffice → Word COM → WPS COM——装有 MS Office 或 WPS 的机器无需 LibreOffice 也能转换；全链失败时可在本机先用 Word/WPS 把 DOCX 转成 PDF，再 `render_visual.py --pdf <已转PDF>` 直通 PNG/预检。无法渲染时 Skill 会如实报告"未完成视觉验收"——此时请务必人工逐页检查排版后再提交。**不能把"脚本无报错"当视觉检查通过。**
 
 ## 5. "WPS 已验证"能不能写？
 
@@ -95,7 +95,7 @@ python -m pip install python-docx lxml PyMuPDF markdown-it-py beautifulsoup4
 
 **原因**：Windows 中文系统默认 GBK，读写 UTF-8 文件时未显式指定编码（常见于自写脚本或旧版测试）。
 
-**处理**：插件内脚本已统一 UTF-8。若你在自写脚本里读写项目资产/JSON，请显式 `open(..., encoding='utf-8')` 或 `Path.read_text(encoding='utf-8')`。也可以临时设置环境变量 `PYTHONUTF8=1` 再运行。仍失败请把完整报错贴给 Claude Code 排查。
+**处理**：插件内脚本已统一 UTF-8，且各脚本开头内置了 stdout/stderr UTF-8 重配置（GBK 终端乱码已在脚本侧设防）；控制台仍乱码时运行前设 `PYTHONIOENCODING=utf-8`。若你在自写脚本里读写项目资产/JSON，请显式 `open(..., encoding='utf-8')` 或 `Path.read_text(encoding='utf-8')`。也可以临时设置环境变量 `PYTHONUTF8=1` 再运行。仍失败请把完整报错贴给 Claude Code 排查。
 
 ## 11. 权限问题（写入 / 符号链接）
 

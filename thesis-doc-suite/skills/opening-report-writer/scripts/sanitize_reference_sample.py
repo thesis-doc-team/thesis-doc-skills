@@ -5,6 +5,10 @@ NEVER writes to the official template, and never packages the original personal-
 This utility is for maintainers to refresh example assets from a user-authorized sample.
 """
 from __future__ import annotations
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 import re
 from pathlib import Path

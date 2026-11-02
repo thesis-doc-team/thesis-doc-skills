@@ -4,6 +4,10 @@
 Never modifies source documents or the installed Skill. Only mutates the explicitly
 chosen project root's project-assets/ directory. Cleans only owned temporary runs.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -328,7 +332,7 @@ def cleanup(args):
         raise ValueError('只允许删除本 Skill 自己创建的单个运行临时目录')
     marker = path / MARKER
     if not marker.is_file() or marker.is_symlink() or marker.read_text(encoding='utf-8') != 'thesis-taskbook-write\n':
-        raise ValueError('目录缺少合法所有权标记，禁止删除')
+        raise ValueError('目录缺少合法所有权标记，禁止删除：期望 ' + str(MARKER) + '（内容为「' + WORK_BASE[1] + '」+换行）；若目录由其他 Skill 的 project_assets.py 创建，请用该 Skill 的副本清理')
     # Symlinks inside the owned directory are not followed by shutil.rmtree.
     shutil.rmtree(path)
     print(f'CLEANED: {path}')
@@ -336,10 +340,13 @@ def cleanup(args):
 
 def record_use(args):
     base, project = get_store(args.root)
-    file = Path(args.file).resolve()
-    if not file.is_file():
-        raise ValueError('最终文件不存在；不允许记录虚假使用情况')
     root = Path(args.root).resolve()
+    _raw = Path(args.file)
+    file = (_raw if _raw.is_absolute() else root / _raw).resolve()
+    if not file.is_file():
+        raise ValueError('最终文件不存在；不允许记录虚假使用情况（'
+                         + ('按绝对路径解析' if _raw.is_absolute() else '相对路径按 --root 项目根解析')
+                         + f'为 {file}；不使用进程当前工作目录）')
     if file.is_relative_to(root / '.skill-tmp'):
         raise ValueError('临时工作空间内的文件不可登记为最终文书')
     ids = [x.strip() for x in args.ref_ids.split(',') if x.strip()]

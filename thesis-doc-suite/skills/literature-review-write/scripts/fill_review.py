@@ -5,6 +5,10 @@ NO Document() from scratch, NO new cover table, NO table regeneration.
 For this specific official template use existing cover paragraphs and existing
 single 2-row table. Fail closed if a different template structure is detected.
 """
+
+import sys as _sys
+if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
+if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 import argparse, json, re
 from pathlib import Path
 from docx import Document
