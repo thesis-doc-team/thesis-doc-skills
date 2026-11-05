@@ -68,7 +68,7 @@ python scripts/publish.py "output/technical-document/项目名称-技术文档.m
   --out-dir "output/technical-document"
 ```
 
-若未提供项目首页 JSON 配置，去掉 `--config` 即可。生成器会自动降级为不编造事实的章节速览/阅读路径，并输出报告 JSON。单独执行 MD→HTML 同样可使用该命令。
+若未提供项目首页 JSON 配置，去掉 `--config` 即可。发布前会校验 MD 同级的 `physical-modules.json`（定名、不加版本号；无实物模块也写 `modules: []`），缺失或不合法即拒绝生成 HTML，契约见 SKILL.md「实物模块清单契约」。生成器会自动降级为不编造事实的章节速览/阅读路径，并输出报告 JSON。单独执行 MD→HTML 同样可使用该命令。
 
 ## 目录说明
 
@@ -95,6 +95,7 @@ project-technical-doc/
 │   └── showcase-config.example.json  仅展示 JSON 字段格式，不是项目事实
 └── scripts/
     ├── check_markdown.py         MD 结构和内容边界检查
+    ├── check_physical_modules.py 实物模块清单校验（physical-modules.json）
     ├── diagram_svg.py            流程图自动转换
     ├── render_html.py            Markdown 内容渲染/模板注入
     ├── validate_html.py          网页结构和 MD 内容一致性检查

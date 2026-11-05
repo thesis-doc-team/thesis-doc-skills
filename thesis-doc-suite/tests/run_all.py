@@ -28,6 +28,7 @@ ITEMS = [
     ('techdoc: project-assets', ['tests/test_project_assets.py'], ROOT / 'skills' / 'project-technical-doc'),
     ('techdoc: screenshot-audit', ['tests/test_screenshot_audit.py'], ROOT / 'skills' / 'project-technical-doc'),
     ('techdoc: svg-pipeline', ['tests/test_svg_pipeline.py'], ROOT / 'skills' / 'project-technical-doc'),
+    ('techdoc: physical-modules', ['tests/test_physical_modules.py'], ROOT / 'skills' / 'project-technical-doc'),
     ('taskbook: pipeline', ['tests/test_pipeline.py'], ROOT / 'skills' / 'thesis-taskbook-write'),
     ('taskbook: reference-samples', ['tests/test_reference_samples.py'], ROOT / 'skills' / 'thesis-taskbook-write'),
     ('taskbook: shared-assets', ['tests/test_shared_assets.py'], ROOT / 'skills' / 'thesis-taskbook-write'),
@@ -42,9 +43,12 @@ ITEMS = [
     ('guidance: pipeline', ['tests/test_pipeline.py'], ROOT / 'skills' / 'thesis-guidance-record-write'),
     ('midterm: pipeline', ['tests/test_pipeline.py'], ROOT / 'skills' / 'thesis-midterm-check-write'),
     ('midterm: shared-assets', ['tests/test_shared_assets.py'], ROOT / 'skills' / 'thesis-midterm-check-write'),
-    ('visual: regression', ['tests/test_visual_assets.py'], ROOT / 'skills' / 'technical-visual-assets'),
+    ('visual: three-line-table', ['tests/test_three_line_table.py'], ROOT / 'skills' / 'technical-visual-assets'),
     ('visual: selection-examples', ['tests/test_user_selection_examples.py'], ROOT / 'skills' / 'technical-visual-assets'),
-    ('visual: v1-capabilities', ['tests/test_v1_new_capabilities.py'], ROOT / 'skills' / 'technical-visual-assets'),
+    ('visual: v1.3-a4', ['tests/test_v13_offline_a4.py'], ROOT / 'skills' / 'technical-visual-assets'),
+    ('visual: v1.4-orthogonal', ['tests/test_v14_orthogonal_layout.py'], ROOT / 'skills' / 'technical-visual-assets'),
+    ('visual: v1.4-vsdx', ['tests/test_v14_vsdx.py'], ROOT / 'skills' / 'technical-visual-assets'),
+    ('visual: v1.4-word-render', ['tests/test_v14_word_render.py'], ROOT / 'skills' / 'technical-visual-assets'),
 ]
 
 # tests that exercise rendering without LibreOffice may print WARN-style notes;

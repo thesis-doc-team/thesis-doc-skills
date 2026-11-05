@@ -51,7 +51,7 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 
 | 命令 | 作用 |
 |---|---|
-| `/thesis-doc-suite:technical-visual-assets` | 建立四类真实可追溯视觉资产（系统框架图/功能架构图/关键流程图/核心模块实物图，VIS-xxx），入库 `project-assets/visual-assets/`；拒绝局部器件图冒充，宁缺毋滥 |
+| `/thesis-doc-suite:technical-visual-assets` | 以正式技术 MD 为唯一事实源，离线生成正交技术图（可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG）与中英文图题，执行 A4/Word 版心门禁；用户实物照片经权利声明与本地验证后入库；不包含联网搜图 |
 
 另有三个管理型 Skill（不生成文书、不修改业务 Skill 职责）：
 

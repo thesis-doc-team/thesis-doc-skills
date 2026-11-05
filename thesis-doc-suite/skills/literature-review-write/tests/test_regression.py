@@ -81,5 +81,26 @@ def test():
             raise AssertionError('非引用方括号数字未被拦截')
         except ValueError as e:
             assert '[[' in str(e) and '圆括号' in str(e),'误导报错未区分引用/非引用：'+str(e)
-        print('PASS template hash lock / non-overwrite / citation superscript / fixed teacher cell / raw citation rejection / teacher meta-tail rejection / meta-tail variant rejection / meta-tail slip-variant (shen-ding-jie-guo-wei-zhu) rejection / spec sample closing passes gates / non-citation bracket guidance')
+        try:
+            import fitz
+            import render_visual as _rv
+            _doc=fitz.open()
+            _doc.new_page()
+            _n=_doc.new_page();_n.insert_text((72,72),'- 2 -')
+            _c=_doc.new_page();_c.insert_text((72,72),'文献综述正文内容示例，用于验证正常页不被误判为空白页。')
+            _probe=td/'probe.pdf';_doc.save(str(_probe));_doc.close()
+            _pr=fitz.open(_probe)
+            assert _rv.blank_page_kind(_pr.load_page(0))=='blank','空白页检测失效：整页无内容未判空白'
+            assert _rv.blank_page_kind(_pr.load_page(1))=='blank','仅页码页未判空白'
+            assert _rv.blank_page_kind(_pr.load_page(2)) is None,'正常内容页被误判空白'
+            _pr.close()
+            _proc=fitz.open();_pc=_proc.new_page();_pc.insert_text((72,72),'文献综述正文内容示例，用于验证正常页不被误判为空白页。');_proc.new_page()
+            _pdf=td/'blank.pdf';_proc.save(str(_pdf));_proc.close()
+            _fake=td/'fake.docx';_fake.write_bytes(b'X')
+            _rr=_rv.render(_fake,td/'blankrender',pdf_in=_pdf)
+            assert _rr['problems'] and any('第2页为空白页' in p for p in _rr['problems']),'渲染预检未拦空白页'
+            blank_note='blank page detection / render blank-page blocking'
+        except ImportError:
+            blank_note='blank page detection skipped (PyMuPDF missing)'
+        print('PASS template hash lock / non-overwrite / citation superscript / fixed teacher cell / raw citation rejection / teacher meta-tail rejection / meta-tail variant rejection / meta-tail slip-variant (shen-ding-jie-guo-wei-zhu) rejection / spec sample closing passes gates / non-citation bracket guidance / '+blank_note)
 if __name__=='__main__':test()

@@ -53,6 +53,8 @@ def run():
         folder=Path(temp)
         md=folder/'测试系统-技术文档.md'
         md.write_text(MD,'utf-8')
+        sidecar=folder/'physical-modules.json'
+        sidecar.write_text(json.dumps({'schema_version':1,'generated_by':'project-technical-doc','modules':[]},ensure_ascii=False),'utf-8')
         output=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
         assert output.returncode==0,(output.stdout,output.stderr)
         page=folder/'测试系统_用户展示.html'
@@ -66,6 +68,12 @@ def run():
         assert '测试系统' in content and '示例值' in content
         assert '<script>' in content and 'id="sidebar"' in content
         assert '已知问题与改进建议' not in content
+        # 固定伴随产物：缺少 physical-modules.json 必须拒绝发布
+        sidecar.unlink()
+        missing=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
+        assert missing.returncode!=0,(missing.stdout,missing.stderr)
+        assert 'physical-modules.json' in (missing.stdout+missing.stderr)
+        sidecar.write_text(json.dumps({'schema_version':1,'generated_by':'project-technical-doc','modules':[]},ensure_ascii=False),'utf-8')
         # Fail closed: forbidden chapters in the MD stop second-stage creation.
         forbidden=folder/'不合法文档.md'
         forbidden.write_text(MD+'\n## 4. 已知问题与改进建议\n内容不应进入正文。\n','utf-8')

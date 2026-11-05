@@ -34,9 +34,6 @@ def parse(source):
             raise ValueError('不支持的节点语法或包含图形指令：' + expression[:55])
         ident = m.group(1)
         label = (m.group(3) or m.group(4) or m.group(5) or ident).strip()
-        # Mermaid 的 ["..."]/("...") 引号只用于转义边角字符，语义就是内层文本。
-        if len(label) >= 2 and label.startswith('"') and label.endswith('"'):
-            label = label[1:-1].strip()
         if not label or len(label) > 90 or any(x in label for x in ('<', '>', '`', '"')):
             raise ValueError('节点标签需要人工处理：' + label[:55])
         if ident in labels and labels[ident] != ident and label == ident:
@@ -50,25 +47,12 @@ def parse(source):
 
     for line in lines[1:]:
         if '-->' in line:
-            edge_label = None
-            m = re.match(r'^(.+?)\s*-->\s*\|([^|]{1,20})\|\s*(.+)$', line)   # A -->|标签| B
-            if m:
-                left, edge_label, right = m.group(1), m.group(2).strip(), m.group(3)
-            else:
-                m = re.match(r'^(.+?)\s*--\s+(.+?)\s*-->\s*(.+)$', line)     # A -- 标签 --> B
-                if m:
-                    left, edge_label, right = m.group(1), m.group(2).strip(), m.group(3)
-                else:
-                    parts = re.split(r'\s*-->\s*', line)
-                    if len(parts) != 2:
-                        raise ValueError('暂不支持链式箭头，使用复杂 Mermaid 渲染器')
-                    left, right = parts
-            if edge_label is not None:
-                if not edge_label or len(edge_label) > 24 or any(x in edge_label for x in ('<', '>', '`', '"', '|')):
-                    raise ValueError('边标签需要人工处理：' + edge_label[:30])
-            a, b = map(node, (left, right))
+            parts = re.split(r'\s*-->\s*', line)
+            if len(parts) != 2:
+                raise ValueError('暂不支持链式箭头，使用复杂 Mermaid 渲染器')
+            a, b = map(node, parts)
             if a == b: raise ValueError('自循环图不属于安全回退范围')
-            edges.append((a, b, edge_label))
+            edges.append((a, b))
         else:
             node(line)
         if len(edges) > 75: raise ValueError('连接线超过 75 条')
@@ -76,7 +60,7 @@ def parse(source):
     # Refuse cycles and other cases where a naive diagram would distort structure.
     parents = {n: 0 for n in labels}
     adj = defaultdict(list)
-    for a, b, _ in edges:
+    for a, b in edges:
         adj[a].append(b)
         parents[b] += 1
     queue = deque([n for n, degree in parents.items() if degree == 0])
@@ -98,7 +82,7 @@ def _wrap(label, limit=15):
     for line in label.split('\\n'):
         # char-based to handle Chinese labels with no spaces.
         lines += [line[i:i+limit] for i in range(0, len(line), limit)] or ['']
-    if len(lines) > 6:
+    if len(lines) > 4:
         raise ValueError('节点标签过长；请缩短或采用已有 Mermaid/Graphviz 引擎')
     return lines
 
@@ -134,7 +118,7 @@ def render(source: str, destination: Path):
         'id':'arrow', 'viewBox':'0 0 10 10', 'refX':'9', 'refY':'5',
         'markerWidth':'6', 'markerHeight':'6', 'orient':'auto-start-reverse'})
     ET.SubElement(marker,f'{{{ROOT}}}path',{'d':'M 0 0 L 10 5 L 0 10 z','fill':'#6573a0'})
-    for a,b,elabel in edges:
+    for a,b in edges:
         ax,ay=coords[a]; bx,by=coords[b]
         if horizontal:
             forward=1 if bx>ax else -1
@@ -142,23 +126,15 @@ def render(source: str, destination: Path):
             ex=bx+(0 if forward==1 else box_w); ey=by+box_h/2
             mid=(sx+ex)/2
             path=f'M {sx} {sy} L {mid} {sy} L {mid} {ey} L {ex} {ey}'
-            lx,ly=mid,(sy+ey)/2
         else:
             forward=1 if by>ay else -1
             sx=ax+box_w/2; sy=ay+(box_h if forward==1 else 0)
             ex=bx+box_w/2; ey=by+(0 if forward==1 else box_h)
             mid=(sy+ey)/2
             path=f'M {sx} {sy} L {sx} {mid} L {ex} {mid} L {ex} {ey}'
-            lx,ly=(sx+ex)/2,mid
         ET.SubElement(root,f'{{{ROOT}}}path',{
             'd':path,'fill':'none','stroke':'#6573a0','stroke-width':'2',
             'marker-end':'url(#arrow)'})
-        if elabel:
-            t=ET.SubElement(root,f'{{{ROOT}}}text',{'x':str(lx),'y':str(ly-7),
-                'fill':'#4a5578','font-size':'13','text-anchor':'middle',
-                'font-family':'Noto Sans CJK SC, Microsoft YaHei, sans-serif',
-                'stroke':'#ffffff','stroke-width':'3','paint-order':'stroke'})
-            t.text=elabel
     for ident, (x,y) in coords.items():
         ET.SubElement(root,f'{{{ROOT}}}rect',{'x':str(x),'y':str(y),'width':str(box_w),
             'height':str(box_h),'rx':'12','fill':'#f0f5fe','stroke':'#7e9bc9','stroke-width':'1.4'})

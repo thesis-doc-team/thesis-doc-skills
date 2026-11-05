@@ -20,6 +20,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from check_markdown import check
+from check_physical_modules import check as check_physical_modules
 from diagram_svg import render_diagrams, engine_status
 from render_html import build
 from screenshot_audit import find_browser, pixel_probe_svg, render_probe_page
@@ -43,6 +44,12 @@ def publish(args):
     md=Path(args.markdown).expanduser().resolve()
     if not md.is_file():raise FileNotFoundError(f'MD 不存在：{md}')
     if check(md):raise RuntimeError('MD 结构门禁 FAIL，停止生成 HTML；请先修订 MD 再运行')
+    physical=check_physical_modules(md)
+    if physical['errors']:
+        raise RuntimeError('实物模块清单校验 FAIL（'+Path(physical['manifest']).name
+                           +' 必须与技术文档 MD 同级、定名不加版本号）：'
+                           +'；'.join(physical['errors'][:5])
+                           +'。请按 SKILL「实物模块清单契约」生成/修订后再发布')
     # Pre-flight: announce missing SVG engines up front, not at delivery time.
     engines=engine_status()
     if not engines['svg_capable']:
@@ -113,6 +120,7 @@ def publish(args):
         'generated_markdown':str(md), 'generated_html':str(target),
         'markdown_sha256':sha256(md), 'html_sha256':sha256(target),
         'configuration':str(Path(args.config).resolve()) if args.config else None,
+        'physical_modules':physical,
         'svg_engines':engines,
         'render':render_info, 'diagrams':diagrams, 'html_validation':statistics,
         'errors':errors,'warnings':warnings,

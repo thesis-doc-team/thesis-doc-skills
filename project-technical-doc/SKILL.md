@@ -104,7 +104,7 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 <PROJECT_ROOT>/                        # 项目资产包根；--root 就指向这里
 ├── project-assets/                    # 共享数据资产（多 Skill 共写，见 1.1）
 ├── deliverables/                      # 成品集中区，按文书类型分目录
-│   └── technical-document/……技术文档-v1.md / ……用户展示-v1.html
+│   └── technical-document/……技术文档-v1.md / ……用户展示-v1.html / physical-modules.json（定名实物模块清单）
 └── .skill-tmp/<skill-name>/<run-id>/  # 各 Skill 运行目录（自动清理）
 ```
 
@@ -259,8 +259,46 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 3. **跨章一致性**：功能 ↔ 模块 ↔ 流程 ↔ 测试；资源/接口 ↔ 架构；参数/单位/阈值方向 ↔ 示例；字段 ↔ API/结构体/数据表 ↔ 附录。
 4. **工程可理解性**：读者不看原资料也能理解项目的组成、主要技术与流程，未知之处可辨识。
 5. **安全与边界**：未暴露机密；原项目源码及资料未被改动；所有不确定和不适用内容如实披露；没有生成问题/改进/未来规划等越界内容。
+6. **实物模块清单（physical-modules.json）**：从正文第 6 章「模块详解」与第 4 章接口/引脚信息判定**具备实物形态的模块**，生成与 MD 同级的 `physical-modules.json`（固定定名、不加版本号，契约与判定规则见下方「实物模块清单契约」），并运行 `python <skill-root>/scripts/check_physical_modules.py <生成的技术文档.md>` 校验；FAIL 修订后复检。`publish.py` 会再次强校验，缺失或不合法即拒绝进入 HTML 阶段。
 
 发现问题应先按原始证据修订一次，再重新检查。**无法凭来源消除的疑点保留“待确认”，不凭猜测修复**。检查参考 `references/quality-gates.md`。
+
+### 实物模块清单契约（physical-modules.json v1）
+
+**文件位置与命名固定**：与交付的技术文档 MD（`<项目名>-技术文档.md`；用户执行器以 `out/` 为输出目录时即 `out/physical-modules.json` 与 `technical-技术文档.md` 同级）**同级**的 `physical-modules.json`，不加版本号、不改名；随 MD 一起交付/移动（交付区同名件随最新交付版本同步更新）。数据契约：
+
+```json
+{
+  "schema_version": 1,
+  "generated_by": "project-technical-doc",
+  "modules": [
+    {"code": "D1", "name": "粉尘模块", "hardware": "D1 粉尘传感器（TTL 串口输出）",
+     "category": "sensor", "source_files": ["D1.c", "D1.h"], "pins": "USART2",
+     "note": "周期性读取，帧同步校验"},
+    {"code": "OLED", "name": "显示模块", "hardware": "0.96寸 OLED（软件 I2C）",
+     "category": "display", "source_files": ["OLED.c"], "pins": "PB8/PB9", "note": ""}
+  ]
+}
+```
+
+| 字段 | 必填 | 说明 |
+|---|---|---|
+| code | ✅ | 模块标识，必须与正文「模块详解」章的小节标识一致（如 D1、SHT40、RS485），全文件唯一 |
+| name | ✅ | 中文模块名 |
+| hardware | ✅ | 对应实物/器件描述；没有具体器件就写该模块对应的外部硬件 |
+| category | 建议 | sensor / actuator / display / input / communication / other |
+| source_files | 可选 | 该模块相关源文件名数组（裸文件名，不写目录/绝对路径） |
+| pins | 可选 | 引脚/接口（如 I2C1、PB14） |
+| note | 可选 | 一句话说明 |
+
+**判定规则（本 Skill 保证；脚本机械校验可查部分）：**
+- **只列具备实物形态的模块**：传感器、执行器、显示、按键输入、通信模组等；
+- **排除软件模块**：通信抽象层（如 `uart_comm`）、纯逻辑（如 `Warn`）、主程序（`main`），以及模块间关系章节；
+- code 必须能在「模块详解」小节标题中找到——脚本按词边界匹配（防 `D1` 误配 `D10`），找不到的条目下游会拒绝，必须修正；
+- **按正文出现顺序排列**（脚本校验单调不减；同一小节并列多个模块如「OLED / Buzzer / LED」允许）；
+- 项目没有任何实物模块时 `modules` 为 `[]`（字段不得省略）；
+- 只给元数据：不输出图片、base64 或路径引用（脚本拒绝绝对路径/内嵌图片，`source_files` 只许裸文件名）；
+- 命名形似软件模块（全小写下划线 / main / warn）时脚本给非阻断警告，人工确认后保留或删除。
 
 待 HTML 阶段执行完毕再完成 `执行汇报.md`：除项目与 MD 检查信息外，还需列出 HTML 路径、章节/表格/流程图数量、SVG/回退数量、MD/HTML 对照状态、离线依赖情况、浏览器检查是否实际执行，和用户需要验收的事项。使用 `templates/execution-report.md`。
 
@@ -352,13 +390,13 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 - MD 成功但 HTML 失败：保留有效 MD，报告 HTML 阶段失败及原因；不得把任务整体报为完成。
 - 生成成功但有 SVG 回退：HTML 可阅读但图形化部分有 WARN，说明真实数量及原因。
 - 同时生成两份文件后，再完成最终 `执行汇报.md`，列出 MD 与 HTML 的对应路径和检查结果，由用户最终验收。
-- **交付移动（两段式收口）**：E5 全部 PASS 且汇报完成后，才把暂存区的 MD/HTML/`.audit.json`/`.report.json`/`执行汇报.md` 整体移入 `deliverables/technical-document/` 并定 `-vN`（N=已有最大版本号+1）；失败稿留运行区随 `cleanup` 删除，不进交付区、不占版本号。
+- **交付移动（两段式收口）**：E5 全部 PASS 且汇报完成后，才把暂存区的 MD/HTML/`.audit.json`/`.report.json`/`执行汇报.md`/`physical-modules.json` 整体移入 `deliverables/technical-document/` 并定 `-vN`（N=已有最大版本号+1；`physical-modules.json` 保持定名不加版本号，随最新交付版本同步更新）；失败稿留运行区随 `cleanup` 删除，不进交付区、不占版本号。
 
 ## 8. 一次性交付和停止条件
 
 本 Skill 的正常运行不是问答式教学：除非项目完全不可读取，否则直接读取资料、理解项目、组织内容、完成文档、执行检查并汇报。不得反复询问模板、章数、段落语气、是否可以开始等已由 Skill 决定的事项。
 
-完成标志：**存在一份与当前项目证据一致的完整 MD、由该 MD 派生的单文件 HTML 用户展示页，以及注明双产物检查情况的执行汇报**；关键设计事实不以已验证口吻出现；用户能够审查并提出修订。交付前按第 1 章执行 **`record-use` 登记**（成品路径、REF-xxx、sha256）与 **`cleanup` 清理**本轮运行目录；**HTML 派生页登记必须已存在同名 `<html>.audit.json` 校验证据（publish/validate 默认生成），无证据不得登记**；共享资产与用户原始资料任何情况下不得删除。如果实际材料缺失造成不能执行，明确说明具体缺口，不从内置参考范本捏造新项目。
+完成标志：**存在一份与当前项目证据一致的完整 MD、由该 MD 派生的单文件 HTML 用户展示页、与 MD 同级且契约校验通过的 physical-modules.json，以及注明双产物检查情况的执行汇报**；关键设计事实不以已验证口吻出现；用户能够审查并提出修订。交付前按第 1 章执行 **`record-use` 登记**（成品路径、REF-xxx、sha256）与 **`cleanup` 清理**本轮运行目录；**HTML 派生页登记必须已存在同名 `<html>.audit.json` 校验证据（publish/validate 默认生成），无证据不得登记**；共享资产与用户原始资料任何情况下不得删除。如果实际材料缺失造成不能执行，明确说明具体缺口，不从内置参考范本捏造新项目。
 
 ## 9. 文件索引（按需读取，不必每次全部加载）
 
@@ -372,6 +410,7 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 - `templates/evidence-register.md`：信息来源与事实状态台账。
 - `templates/execution-report.md`：执行结束的汇报格式。
 - `scripts/check_markdown.py`：无第三方依赖的 MD 结构和正文边界检查（含 Mermaid 图示强制门禁：0 幅图 / 总体架构与关键流程章缺图即 ERROR）。
+- `scripts/check_physical_modules.py`：实物模块清单 `physical-modules.json` v1 契约校验（固定定名与同级位置、schema/generated_by、code 唯一且命中「模块详解」小节标题含词边界、正文顺序单调、category 软提示、软件模块名启发式警告、拒绝 base64/绝对路径、source_files 裸文件名）；publish.py 发布前强制调用。
 - `references/browser-verification-notes.md`：浏览器截图验证的伪象判别、量测规则与探针写法红线（E5 截图验证分析实施细则）。
 - `scripts/screenshot_audit.py`：截图字节级查重（dupcheck）、真实布局量测（probe）、章节切片 harness 生成（harness）、图区渲染/像素探针（renderprobe、pixelprobe）、截图覆盖矩阵核对（coverage）。
 - `scripts/viewport_probe.js`：布局量测探针（由 screenshot_audit.py 注入，单次执行）。

@@ -221,4 +221,29 @@ class TestStrictTemplate(unittest.TestCase):
             r=validate(DEFAULT_TEMPLATE,f,d)
             self.assertTrue(r['passed'],r['problems'])
 
+    def test_blank_page_detection_and_render_flag(self):
+        # 用户要求：Word 成品不得出现空白页——任意页空白检测与渲染 problems 硬拦截
+        try:
+            import fitz
+        except ImportError:
+            self.skipTest('PyMuPDF 未安装')
+        from render_visual import blank_page_kind, render_and_precheck
+        doc=fitz.open()
+        self.assertEqual(blank_page_kind(doc.new_page()),'blank')
+        num=doc.new_page();num.insert_text((72,72),'- 3 -')
+        self.assertEqual(blank_page_kind(num),'blank')
+        ok=doc.new_page();ok.insert_text((72,72),'中期检查正文内容示例，用于验证正常页不被误判为空白页。')
+        self.assertIsNone(blank_page_kind(ok))
+        doc.close()
+        proc=fitz.open()
+        c=proc.new_page();c.insert_text((72,72),'中期检查正文内容示例，用于验证正常页不被误判为空白页。')
+        proc.new_page()
+        with tempfile.TemporaryDirectory() as td:
+            td=Path(td)
+            pdf=td/'blank.pdf';proc.save(str(pdf));proc.close()
+            fake=td/'fake.docx';fake.write_bytes(b'NOT DOCX')
+            report=render_and_precheck(fake,td/'render',pdf_in=pdf)
+            self.assertFalse(report['auto_precheck_passed'])
+            self.assertTrue(any('第2页为空白页' in p for p in report['problems']),report['problems'])
+
 if __name__=='__main__':unittest.main()

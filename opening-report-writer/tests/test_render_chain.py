@@ -58,6 +58,28 @@ class TestRenderPdfPassthrough(unittest.TestCase):
             with self.assertRaises(ValueError):
                 render(src, d / 'deliverables' / 'png', pdf_in=pdf)
 
+    def test_blank_page_detection_and_fail_status(self):
+        # 用户要求：Word 成品不得出现空白页——任意页空白检测，渲染预检必须 FAIL_PRECHECK
+        import fitz
+        from render_visual import render, blank_page_kind
+        doc = fitz.open()
+        self.assertEqual(blank_page_kind(doc.new_page()), 'blank')
+        num = doc.new_page(); num.insert_text((72, 72), '- 2 -')
+        self.assertEqual(blank_page_kind(num), 'blank')
+        ok = doc.new_page(); ok.insert_text((72, 72), '开题报告正文内容示例，用于验证正常页不被误判为空白页。')
+        self.assertIsNone(blank_page_kind(ok))
+        doc.close()
+        proc_doc = fitz.open()
+        c = proc_doc.new_page(); c.insert_text((72, 72), '开题报告正文内容示例，用于验证正常页不被误判为空白页。')
+        proc_doc.new_page()
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            pdf = d / 'blank.pdf'; proc_doc.save(str(pdf)); proc_doc.close()
+            src = d / 'fake.docx'; src.write_bytes(b'X')
+            result = render(src, d / 'png', pdf_in=pdf)
+            self.assertEqual(result['status'], 'FAIL_PRECHECK')
+            self.assertTrue(any('第2页为空白页' in p for p in result['problems']), result['problems'])
+
 
 if __name__ == '__main__':
     unittest.main()

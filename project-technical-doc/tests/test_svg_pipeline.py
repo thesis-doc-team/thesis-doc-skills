@@ -362,6 +362,9 @@ class TestPublishEvidence(unittest.TestCase):
             tmp = Path(td)
             md = tmp / '合成示例-技术文档.md'
             md.write_text(MD_TEXT, 'utf-8', newline='\n')
+            (tmp / 'physical-modules.json').write_text(
+                json.dumps({'schema_version': 1, 'generated_by': 'project-technical-doc', 'modules': []},
+                           ensure_ascii=False), 'utf-8', newline='\n')
             proc = subprocess.run([sys.executable, str(SKILL_ROOT / 'scripts' / 'publish.py'),
                                    str(md), '--out-dir', str(tmp / 'out')],
                                   capture_output=True, text=True, encoding='utf-8',

@@ -1,186 +1,272 @@
 ---
 name: technical-visual-assets
-version: 1.1.0
+version: 1.4.1
 disable-model-invocation: true
-description: 毕业设计公共视觉素材 Skill；只依据 project-technical-doc 正式 Markdown 及同项目 FACT-xxx，主动整理系统总体框架、功能架构、核心流程与完整硬件模块实物图。优先复用 Mermaid 和原图，从可证实 ASCII 关系生成缺少的图表；模块照片按完整主体/准确型号/来源许可逐张核验，官网、Bing、百度、CSDN 等仅作候选线索；按 VIS 稳定 ID 管理图片。禁止擅自安装软件、下载无关文件、虚构技术事实或修改业务 Word 文档。
+description: 根据用户指定的唯一正式技术 Markdown，提取/创建系统架构图、功能树、核心流程图和真实数据表；强制正交（横平竖直）连线、Visio 式黑白工程图、A4 版心与实际 Word/WPS 分页验收，并为每张正式技术图生成中英文图题元数据与原生 VSDX（Visio 打开状态如实标注）。按 MD 明确记载的实体硬件生成用户实物图上传清单、审核本地上传照片。保留 Mermaid/SVG/可编辑 draw.io 与项目 VIS/FACT/RES 资产，完全取消联网搜图及自动安装。
 ---
 
-# technical-visual-assets v1.1.0 — 真实技术视觉资产公共 Skill
+# 技术视觉与表格资产｜v1.4.0（正交连线 · 中英文图题 · A4/Word · 完全离线）
 
-## 0. 唯一任务与直接执行原则
+## 0. 不可突破的约束
 
-**本 Skill 独立完成：从已写好的技术文档认知项目 → 主动补齐有事实依据的技术图 → 检索准确完整的实物图片 → 查验与登记 → 输出四类图片清单及缺口。**
+1. **唯一项目技术事实源 = 本轮用户指定的正式技术 Markdown `<TECH_MD>`**。必须位于 `<PROJECT_ROOT>/deliverables/technical-document/` 或用户明确指定的同项目路径。FACT-xxx 只作为同份 MD 的派生追溯，不是独立事实源；冲突则报告，不反向改写 MD。示例截图、模型常识、聊天历史、用户照片都不能补充或编造项目技术事实。
+2. **彻底不联网搜图。** 不允许 WebSearch/WebFetch、Bing/百度/DDGS/Openverse/Commons、浏览器搜图、图片爬虫、图片 API、HTTP 下载图片。相关脚本和命令已移除。**实物模块图片只能由用户自己上传**；不存在“自动搜索候选”阶段，也不允许自动补齐不存在的实物照片。
+3. **只做素材能力，不越界修改 Word 文书**。本 Skill 不改技术 MD、HTML、源码、官方 DOCX 模板、其他写作 Skill；输出是候选图、表格源、A4 设计约束与审核资产。最终 DOCX 插入由对应文书 Skill 完成，并执行排版校验。
+4. **正交连线是硬门槛。** 所有常规连接线只能是水平线、垂直线或由二者组成的 90° 折线；不得默认输出任意角度斜线。箭头尖端自身的几何斜边不属于连接路径。只有图形语义明确要求特殊斜线时才允许例外，且必须写明原因。**不能只在样式名里写“正交”，必须检查实际 SVG/ draw.io 路径。**
+5. **A4 页面适配是硬门槛。** 图表/表格不能仅因“能生成”就成为可插 Word 的正式素材。必须依据当前官方 DOCX 的实际纸张、页边距和所在节计算版心；过宽/过高时重新排布或拆图/拆表，绝不直接缩成看不清的小图。只有在 Word/WPS 真正渲染并检查后，才能宣称“Word 版面验收通过”。
+6. **每张正式技术图必须有中英文图题元数据。** 图号按正式 Word 章节编号（如 `4-1`），中文题名和英文题名必须描述实际内容；图题放在图下，由 Word 原生段落渲染，**不得画进 SVG/PNG 像素**。模板只允许单行时可合并中英文，但不得改变官方模板结构。
+7. 不臆造连线、模块状态、系统测试、实验曲线和表格数据。**测试计划 ≠ 测试结果**。本项目未使用、备用、待实现的设备，不能标成已实装照片。
+8. 不自动安装任何包或字体，不调用外部下载，不运行学生上传的源码。不覆盖项目历史 `-vN` 文书版本，不写入插件安装目录。
+9. **必须生成原生 `.vsdx` 文件**：`scripts/vsdx_writer.py` 从同一正交 spec 生成 Visio 2013+ Open Packaging 格式的节点、连线、文字和图题。生成后必须做包结构/XML/关系校验；若本机没有 Visio，状态必须标 `vsdx_verification=pending-visio-open`，不得写成“Visio 已打开合格”。只有真实 Visio/WPS 打开并保存验证后，才能标 `VISIO_OPEN_VERIFIED`。不得用改后缀的假 VSDX。
 
-用户已有技术 MD 时，**直接启动全链路**，不要反复要求重写技术文档、逐阶段追问或只给开发建议。已有条件能完成的立即完成；不可完成的节点准确报告缺口，不造假。
+## 1. 核心输入与工作顺序
 
-- 技术内容唯一上游：`<PROJECT_ROOT>/deliverables/technical-document/` 下 `project-technical-doc` 的**正式最终 Markdown**，以及同项目 `<PROJECT_ROOT>/project-assets/facts.json` 的 `FACT-xxx`。`implemented / declared / proposed / unverified` 状态必须如实保留。
-- 用户输入只能选择项目根目录与技术 MD、批准本轮行为，不允许来自网上图片的内容反向补造项目事实；网络网页只证明候选图片/产品信息，**不能证明本项目使用了该型号板卡或实测成功**。
-- 本 Skill 不创建六类业务 Word 文书、不修改官方模板、不修改 `project-technical-doc` 的正式 MD/HTML、不替业务 Skill 执行 DOCX 插图。各业务 Skill 后续根据官方模板自行选择是否插图。
-- 一个项目一个资产包：共享事实 `project-assets/`；本 Skill 的图片长期资产为 `project-assets/visual-assets/`；中间文件只在 `.skill-tmp/technical-visual-assets/<run-id>/`；保留历史、不覆盖。
-- **最小引入绝对规则**：不得执行 `pip install`、`npm install`、`npx` 拉包、浏览器/驱动/模型安装、`git clone` 任意网络仓库，不得自动下载 PDF、文档、脚本、压缩包、软件或无关图片。可调用已存在的 Python 标准库和既有 Claude Code 网络工具；DDGS 仅当本机已安装才尝试。不安装也应能做信息分析和普通图形绘制。
+必需：`<PROJECT_ROOT>`、已正式确认的 `<TECH_MD>`、稳定 `project_id`。
 
-**首轮默认：允许网络检索候选元数据，不授权下载图像文件。** 网络图像只有用户针对本轮明确要求“下载/保存图片”才可受控下载、审核；单纯执行 Skill、希望“找图”不等于允许下载。
+实际生成到 Word 前还必需：用户/学校的**原始官方 DOCX 模板**（只读）、目标 Word 文书类型、拟插入的章节/节。模板可以经写作 Skill 在同项目中按真实路径只读引用，不能猜测页边距。
 
-## 1. 必要输入与核验门槛
+执行流程：
 
-- `<PROJECT_ROOT>` 是用户明确指定的项目根目录，已初始化 `project-assets/project.json`。必须校验 `schema_version = 1`、`project_id` 与 `facts.json` 的项目归属一致。
-- `<TECH_MD>` 是上述目录下**已生成并确定版本**的技术 MD；不能读取别的项目、网上通用模板或 AI 编造的伪技术文档替代。
-- `facts.json` 中确有与图对应的 `FACT-xxx`。未入库的技术推断不可替代事实。若项目已有 MD 但部分 FACT 缺失：先保留图形候选与待核验关系，需上游补齐 FACT 后才可批准；不得擅自将推断写成已实现。
-- 逐项记录文档路径、SHA-256、章节/行号、`FACT ID` 与事实状态。上游修改后相应图片必须重新复核，不得静默沿用旧的 `approved`。
+1. `md_pipeline.py scan`：只读扫描正式 MD，提取 Mermaid、ASCII 功能树、Markdown 表格、本地图片引用与证据行号。
+2. `md_pipeline.py sync`：按六类归档到 `project-assets/resource-catalog/`，并自动建立**MD 中明确出现的硬件/完整模组的用户照片上传清单**。两次执行须幂等。
+3. **技术图：**复用 MD 已有 Mermaid，按明确树关系生成缺失功能图；文本有足够证据时，Agent 才可以编写新的 Mermaid 或显式布局 JSON。每个节点和箭头都要能回指 MD 的章节/行号；无法确认的连接必须留在待确认，不能画错。保存可编辑源码。
+4. **正交 Visio 式绘图：**参考 `references/visio-style-a4-guide.md`、`references/orthogonal-routing-rules.md` 和内置 7 张 Word 参考截图。使用 `scripts/visio_diagram.py` 从源自有据节点/箭头的 JSON 生成 `.svg` + `.drawio` + `.vsdx`；连接器由 `orthogonal_router.py` 自动布线或校验，不允许默认斜线。需要位图时用 `scripts/export_png.py` 在本机 Chrome/Edge 导出 300 dpi PNG。无原生 Visio 环境时不伪称 `.vsdx` 已生成。
+5. **图题：**为每张正式图填写 `figure_number`、`caption_zh`、`caption_en` 和 `source_refs`；渲染器写出 `.figure.json` 元数据，不把图题画进图片。规则见 `references/english-caption-spec.md`。
+6. **质量门禁：**运行 `scripts/figure_qc.py`，检查正交、节点重叠、连线穿节点、文字溢出、分支标签、A4 版心、中英文图题、SVG/drawio/VSDX 完整性和 RES 关联。程序通过不等于视觉验收通过；技术逻辑与英文语义仍需人工复核。
+7. **用户实物照片：**使用 `md_pipeline.py module-list --save` 让用户看到“缺什么模块照片、名字、MD 行号、状态”。用户在**当前项目的** `user-uploads/` 中提交 PNG/JPG/WEBP；由 `md_pipeline.py upload-photo` 导入候选 VIS，再按原 VIS 审核检查完整主体、准确型号、来源/权利声明与同项目 FACT。未上传即 MISSING；用户照片与实际模块是否一致由人复核。
+8. **数据表格：**直接保留 MD 中的真实行列和单元格。使用 `scripts/table_layout.py` 测算目标 A4 版心；下游必须生成**Word 原生可编辑表格**，**所有新生成的学术数据表必须是严格三线表**：仅表顶线、表头下线、表底线；不允许任何竖线或其他内部横线。固定官方表单框架不改动；若模板对新生成数据表要求与三线表冲突则 BLOCK 并交由用户处理。不将文字数据表转成大图片。
+9. **A4 质量门禁：**使用 `scripts/a4_layout.py profile` 读取官方模板 A4 纸型/节/页边距/内容宽度；使用 `fit-figure` 测试图形物理尺寸和缩放后文字大小；下游写作 Skill 插入后运行 `audit --docx`、`figure_qc.py --docx` 并逐页查看 Word/WPS 或实际渲染截图。
+10. 审核入库、引用登记、汇报。如果未提供正式模板，允许生成技术候选，但必须标注 `pending-template-and-word-visual-review`，**不得写“可直接插入 Word 且已合格”**。
 
-## 2. 必须覆盖的 4 类技术图（不是“找几张图片就算完事”）
+## 2. 六类素材及规则
 
-| 类型 | 需要展示的真实内容 | 优先成图路径 | 禁止的替代品 |
+| 类别 | code | 数据从何而来 | A4 / 人工门槛 |
 |---|---|---|---|
-| `system-framework` 系统总体框架 | 系统边界、硬件/软件/通信主要子系统、**有证据的**连接和数据边界 | 复用 MD → ASCII 严格关系转换 → 人工核对后绘制 Mermaid | 一张芯片内部资源框图、单独主控板照片 |
-| `functional-architecture` 功能架构 | 项目功能树/功能域、子功能与层级关系 | 复用功能树 → ASCII 转换 → 按事实新建功能图 | 把硬件型号清单改名为功能架构 |
-| `flowchart` 核心流程 | 真正的启动/采集/决策/通信/异常处理等步骤、分支与顺序 | 复用技术 MD 的 Mermaid；按明确节点和箭头补图 | 空泛“开始→处理→结束”装饰图 |
-| `module-photo` 模块整体实物图 | 每一个**真正核心**硬件功能单元的整体外观，准确型号/板型/版本与真实层级匹配 | 官方/分销商/公开资料原图线索 → 逐图目视核验 | 裸传感器 IC、板上电阻、局部零件、芯片内部框图、错型号板卡 |
+| 系统框架图 | `system-framework` | MD 中系统层次、组件及真实通信关系 | 分区层级清楚；大型框架优先分区/拆图，不超版心；连线正交 |
+| 功能架构图 | `functional-architecture` | MD 功能树、明确父子关系 | 方框/层级，禁止借硬件清单充当功能划分；连线正交 |
+| 核心流程图 | `flowchart` | MD 实际步骤、判断、分支、异常路径 | 流向清晰，长流程分段，菱形分支标“是/否”；连线正交 |
+| 模块实物图 | `module-photo` | **用户上传照片**；所需模块名称只能从 MD 提取 | 完整设备/整板/整模组；不使用网络照片、不用裸元件代替 |
+| 测试结果图 | `test-result` | MD 中有可追溯的真实测量或测试截图/数据 | 不从计划或设想生造实验曲线；图例/坐标适合 A4 |
+| 数据表格 | `data-table` | MD 中真实 Markdown 表格 | 原生 Word **严格三线表**；宽度≤版心；不得有竖线/内层横线；内容完整 |
 
-四类单独审核。**一图一主类别**：不能把系统框图同时记为功能图或流程图凑覆盖率；同一图可在多个文书中引用，但不能刷类别完成度。纯软件项目没有核心硬件的情况标记 `N/A` 并写依据，不能强造模块照片。
+每一素材仅一个主分类，保留 `RES-xxx` 稳定标识、MD SHA256、章节/行号、图形源哈希、实际审阅状态、A4 模板版本和 VIS 关联。正式技术图还要保留 `figure_number`、`caption_zh`、`caption_en`、`caption_position=below`、`source_refs`、`routing_status` 和 `caption_review_status`。MD 变更须重新审核受影响资产，不能静默替换已交付成品。
 
-### 2.1 用户五张正反例是硬性判例
+## 3. 正交连线与布局规范（v1.4.0 新增）
 
-开始筛选实物照前，**必须阅读** `references/image-selection-examples.md` 并实际查看 `assets/image-selection-examples/` 内五张用户图片：
+完整规则见 `references/orthogonal-routing-rules.md`。执行时必须遵守：
 
-- **反例 1**：只有 SH4X 裸芯片封装，即使名称相符，也不是“完整 SHT40 功能模块实物照”。
-- **反例 2**：孤立小部件（无法证明其为目标完整功能单元），不合格。
-- **反例 3**：MCU 内部存储/接口资源框图，不是项目级系统架构、功能架构或板卡实物照。准确芯片的内部原理说明任务可另用，但不计入本四类。
-- **正例 4**：完整步进电机（外壳、输出轴、主体清晰可见），主体层级合格；但仍必须核对具体型号。
-- **正例 5**：完整的传感器 PCB 小板/模组（整板、接脚、元件关系可见），主体层级合格；图中若出现多个板型必须选对真实版本。
+### 3.1 连线
 
-合格强调**有意义的完整功能对象**，而不是“拍到了关键词”。单件电机可以是完整执行器；单颗传感器芯片若只是板上的元件，就不能冒充功能模块。透明底/白底可接受，不能因样式拒绝；模糊、截断、广告、水印、非主体配件不合格。
+1. 常规连接路径只能由水平/垂直线段组成，**不得默认使用任意角度斜线**。
+2. 优先上→下；需要横向展开时左→右。
+3. 连线从上、下、左、右四个合理锚点进出矩形/菱形/起止节点，不从图形中心穿入。
+4. 判断节点分支方向稳定：目标主要在下方的分支走底边；目标在侧方/上方的分支走左/右边。同一判断节点的“是/否”标签必须成对出现，靠近对应线段。
+5. 连线必须避开其他节点、节点文字和图题；不可避免的交叉要尽量少，并在 QC 报告中计数。
+6. 回环/重试支线从外侧绕行，不允许穿过中间节点。
+7. 汇合点必须符合实际业务逻辑；不能为了布局方便把两条不同语义的支线强行合并。
+8. 相邻节点统一间距，同级节点尽量对齐，判断分支左右尽量对称。
+9. **不得因为自动布局方便而改变 MD 的技术流程语义**；如果路由失败，应先扩大间距、移动节点或拆图，而不是接受斜线/穿节点。
 
-### 2.2 模块识别层级
+### 3.2 节点与文字
 
-先创建审阅表：`技术MD原名 | 系统角色 | 完整目标层级（设备/模组/整板/仅芯片）| FACT ID | 型号证据 | 图片必须展示的范围`。
+1. 白底、黑/深灰边框、无渐变/阴影；普通操作矩形、判断菱形、起止圆角矩形、分区虚线框。
+2. 文字在节点内水平/垂直居中；不得超出边框，不得因自动缩小低于 9pt。
+3. 长文本优先换行或加宽节点；中文不得乱码/方框。
+4. 分支标签必须有白色底衬，且不得压在任何节点上。
+5. 复杂流程优先拆成多个逻辑完整子图；不允许简单缩小整图来适配 A4。
 
-- 确认完整模块/板卡型号时，优先找同型号完整实物图。
-- 若只确认“STM32F103 芯片”而未确认开发板或核心板，**不能挑一块 STM32F103C8T6 小板说项目用了它**。可保留“同类开发板示意/仅供参考”，但不能批准为该项目的 `module-photo`。
-- 若只确认 SHT40 裸芯片，不要为了凑图强找某品牌 SHT40 breakout 小板冒充项目模块。此时正确结果是“板型待确认，缺真实整体照片”。
-- 代表性照片与实际设备照片必须分开标记：`exact-project-module / reference-only / model-unknown`。**reference-only 永不计入正式模块照覆盖率**。
-- 例如 SIM900A 与“4G DTU”同时出现在 MD，应先反馈上游核对二者是否为不同模块；不得根据网络信息直接篡改上游事实。
+### 3.3 路由实现约束
 
-## 3. 主动执行的完整流程
+`scripts/orthogonal_router.py` 是唯一默认路由器：它为每条边选锚点、在节点障碍格上做正交 A*、惩罚交叉/反向重叠/过多转折，并拒绝穿节点路径。`visio_diagram.py` 在写文件前调用它；显式 `points` 只有在**本身正交且不穿节点、不产生交叉**时才保留，否则自动重排。`figure_qc.py` 会再次扫描实际 SVG 的 `<polyline>` 和 draw.io 的 `orthogonalEdgeStyle`，不能只凭样式名放行。
 
-### A. 先识别，不直接搜图
+## 4. 中英文图题规范（v1.4.0 新增）
 
-1. 运行 `scripts/plan_visuals.py` 或等价只读分析：识别技术 MD 章节、Mermaid、ASCII 树/箭头的证据行号和可用 `FACT-xxx`。
-2. `visual_assets.py scan-md` 提取已存在 Mermaid 和本地图片到候选库。**图仅是候选，不能凭名字批准。**
-3. 依据事实识别**核心**硬件功能单元，按需用 `scope-module` 登记查图目标；元器件清单中的电阻/电容/局部附件不是模块查图清单。
-4. 运行 `coverage` 初检，列出 `system-framework / functional-architecture / flowchart / module-photo` 的真实缺口。
+完整规则见 `references/english-caption-spec.md`。
 
-### B. 优先补全本地技术图，无需联网或安装
+1. 每张正式图必须提供：
+   - `figure_number`：按章节编号，如 `4-1`、`3-2`；不得写死“图 1”。
+   - `caption_zh`：中文描述性题名，如“阈值判断与告警流程图”。
+   - `caption_en`：英文描述性题名，如“Threshold Judgment and Alarm Processing Flowchart”。
+   - `source_refs`：章节/行号/证据，至少一项。
+2. 图号、中文题、英文题必须语义一致；禁止只用 `Flowchart`、`System Diagram`、`Diagram` 等含糊标题。
+3. 图题放在图片下方、居中；字号、字体、段前段后优先服从官方模板。
+4. **图题不画进 SVG/PNG 像素**。SVG 可在 `<title>`/`<desc>` 和 `data-caption-*` 属性中保存元数据，但视觉文字由 Word/HTML 原生段落负责。
+5. Word 中优先使用原生图题段落；中文与英文可分两段（中文在上、英文在下），模板只允许单行时可合并。图题与图片必须同页，不得跨页分离。
+6. 图题元数据写入 `.figure.json` 并绑定到 RES；`md_pipeline.py attach-layout --figure-meta` 会把图号/中英文题/routing 状态写入资源目录。
+7. 英文题名语义必须人工核对；`figure_qc.py` 的关键词一致性只是预警，不是语义证明。
 
-1. 检查已存在 Mermaid 是否能对应真实架构、功能、流程。与 MD/FACT 不一致的不能批准。
-2. 如果系统框架/功能架构只存在 ASCII（如 `├──` 功能树或有明确箭头的文本链），**不要直接报告必须重跑上游**：依据行号运行 `draft-from-ascii` 生成候选 Mermaid。先核对根节点、父子关系和方向；无充分证据的连线不得添加。
-3. 如果 ASCII 混合、没有明确箭头、关系歧义或无法可靠转换：依据已证实的段落+FACT 写一个可编辑 `.mmd` 草稿，使用 `add-diagram` 登记；只有节点/连线都能对应事实时才可审查通过。没有证据就报告缺口。
-4. `render` 优先复用项目已存在的 Mermaid 渲染器及本机 `mmdc/dot`；**如果没有这些程序，内置 `svg_fallback.py` 使用 Python 标准库渲染简单 DAG 流程图**。复杂语法、环路、长标签或布局不可靠则 WARN，绝不伪称渲染成功。
-5. 必须保存 `.mmd` 原始源代码与可显示 `.svg`。对每张图进行实际目视检查：是否完整、文字是否被遮挡、箭头是否清楚、节点是否与事实对应。批准前写明 `visual-evidence` 和 FACT。**仅程序生成 SVG 不表示技术审核完成**。
-6. 系统框架与功能架构**必须分开判断**，不能给一张图换个标题当两张。
+## 5. A4 / Word 集成
 
-### C. 多渠道联网搜核心模块实物图（不下载）
+1. 纸张 A4 = 210×297mm，但可用尺寸由 DOCX `sectPr/pgSz/pgMar` 决定；例如左右各 25mm 时正文宽仅 **160mm**。不得将固定 190mm 宽的图塞进去。
+2. 通过 `a4_layout.py profile` 读取真实模板；`fit-figure` 检查缩放后文字是否仍 ≥9pt。纵向图还要预留图题、上下文和段落间距。
+3. 图片优先嵌入型（inline），不要环绕浮动覆盖文字；不得拉伸变形；不得与页眉/页脚重叠。
+4. 图与图题必须同页；图题不得孤立在上一页或下一页。
+5. 插入后运行 `a4_layout.py audit --docx` 和 `figure_qc.py --docx`，再在 Word/WPS 中逐页实际渲染，检查出界、文字重叠、表格横向溢出、图题孤页、图表跨页截断。
+6. 静态 XML 尺寸检查不等于 Word 最终渲染；没有实际页面截图/目检，不得宣称视觉验收通过。
+7. 不能为了放下一张图破坏学校官方模板；裁剪、边距改写、横竖版切换都要取得模板许可。
 
-1. 仅从 MD 和 FACT 生成查询词：真实名称、厂家、准确型号、目标层级（whole module/complete board/full stepper motor）以及“整板/实物/完整模块”。**不把来源网页发现的新型号添加到上游技术事实**。
-2. 按证据优先级使用：**原厂产品/型号页面 → 正规元器件分销商页面 → 公开图片平台 → 百度/CSDN/Bing 等搜索线索**。百度/CSDN 的搜索缩略图需要回到原网页核验，不能仅靠标题批准。
-3. 如果 Claude Code 已具备 WebSearch/WebFetch/浏览器，使用现有能力；遇网络策略拦截，不得绕过验证码/登录/反爬。`search_candidates.py --provider auto` 先使用当前 Python 已安装的 DDGS；否则/之后尝试**Python 标准库** Openverse、Wikimedia Commons 图片元数据 API。两个公共渠道覆盖精确硬件型号可能有限；结果为 0 就如实报告。
-4. 每个候选记录：`title / precise_model / target_object_level / source_page_url / original_image_url / publisher / author / license_evidence / actual_viewed / fact_ids / decision`。若仅搜到搜索摘要，标为线索，**不可声称已经看到图片**。
-5. **主体检查**：是否展示完整电机/整板/完整模组，还是裸芯片、局部元件、芯片内部框图？**型号检查**：厂商、完整型号、版本/板型、外观是否一致？**说明价值**：是不是读者能看懂的真实整体部件？不满足任何一个则淘汰作正式 `module-photo`。
-6. 图片版权与型号分开审查；网络上有图不等于允许公开转载。无可核对许可则保持 `candidate`，不得标记 `approved`。第三方的 CC 元数据也必须回到原页面核对，并按许可署名。
-7. **有效探索，而非机械重试**：一种引擎失效后使用另一种已有渠道；不要把 Bing 无关噪声或百度反爬结果当作成功。对仅有芯片型号但无板型的模块，报告缺少的事实字段，允许保留“reference-only”线索但不计覆盖。
+## 6. 数据表格（三线表硬门禁保持）
 
-### D. 保存、审核与共享（仅已授权图片）
+1. 直接保留 MD 真实行列和单元格，不篡改数据。
+2. 下游生成 **Word 原生可编辑表格**；所有新生成的学术数据表必须是严格三线表：表顶一条线、表头下一条线、表底一条线；无竖线、无数据行间横线、无表格截图。
+3. 表头跨页重复；表格宽度在版心内；文字建议 ≥9pt，不允许缩成不可读小字。
+4. **所有表头和数据单元格必须水平居中且垂直居中**；`three_line_table.py apply` 会自动设置，`audit` 把未居中列为 BLOCK。
+5. 表格过宽时按语义拆成关联子表并重复关键列，不删数据。
+6. 官方固定表单不改；模板要求与三线表冲突时 BLOCK 并请用户确认边界。
+7. 每张新生成数据表在正式 Word 成品上运行 `three_line_table.py audit --docx ... --indices ...` 并保存 PASS 报告；没有 Python-docx/Word 运行环境时标记 PENDING，不得虚报通过。
 
-- 用户明确同意**本轮保存指定图像**后，方可 `workdir` → `download_selected_image.py --allow-image-download` **单张**下载 PNG/JPEG/WEBP 到受控运行区（脚本不装任何依赖），然后 `add-external` 复制到 `project-assets/visual-assets/images/` 候选库；不下载任何其他网络文件。不要自动批量下载。
-- `review` 对每张可用图片分别绑定 `FACT-xxx`、实际观察说明、确切主体层级、原始来源和复用权限。外部图必须提供 `--source-checked-at --checked-by --model-evidence --permission-evidence --subject-level --full-module-confirmed`；缺任何可信依据就保持未批准。
-- 一个 `VIS-...` 资产一个真实主类别；批准图形时还须确认渲染文件已生成，批准模块图需确认尺寸/整体主体。审计信息写入 `project-assets/activity.jsonl`；引用来源须保存可回查 URL。
-- 执行后 `verify` 和 `coverage`：已有正式图片与“仅候选/型号待核/授权待核/不适用”分开；不要强迫所有类别 PASS。**只有真实且经过审核的资源才能供下游文书使用。**
-- 结束时只清理本人创建的 `.skill-tmp/technical-visual-assets/<run-id>`，不能清理用户原文件、其它 Skill 运行目录或任何历史 `VIS` 资产。
+## 7. 技术真实性与数据来源
 
-## 4. CLI 速查（全部使用现有 Python，不安装新包）
+1. 图中每个实际技术模块必须来自技术 MD。
+2. 数据方向、连接关系、判断条件必须有对应事实依据；`source_refs` 要写章节和行号。
+3. 不允许根据经验自行增加项目没有的硬件或功能。
+4. 不允许为了让流程图更美观而修改实际业务逻辑。
+5. 流程矛盾或条件不完整时报告，不擅自补全。
+6. 不把参考范本中的模块照搬到其他项目。
+7. FACT 只作为 MD 的派生索引，不作为独立事实源。
+8. 不修改原始技术 MD，除非用户明确授权。
+9. 特别检查“是/否”路径、处理顺序、循环、结束条件和异常分支；`figure_qc.py` 只能检查标签和几何，语义必须人工核对。
 
-从 `thesis-doc-suite/` 插件根执行；Windows 为例，尖括号表示真实路径占位：
+## 8. 用户上传实物图机制（保持）
+
+1. 从技术 MD 提取需要照片的实体模块，输出 `module-requests.json/.md`；机器清单可能包含“落选方案/后续路线/泛称”误提，必须人工核对并在汇报中说明。
+2. 照片放入本项目 `user-uploads/`，使用真实 `MOD-...` ID 执行 `upload-photo`。
+3. 上传只生成待审核候选；必须检查完整设备/模组/整板、型号证据、来源/权利声明、同项目 FACT。
+4. 不得用网络照片、宣传图、裸元件或局部特写冒充完整模组。
+5. 不得安装或启用 DDGS、Openverse、Commons、百度搜图等网络图片搜索程序。
+6. 用户照片与实际模块是否一致由用户最终确认。
+7. 正式 VIS 审核使用 `visual_assets.py review` 时，必须明确 `--category module-photo`、`--subject-level complete-device|complete-module|complete-board`、`--full-module-confirmed`、`--model-evidence`、`--visual-evidence`、`--rights owned|express-permission`、`--permission-evidence` 及真实同项目 `--fact-ids`。这些是实际审核步骤，不能让模型自动勾选。
+
+## 9. 命令与产物
+
+在 `thesis-doc-suite/skills/technical-visual-assets/` 下执行：
 
 ```powershell
-# 只读发现 MD 中的图示/ASCII/FACT（不会下载或创建资产）
-python skills/technical-visual-assets/scripts/plan_visuals.py --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>"
-
-# 将 MD 已有 Mermaid/本地图登记为候选（不会联网）
-python skills/technical-visual-assets/scripts/visual_assets.py scan-md --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>"
-
-# 如果原文第62至82行是事实明确的功能树/箭头段，可以直接生候选（先核对真正行号）
-python skills/technical-visual-assets/scripts/visual_assets.py draft-from-ascii --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>" --category functional-architecture --start-line 62 --end-line 82 --title "功能架构图" --fact-ids FACT-001 --reason "对应技术MD及FACT真实关系"
-
-# 对没有可安全自动转换 ASCII 的结构，手写经事实核对的 Mermaid 源稿再登记
-python skills/technical-visual-assets/scripts/visual_assets.py add-diagram --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>" --file "<临时源稿.mmd>" --title "系统总体框架图" --category system-framework --fact-ids FACT-001 --reason "节点连线均来自技术MD与FACT"
-
-# 渲染选中的候选图（先看 list 获得真实 VIS-ID）；自动尝试零依赖 SVG 回退
-python skills/technical-visual-assets/scripts/visual_assets.py render --root "<PROJECT_ROOT>" --id VIS-真实ID
-
-# 渲染后必做：SVG 自检 + 按真实尺寸出验收预览 PNG（禁止固定画布截图制造空白）
-python skills/technical-visual-assets/scripts/visual_assets.py preview --root "<PROJECT_ROOT>" --id VIS-真实ID --run-id "<真实run-id>"
-
-# 登记完整实体模块检索目标，不能登记没有上游事实的板卡
-python skills/technical-visual-assets/scripts/visual_assets.py scope-module --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>" --module "<技术MD中的真实模块名>" --fact-ids FACT-001 --reason "核心硬件功能单元"
-
-# 搜索 URL 元数据，默认 DDGS(已安装时) → Openverse → Commons，绝不下载图
-python skills/technical-visual-assets/scripts/search_candidates.py --root "<PROJECT_ROOT>" --technical-md "<TECH_MD>" --module "<技术MD中的真实模块名>" --fact-ids FACT-001 --provider auto --limit 6
-
-# 只有本轮用户明确允许保存指定候选图，才可创建临时运行区并显式下载选中单张图
-python skills/technical-visual-assets/scripts/visual_assets.py workdir --root "<PROJECT_ROOT>"
-python skills/technical-visual-assets/scripts/download_selected_image.py --root "<PROJECT_ROOT>" --run-id "<真实run-id>" --image-url "https://真实选定的图片URL" --allow-image-download
-# 对已保存的图，继续使用 visual_assets.py add-external / review 审核登记（见 references/asset-contract.md）
-
-python skills/technical-visual-assets/scripts/visual_assets.py list --root "<PROJECT_ROOT>"
-python skills/technical-visual-assets/scripts/visual_assets.py coverage --root "<PROJECT_ROOT>"
-python skills/technical-visual-assets/scripts/visual_assets.py verify --root "<PROJECT_ROOT>"
+$ROOT = "E:\thesis-projects\demo"
+$MD = "$ROOT\deliverables\technical-document\技术文档.md"
+python scripts/md_pipeline.py scan --root $ROOT --technical-md $MD
+python scripts/md_pipeline.py sync --root $ROOT --technical-md $MD
+python scripts/md_pipeline.py module-list --root $ROOT --technical-md $MD --save
+python scripts/md_pipeline.py report --root $ROOT --technical-md $MD
 ```
 
-**不要直接照抄示例行号或 FACT-001**：命令只是格式参考，必须替换成当前项目真实行号和真实关联 FACT。`--rights owned` 等审批声明必须有真实著作权事实，不得默认使用。
+### 9.1 生成正交图（必须带中英文图题）
 
-## 5. 已有项目资产契约与系统边界
+```powershell
+python scripts/visio_diagram.py --spec "$ROOT\project-assets\resource-catalog\diagrams\figure-01.json" `
+  --template "E:\official\官方模板.docx" `
+  --out-prefix "$ROOT\project-assets\resource-catalog\diagrams\figure-01" `
+  --require-caption
+# 输出：figure-01.svg + figure-01.drawio + figure-01.figure.json
+```
+
+需要位图时：
+
+```powershell
+python scripts/export_png.py --svg "$ROOT\...\figure-01.svg" --out "$ROOT\...\figure-01-300dpi.png" --dpi 300
+```
+
+### 9.2 质量检查（几何 + 图题 + A4）
+
+```powershell
+python scripts/figure_qc.py --spec "$ROOT\...\figure-01.json" `
+  --svg "$ROOT\...\figure-01.svg" --drawio "$ROOT\...\figure-01.drawio" `
+  --template "E:\official\官方模板.docx" `
+  --json "$ROOT\...\figure-01.qc.json"
+```
+
+### 9.3 绑定 RES 与图题元数据
+
+```powershell
+python scripts/md_pipeline.py attach-layout --root $ROOT --technical-md $MD `
+  --id "RES-真实ID" --svg "$ROOT\...\figure-01.svg" --drawio "$ROOT\...\figure-01.drawio" `
+  --template "E:\official\官方模板.docx" `
+  --figure-meta "$ROOT\...\figure-01.figure.json" `
+  --evidence "已逐条核对正式技术MD对应章节的真实节点、连线与箭头方向"
+```
+
+### 9.4 A4 与三线表
+
+```powershell
+python scripts/a4_layout.py profile --template "E:\official\官方模板.docx"
+python scripts/a4_layout.py fit-figure --template "E:\official\官方模板.docx" --width-mm 155 --height-mm 95 --text-pt 9.5
+python scripts/a4_layout.py audit --docx "<写作Skill生成的正式成品.docx>"
+python scripts/table_layout.py --template "E:\official\官方模板.docx" --table-md "<某个RES表格.md>"
+python scripts/three_line_table.py apply --docx "<待检查成品.docx>" --indices 1 --out "<三线表修订副本.docx>"
+python scripts/three_line_table.py audit --docx "<三线表修订副本.docx>" --indices 1 --json "<三线表审计.json>"
+```
+
+### 9.5 目录规范
 
 ```text
 <PROJECT_ROOT>/
-├── project-assets/
-│   ├── project.json / facts.json / references.json / schedule.json / activity.jsonl
-│   └── visual-assets/
-│       ├── index.json                  # 稳定 VIS-ID、哈希、FACT、版权和来源
-│       ├── requirements.json           # 已核实核心模块清单与待找照片范围
-│       ├── diagrams/                   # 可编辑 .mmd 与有效 SVG、已引用本地图
-│       └── images/                     # 本轮明确授权入库的候选或批准照片
-├── deliverables/technical-document/    # 上游正式技术MD/HTML（严格只读）
-└── .skill-tmp/technical-visual-assets/<run-id>/ # 可清理过程目录
+├─ deliverables/technical-document/技术文档.md  # 唯一项目技术事实源
+├─ user-uploads/                               # 用户自行上传照片的输入区
+├─ project-assets/
+│  ├─ facts.json                               # 派生兼容事实（非新事实入口）
+│  ├─ visual-assets/index.json                 # 正式 VIS 原有资产/人工审核
+│  ├─ visual-assets/images/                    # 审核前的用户照片实体
+│  └─ resource-catalog/
+│     ├─ index.json                            # 六类 RES 资源 + 图题出版元数据
+│     ├─ module-requests.json / .md            # 用户需要上传的实物模块清单
+│     ├─ diagrams/                             # .mmd / .svg / .drawio / .figure.json
+│     └─ tables/                               # 完整 Markdown 表格原始文本
+└─ .skill-tmp/technical-visual-assets/<run-id>/ # 自有可清理工作区
 ```
 
-- 兼容原 `core/contracts/shared-project-assets-contract.md` v1，**不修改**原 `project_assets.py` 的 `KINDS`，复用 `.asset-write.lock` 和 `activity.jsonl`。勿把图像写进插件安装目录。
-- `VIS-...` 每个内容 SHA 稳定去重；已批准旧资产及历史文件不静默覆盖。源 MD SHA 改变时列为重新审阅事项。
-- 所有来源页面和图片 URL 必须真实可回访；原图、候选与最终批准不等价。
+## 10. 自动质量门禁
 
-## 6. 最终一次性执行汇报格式（必须）
+`scripts/figure_qc.py` 至少检查：
 
-**不要只说“找不到图片”。** 按下列结构提供每一个已经完成、未完成和阻塞的结果：
+1. 非正交连接线（SVG `<polyline>` 与 spec `points` 双重检查）。
+2. 节点之间重叠。
+3. 连接线穿过节点内部。
+4. 节点文字溢出（复用 `validate` 的字宽/行高计算）。
+5. 箭头缺失或来源/目标元数据不一致。
+6. 判断分支标签缺失、重复或压到节点上。
+7. 技术流程逻辑与 MD 不一致（需要人工语义核对；QC 只检查 `source_refs` 完整性并标记 `semantic_review_required`）。
+8. 图片宽高与 A4 版心不匹配。
+9. 图题缺失、图号格式错误、中文/英文题过于笼统。
+10. VSDX 包缺件、XML/关系损坏、页面无形状；VSDX 校验状态与验证状态不一致。
+11. 表头/数据单元格未水平或垂直居中。
+12. 英文图题与中文题目的关键词一致性预警（不替代人工语义检查）。
+13. 图题与图片分页分离（`--docx` 模式检查图下是否有中英文题；是否同页仍需 Word 渲染）。
+14. 图形渲染失败（SVG/drawio/VSDX XML 解析、毫米宽高、根元素）。
+15. 绘图源文件缺失或尺寸不一致。
+16. 图形资源与原 VIS/RES 索引不一致（`--catalog --id`）。
 
-1. 项目 ID、实际技术 MD 路径/SHA、事实数、被使用的 `FACT-xxx`。
-2. 本轮真实使用的网络搜索渠道、每种结果数、失败原因；安装第三方包数（默认 `0`）、下载图片数（默认 `0`）。
-3. 系统框架图、功能架构图、核心流程图、模块整体实物图四类**逐类** PASS/PENDING/MISSING/N/A；包括新绘可编辑 `.mmd` 和实际渲染 SVG 的文件位置。
-4. 每个核心模块逐项列出：**目标主体/真实型号、FACT、搜索候选 URL、实物图完整性、来源与许可核验、最终 VIS ID 与状态**。
-5. 明确区分通过的图片、仅供参考但不代表本项目的图片、未验证型号的图片、无授权的图片；给出不能批准的确切理由。
-6. 不触碰上游 MD/Word，不改项目事实，没有用户授权绝不下载外部图片；仅在确有可核验资产时登记。
-7. 校验脚本真实运行结果、未完成的环境限制及**用户应该验收的实际图像**。
+**通过标准**：`status = PASS_GEOMETRY_NEEDS_SEMANTIC_AND_VISUAL_REVIEW` 只表示程序检查通过；必须在真实 Word/WPS 页面中逐页目检，并人工核对技术逻辑与英文题名语义，才能做最终验收。
 
-**严格失败**：缺少当前项目正式技术 MD、跨项目 FACT、伪造来源/授权/测试、未经许可安装软件或下载。**允许 WARN**：网络失效、缺少精确硬件板型、ASCII 语义含糊、图表渲染器不支持复杂语法、未找到可复用授权图片；不得为了提高通过率瞒报。
+## 11. 失败门禁与执行汇报
 
-## 7. 按需读取的本地资源
+`BLOCK`：MD 缺失/越项目；图数据无 MD 依据；脚本无法解析关系；上传目标不存在；图片含恶意/未知格式；图片版权或型号证据缺失却要求批准；图超版心/字体小于9pt；出现斜线连接；节点重叠或连线穿节点；判断分支标签缺失；图题缺失/格式错误/过于笼统；VSDX 包结构损坏或页面无形状；表格单元格未水平/垂直居中；表格信息被删减；新生成数据表出现竖线/内部网格线、不是严格三线表或未经过三线表审计；非 A4 却按 A4 硬插；违反官方模板。
 
-- `references/image-selection-examples.md`：用户五张真实正反例和完整主体判断办法。
-- `assets/image-selection-examples/`：五张用户当次提供的视觉案例，**不代表公开再分发许可**。
-- `references/asset-contract.md`：VIS 索引/审核/项目隔离契约和 CLI 详情。
-- `references/network-image-research.md`：DDGS、Openverse、Commons、搜索工具降级与原图来源审计。
-- `scripts/plan_visuals.py`：只读真实技术需求盘点。
-- `scripts/visual_assets.py`：候选、Mermaid/ASCII、渲染、事实审核、索引、去重和覆盖。
-- `scripts/svg_fallback.py`：仅为安全、简单的有向无环图提供零依赖 SVG 渲染。
-- `scripts/search_candidates.py`：仅检索 URL 元数据；不自动安装任何依赖、不下载图片。
-- `scripts/download_selected_image.py`：用户明确许可的单张 HTTPS 图片受控保存；默认拒绝。
+`WARN / PENDING`：用户没有上传照片、没有提供模板、复杂图形仍需实际目检、没有 Word/WPS 实际渲染证据、复杂路由存在 1–2 处不可避免交叉、英文图题关键词预警。应保留候选并明确缺口。
 
-项目最终业务验收属于用户；本 Skill 的本地自动测试**不能代替**视觉、技术事实与图片授权的实际人工核验。
+每次输出：项目 ID、正式 MD 路径及哈希；6 类资源数及来源行号；建议上传的硬件模块及是否待确认；可编辑 `.mmd`/`.drawio`/`.svg`/`.figure.json` 的真实文件清单；模板 A4 内容宽高与图片/表格适配结果；正交布线 QC 结果（交叉数、自动重排边数）；中英文图题元数据；Word 实际检查是否完成；旧 VIS 的审核状态；处理异常/权限问题；修改文件与真实测试结论。**用户做最终验收。**
+
+## 12. 参考文档与示例
+
+- `references/orthogonal-routing-rules.md`：正交布线、锚点、分支、障碍、QC 规则。
+- `references/english-caption-spec.md`：图号、中英文题名、元数据 schema、Word 原生图题。
+- `references/a4-figure-layout-spec.md`：A4 版心、图片/图题/表格尺寸与 Word 验收清单。
+- `references/vsdx-export-spec.md`：原生 VSDX 包结构、形状/连线/图题映射与 Visio 打开验证状态。
+- `references/visio-style-a4-guide.md`：7 张 Word 参考截图逆向规则 + A4 约束 + 正交/图题补充。
+- `references/asset-contract.md`：RES/VIS/FACT 兼容与 v1.4.0 图题字段。
+- `references/image-selection-examples.md` + `assets/image-selection-examples/`：用户实物照片正反例（完整设备/完整模组/完整步进电机 vs 裸芯片/局部特写）。
+- `examples/visio-style-example.json`：带中英文图题的规范 spec。
+- `examples/orthogonal-flow-example.svg`、`examples/orthogonal-flow-example.drawio`、`examples/orthogonal-flow-example.vsdx`、`examples/orthogonal-flow-example.figure.json`、`examples/orthogonal-flow-example-300dpi.png`：正交示例（含原生 VSDX）。
+- `examples/before-diagonal-sms-flow-300dpi.png` 与 `examples/after-orthogonal-sms-flow-300dpi.png`：修改前后对照。**仅作格式判例**，图中 SIM900A/AT 指令等节点不得复制为其他项目的技术事实。
+- `examples/A4-正交流程图与英文图题示例.docx` 与 `page-1.png`：真实 Word 渲染样例（非学校官方模板）。
+- `examples/A4-图表排版示例.docx`、`examples/A4-三线表强制规范示例.docx`：A4/三线表格式样例。
+
+## 13. 最终验收
+
+用户需最终确认：
+
+1. 图中节点、连线、箭头方向是否与正式技术 MD 完全一致。
+2. 所有常规连线是否正交，是否存在穿节点、压文字、不可读的小字。
+3. 中英文图题是否语义一致、编号正确、位于图下，并与图片同页。
+4. 是否提供学校官方 DOCX 模板与目标章节，以便重新做 A4 与 Word 逐页验收。
+5. 正式 Word 成品中的新增数据表是否通过三线表审计。
+6. 实物模块照片是否由用户本人上传并完成 VIS 审核。

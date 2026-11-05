@@ -22,6 +22,29 @@ FIXED=['塔里木大学毕业论文（设计）中期检查记录表','附件6',
        '负责人签名（盖章）','学院意见','完成进度','存在的问题及整改措施','指导教师意见',
        '毕业论文（设计）题','学生姓名','班级','年','月','日']
 
+def page_ink_ratio(page):
+    """非白像素占比（72dpi，1/7 抽样；任一通道<245 计非白）。空白页≈0。"""
+    pix=page.get_pixmap(alpha=False)
+    s,n=pix.samples,pix.n
+    total=nonwhite=0
+    for j in range(0,len(s)-n,n*7):
+        total+=1
+        if s[j]<245 or s[j+1]<245 or s[j+2]<245:nonwhite+=1
+    return nonwhite/max(total,1)
+
+def blank_page_kind(page):
+    """任意页空白页判定（用户硬性要求：Word 成品任何位置不得出现空白页）。返回 None/'blank'/'near_blank'。
+    正文文字只计页眉/页脚带（上下 72pt）以外的文本块；纯页码行不计。'blank'=无正文且几乎无着墨
+    （无表格/图形）；'near_blank'=正文<10 字且着墨<1%，须目视确认。表格框线着墨使空白填写页不被误判。"""
+    ph=page.rect.height
+    lines=[b[4] for b in page.get_text('blocks') if b[3]>72 and b[1]<ph-72]
+    core=re.sub(r'\s','',''.join(lines))
+    if re.fullmatch(r'[\-–—－_/\.0-9]*',core):core=''
+    ink=page_ink_ratio(page)
+    if not core and ink<0.003:return 'blank'
+    if len(core)<10 and ink<0.01:return 'near_blank'
+    return None
+
 def page_substantive_chars(raw):
     for s in FIXED:raw=raw.replace(s,'')
     raw=re.sub(r'（[^）]*不少于200字[^）]*）','',raw)
@@ -101,15 +124,21 @@ def render_and_precheck(source,output_dir,max_pages=3,pdf_in=None):
         text=p.get_text()
         pages.append({'page':index+1,'png':str(png),'chars':len(text),
                       'substantive_chars':page_substantive_chars(text),
+                      'blank_check':blank_page_kind(p) or 'ok',
                       'visually_inspected':False})
-    problems=[]
+    problems=[];warnings=[]
+    for pg in pages:
+        if pg['blank_check']=='blank':
+            problems.append(f"第{pg['page']}页为空白页（整页无正文，仅页码/页眉/页脚亦算）：成品不得出现空白页。先与官方空白原件同渲染器对照定性：原件同位置亦空白→模板固有，如实报告用户；原件无空白→内容/占位挤出，只动可填正文收口重排后复验（不删事实、不改官方框架、不缩字号行距）")
+        elif pg['blank_check']=='near_blank':
+            warnings.append(f"第{pg['page']}页正文不足10字且几乎无表格/图形：疑似近空白页，必须目视确认")
     if doc.page_count>max_pages:
         problems.append(f'超出官方空白模板的 {max_pages} 页基准：实际 {doc.page_count} 页。应先精简重复内容，不可动学校字号/页边距/行距。')
     if doc.page_count and pages[-1]['substantive_chars']<50:
         problems.append('最后一页几乎没有有效正文，疑似孤立签名/学院意见落款页。')
     if doc.page_count==0:problems.append('PDF页数为0')
     report={'auto_precheck_passed':not problems,'page_count':doc.page_count,
-            'pages':pages,'problems':problems,
+            'pages':pages,'problems':problems,'warnings':warnings,
             'human_visual_review':'PENDING — Agent/审稿人必须逐张打开全部 PNG 并标记结论，未审不得宣布正式PASS',
             'wps_tested':False,'converter':converter}
     (out/'visual-precheck.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf8')

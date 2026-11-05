@@ -13,6 +13,29 @@ import argparse,json,re,subprocess
 from pathlib import Path
 import fitz
 
+def page_ink_ratio(page):
+    """非白像素占比（72dpi，1/7 抽样；任一通道<245 计非白）。空白页≈0。"""
+    pix=page.get_pixmap(alpha=False)
+    s,n=pix.samples,pix.n
+    total=nonwhite=0
+    for j in range(0,len(s)-n,n*7):
+        total+=1
+        if s[j]<245 or s[j+1]<245 or s[j+2]<245:nonwhite+=1
+    return nonwhite/max(total,1)
+
+def blank_page_kind(page):
+    """任意页空白页判定（用户硬性要求：Word 成品任何位置不得出现空白页）。返回 None/'blank'/'near_blank'。
+    正文文字只计页眉/页脚带（上下 72pt）以外的文本块；纯页码行不计。'blank'=无正文且几乎无着墨
+    （无表格/图形）；'near_blank'=正文<10 字且着墨<1%，须目视确认。表格框线着墨使空白填写页不被误判。"""
+    ph=page.rect.height
+    lines=[b[4] for b in page.get_text('blocks') if b[3]>72 and b[1]<ph-72]
+    core=re.sub(r'\s','',''.join(lines))
+    if re.fullmatch(r'[\-–—－_/\.0-9]*',core):core=''
+    ink=page_ink_ratio(page)
+    if not core and ink<0.003:return 'blank'
+    if len(core)<10 and ink<0.01:return 'near_blank'
+    return None
+
 def _com_to_pdf(src, pdf, prog_id, label):
     import base64, shutil
     ps = shutil.which('powershell') or shutil.which('pwsh')
@@ -79,16 +102,22 @@ def run(source,output_dir,pdf_in=None):
         converter='external-pdf'
     else:
         pdf,converter=_docx_to_pdf(source,out)
-    pages=[]
+    pages=[];problems=[];warnings=[]
     with fitz.open(pdf) as doc:
         for i,p in enumerate(doc):
             pic=out/f'page-{i+1}.png'
             p.get_pixmap(matrix=fitz.Matrix(1.6,1.6),alpha=False).save(pic)
+            kind=blank_page_kind(p)
+            if kind=='blank':
+                problems.append(f'第{i+1}页为空白页（整页无正文，仅页码/页眉/页脚亦算）：成品不得出现空白页。先与官方空白原件同渲染器对照定性：原件同位置亦空白→模板固有，如实报告用户；原件无空白→内容/占位挤出，只动可填正文收口重排后复验（不删事实、不改官方框架、不缩字号行距）')
+            elif kind=='near_blank':
+                warnings.append(f'第{i+1}页正文不足10字且几乎无表格/图形：疑似近空白页，必须目视确认')
             pages.append({'page':i+1,'png':str(pic),'extracted_chars':len(p.get_text()),
+                          'blank_check':kind or 'ok',
                           'visually_inspected':False,'conclusion':'PENDING'})
-    warnings=[]
     if pages and pages[-1]['extracted_chars']<80:warnings.append('最后一页内容很少：请视觉检查是否孤立签名或异常空白；这不是自动删改内容的许可')
-    result={'pages':pages,'page_count':len(pages),'warnings':warnings,'requires_each_page_review':True,
+    result={'pages':pages,'page_count':len(pages),'problems':problems,'auto_precheck_passed':not problems,
+            'warnings':warnings,'requires_each_page_review':True,
             'render_engine':converter,'wps_tested':False,
             'visual_approved':False,'no_fixed_page_limit':True}
     (out/'visual-precheck.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
@@ -96,4 +125,5 @@ def run(source,output_dir,pdf_in=None):
 
 if __name__=='__main__':
     a=argparse.ArgumentParser(description=__doc__);a.add_argument('--file',required=True);a.add_argument('--outdir',required=True);a.add_argument('--pdf',default=None,help='直通外部已转换 PDF（跳过转换链）')
-    args=a.parse_args();print(json.dumps(run(args.file,args.outdir,args.pdf),ensure_ascii=False,indent=2))
+    args=a.parse_args();res=run(args.file,args.outdir,args.pdf);print(json.dumps(res,ensure_ascii=False,indent=2))
+    if res['problems']:raise SystemExit(2)

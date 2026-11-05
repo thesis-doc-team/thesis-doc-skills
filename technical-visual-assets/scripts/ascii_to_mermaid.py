@@ -29,7 +29,8 @@ def build_mermaid(source_lines, start_line, category):
     if len(chosen) < 2 or len(chosen) > 55:
         raise ValueError('源行数不足或过多，请改用更精确的行号范围')
     texts = [s for _,s in chosen]
-    has_arrows = any(ARROWS.search(s) for s in texts)
+    # Arrows embedded INSIDE a tree-node label are text, not separate graph edges.
+    has_arrows = any(ARROWS.search(s) and not BRANCH.fullmatch(s) for s in texts)
     has_tree = any(BRANCH.fullmatch(s) for s in texts)
     if has_arrows and has_tree:
         raise ValueError('箭头图与树状图混杂；自动解析可能误连，改为人工提取')
@@ -84,9 +85,7 @@ def build_mermaid(source_lines, start_line, category):
                 stack=stack[:level]+[ident]
             else:
                 if saw_root or line.startswith(('#','-','*')):
-                    raise ValueError(f'第 {lineno} 行不是合法的树节点；请缩小选区。'
-                                     'box/arrow 等非树形关系图请改走 SKILL B.3：'
-                                     '按原文逐行手写 .mmd 后用 add-diagram 登记（draft-from-ascii 只接受严格树形）')
+                    raise ValueError(f'第 {lineno} 行不是合法的树节点；请缩小选区')
                 root=add(line.strip(),lineno,distinct=True)
                 stack=[root];saw_root=True
     if not edges:

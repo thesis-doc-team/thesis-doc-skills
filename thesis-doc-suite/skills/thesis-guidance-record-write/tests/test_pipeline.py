@@ -107,5 +107,79 @@ class Tests(unittest.TestCase):
    self.assertEqual(rep['result'],'PASS')
    self.assertGreaterEqual(rep['vague_action_hits'],1)
    self.assertTrue(any('空泛' in w for w in rep['warnings']))
+ def test_blank_page_detection_and_render_flag(self):
+  # 用户要求：Word 成品不得出现空白页——任意页空白检测与渲染 problems 硬拦截
+  sys.path.insert(0,str(BASE/'scripts'))
+  try:
+   import fitz
+  except ImportError:
+   self.skipTest('PyMuPDF 未安装')
+  from render_visual import blank_page_kind,render
+  doc=fitz.open();self.assertEqual(blank_page_kind(doc.new_page()),'blank')
+  num=doc.new_page();num.insert_text((72,72),'- 2 -');self.assertEqual(blank_page_kind(num),'blank')
+  ok=doc.new_page();ok.insert_text((72,72),'指导记录正文内容示例，用于验证正常页不被误判为空白页。');self.assertIsNone(blank_page_kind(ok));doc.close()
+  with tempfile.TemporaryDirectory() as td:
+   td=Path(td);src=td/'fake.docx';src.write_bytes(b'X')
+   proc=fitz.open();c=proc.new_page();c.insert_text((72,72),'指导记录正文内容示例，用于验证正常页不被误判为空白页。');proc.new_page()
+   pdf=td/'b.pdf';proc.save(str(pdf));proc.close()
+   rep=render(src,td/'render',pdf_in=pdf)
+   self.assertFalse(rep['auto_precheck_passed'])
+   self.assertTrue(any('第2页为空白页' in p for p in rep['problems']),rep['problems'])
+ def test_fill_adds_invisible_blank_page_guard(self):
+  # 复盘实锤：官方模板以表格收尾、末行恰达版心底线必溢出空白页（空白原件第5页、真实成品第11页）；
+  # 填充件补表尾 1pt 防空白页尾段无损消除，且校验器只放行这一种额外段落
+  from docx.oxml.ns import qn
+  with tempfile.TemporaryDirectory() as td:
+   td=Path(td);src=BASE/'assets/official-guidance-template.docx'
+   out=td/'guide.docx'
+   call(BASE/'scripts/fill_guidance.py','--template',src,'--data',BASE/'tests/format-smoke-input.json','--out',out)
+   doc=Document(out);tpl=Document(src)
+   self.assertEqual(len(doc.paragraphs),len(tpl.paragraphs)+1)
+   guard=doc.paragraphs[-1]
+   self.assertEqual(guard.text.strip(),'')
+   sz=guard._p.find('.//'+qn('w:sz'))
+   self.assertIsNotNone(sz);self.assertEqual(sz.get(qn('w:val')),'2')
+   call(BASE/'scripts/validate_guidance.py','--template',src,'--data',BASE/'tests/format-smoke-input.json','--file',out,'--report',td/'qa.json')
+   self.assertEqual(json.loads((td/'qa.json').read_text(encoding='utf-8'))['result'],'PASS')
+   doc.add_paragraph('不该出现的额外段落')
+   doc.save(out)
+   r=call(BASE/'scripts/validate_guidance.py','--template',src,'--data',BASE/'tests/format-smoke-input.json','--file',out,'--report',td/'qa2.json',ok=False)
+   self.assertNotEqual(r.returncode,0)
+   self.assertIn('非授权额外段落',' '.join(json.loads((td/'qa2.json').read_text(encoding='utf-8'))['errors']))
+ def test_overlong_content_rejected_by_fill(self):
+  # 用户截图复盘：指导内容超长压盖下一行——官方行高 exact，fill 按 17 行硬预算拒绝
+  with tempfile.TemporaryDirectory() as td:
+   data=json.loads((BASE/'tests/format-smoke-input.json').read_text(encoding='utf-8'))
+   long='核对系统时钟与外设时钟配置的一致性，并按实际时钟核算各串口波特率误差，记录超差链路与恢复验证结果。'*4
+   data['records'][0]['issue_pairs']=[{'problem':long,'action':long} for _ in range(3)]
+   inp=Path(td)/'d.json';inp.write_text(json.dumps(data,ensure_ascii=False),encoding='utf-8')
+   r=call(BASE/'scripts/fill_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--out',Path(td)/'x.docx',ok=False)
+   self.assertNotEqual(r.returncode,0)
+   self.assertIn('行预算',r.stdout+r.stderr)
+ def test_validate_flags_overlong_content(self):
+  # 校验器独立复核：绕过 fill 直改文档也要被拦
+  with tempfile.TemporaryDirectory() as td:
+   td=Path(td);out=td/'guide.docx'
+   call(BASE/'scripts/fill_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',BASE/'tests/format-smoke-input.json','--out',out)
+   doc=Document(out);cell=doc.tables[1].cell(5,1)
+   long='核对系统时钟与外设时钟配置的一致性，并按实际时钟核算各串口波特率误差，记录超差链路与恢复验证结果。'*4
+   for _ in range(3):cell.add_paragraph(long)
+   doc.save(out)
+   r=call(BASE/'scripts/validate_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',BASE/'tests/format-smoke-input.json','--file',out,'--report',td/'qa.json',ok=False)
+   self.assertNotEqual(r.returncode,0)
+   self.assertIn('行预算',' '.join(json.loads((td/'qa.json').read_text(encoding='utf-8'))['errors']))
+ def test_long_item_warning_non_blocking(self):
+  # 单条 90~135 字但行预算内：软提示"宜概括"，不阻断——概括口径可灵活，不一刀切
+  with tempfile.TemporaryDirectory() as td:
+   data=json.loads((BASE/'tests/format-smoke-input.json').read_text(encoding='utf-8'))
+   item='核对系统时钟与外设时钟配置的一致性，并按实际时钟核算各串口波特率误差，记录超差链路与恢复验证结果。'*3
+   data['records'][0]['issue_pairs']=[{'problem':item,'action':item}]
+   inp=Path(td)/'d.json';inp.write_text(json.dumps(data,ensure_ascii=False),encoding='utf-8')
+   out=Path(td)/'guide.docx'
+   call(BASE/'scripts/fill_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--out',out)
+   call(BASE/'scripts/validate_guidance.py','--template',BASE/'assets/official-guidance-template.docx','--data',inp,'--file',out,'--report',Path(td)/'qa.json')
+   rep=json.loads((Path(td)/'qa.json').read_text(encoding='utf-8'))
+   self.assertEqual(rep['result'],'PASS')
+   self.assertTrue(any('超过 90 字' in w for w in rep['warnings']),rep['warnings'])
 
 if __name__=='__main__':unittest.main()

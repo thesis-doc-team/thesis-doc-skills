@@ -14,7 +14,7 @@
 | `/thesis-doc-suite:literature-review-write` | 业务 | 3.2.1 | 文献综述 DOCX + 执行汇报 | `deliverables/literature-review/` |
 | `/thesis-doc-suite:thesis-guidance-record-write` | 业务 | 1.2.0 | 指导记录 DOCX + 执行汇报 | `deliverables/guidance/` |
 | `/thesis-doc-suite:thesis-midterm-check-write` | 业务 | 1.3.2 | 中期检查记录表 DOCX + 执行汇报 | `deliverables/midterm/` |
-| `/thesis-doc-suite:technical-visual-assets` | 支持 | 1.1.0 | 四类视觉资产（VIS-xxx 索引/.mmd/SVG/实物图）+ 覆盖缺口报告 | `project-assets/visual-assets/` |
+| `/thesis-doc-suite:technical-visual-assets` | 支持 | 1.4.1 | 正交技术图（可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG）+ 中英文图题 + A4/Word 版心门禁 + 六类资源索引 | `project-assets/resource-catalog/`、`project-assets/visual-assets/` |
 | `/thesis-doc-suite:init-project` | 管理 | 0.1.0 | 项目资产包骨架 | — |
 | `/thesis-doc-suite:check-project` | 管理 | 0.1.0 | PASS/WARN/BLOCK 检查报告 | — |
 | `/thesis-doc-suite:help` | 管理 | 0.1.0 | 命令导航与使用指导 | — |
@@ -87,15 +87,15 @@
 
 ## 支持 Skill 逐项说明
 
-### technical-visual-assets｜技术图示与模块实物图（v1.1.0）
+### technical-visual-assets｜正交工程绘图、原生 VSDX 与视觉资产（v1.4.1）
 
-- **定位**：基于 `project-technical-doc` 的正式技术 MD 与同项目 FACT-xxx，建立系统框架图、功能架构图、关键流程图、核心模块完整实物图四类真实可追溯视觉资产（VIS-xxx）。联网按准确型号核验来源与复用许可，拒绝裸芯片/局部元件/芯片内部框图冒充模块实物图。**只做素材与登记，不负责在 Word/MD 中插图**（插图由下游 Skill 自行决定）。
-- **生成**：`project-assets/visual-assets/`（VIS-xxx 索引、可编辑 `.mmd`/SVG、已授权图片）、四类覆盖与缺口报告。
-- **必需输入**：project-technical-doc 产出的正式技术 MD、`project-assets/project.json` 与 `facts.json`、项目根目录。
-- **可选输入**：用户明确许可后保存的网络模块图片、技术 MD 已有 Mermaid/本地图、已安装 DDGS/Mermaid CLI/Graphviz（可选，**绝不自动安装**）。
-- **前置条件**：Python 3.10+（仅标准库）；联网检索能力；逐图人工确认（审核声明≠自动视觉识别）。
-- **场景**：为技术文档或文书准备系统框架图、功能架构图、流程图与核心模块实物图素材；宁缺毋滥，无合格图如实报 MISSING。
-- **边界**：技术事实只来自上游 MD 与 FACT，网络资料只核对图片与型号；不修改上游 MD 与六个业务 Skill；外部检索≠自动下载（下载需用户明确许可 + `--allow-image-download`）。
+- **定位**：用户指定正式技术 MD 为唯一事实源，离线提取/绘制正交（横平竖直）技术图；生成原生 VSDX（Visio 打开状态如实标注）、中英文图题、A4/Word 版心与实际渲染门禁；Visio 式 SVG + 可编辑 drawio；六类资源目录；**不包含任何联网搜图功能**。**只做素材与登记，不负责在文书里插图**（插图由下游 Skill 自行决定）。
+- **生成**：`project-assets/resource-catalog/` 与 `project-assets/visual-assets/`——MD 驱动的六类资源索引与图表源、仅从 MD 提取的模块实物照片上传清单、用户照片经本地验证后的 RES/VIS 候选记录、可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG、A4 布局审计结果、中英文图题元数据（`.figure.json`）。
+- **必需输入**：同项目根目录与稳定 project_id、本项目正式技术 Markdown。
+- **可选输入**：用户上传的模块照片与权利声明、官方 A4 DOCX 模板（Word 适配阶段必需）、同项目派生 FACT 用于正式 VIS 审核。
+- **前置条件**：Python 3.10+（仅标准库，禁止自动装包）；无需联网搜图、不自动安装工具；300dpi PNG 导出需本机 Chrome/Edge（无浏览器时保留 SVG）；VSDX 生成不需要 Visio，Visio 实际打开验证需本机 Visio/WPS 并如实标注。
+- **场景**：依据唯一正式技术 MD 生成可编辑工程图、原始数据表格、用户实物图需求清单；按官方模板验收 A4 版式后由文书 Skill 复用。
+- **边界**：技术事实只来自上游 MD 与 FACT；不修改上游 MD 与业务 Skill；用户照片需权利声明并经本地验证后入库；不恢复联网搜图。
 
 ---
 

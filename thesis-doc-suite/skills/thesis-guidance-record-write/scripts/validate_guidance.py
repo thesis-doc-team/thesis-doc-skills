@@ -9,6 +9,7 @@ from pathlib import Path
 from docx import Document
 from docx.oxml.ns import qn
 from lxml import etree
+from fill_guidance import CONTENT_LINES_BUDGET, ITEM_CHARS_SOFT, estimate_cell_lines
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -55,6 +56,13 @@ def main():
             body=t.cell(base+5,1).text
             if '指导教师指出存在问题：' not in body or '指导教师提出修改意见：' not in body:
                 errs.append(f'第{i+1}次缺少两组标签')
+            paras=[p.text.strip() for p in t.cell(base+5,1).paragraphs if p.text.strip()]
+            lines=estimate_cell_lines(paras)
+            if lines>CONTENT_LINES_BUDGET:
+                errs.append(f'第{i+1}次指导内容超出单元格行预算（估算 {lines} 行 > {CONTENT_LINES_BUDGET} 行）：官方行高固定，超出会被裁切并压盖下一行，必须压缩为概括性记录（每条约 30~80 字）')
+            long_items=[p for p in paras if not p.startswith('指导教师') and len(p)>ITEM_CHARS_SOFT]
+            if long_items:
+                warnings.append(f'第{i+1}次有 {len(long_items)} 条问题/意见超过 {ITEM_CHARS_SOFT} 字：指导记录宜概括（约 30~80 字），实现细节留给技术文档（非阻断提示）')
             if '分条列出。如：' in body:errs.append(f'第{i+1}次残留官方示例引导句：示例开头“分条列出。如：”整句应删除，按两段标签作答')
             if re.search(r'\d+\.XX',body):errs.append(f'第{i+1}次残留官方示例占位（“数字.XX”样例须替换为真实问题/意见；张XX、20XX 等脱敏名/年份写法不在此限）')
             hit=[w for w in VAGUE if w in body]
@@ -75,6 +83,14 @@ def main():
     for i,(x,y) in enumerate(zip(src.paragraphs,d.paragraphs)):
         if i not in (13,15,17,19,21,23,25,27) and norm(x.text)!=norm(y.text):
             errs.append(f'封面/填写说明固定段落{i}内容被改动')
+    extra=d.paragraphs[len(src.paragraphs):]
+    if extra:
+        guard_ok=False
+        if len(extra)==1:
+            gp=extra[0];sz=gp._p.find('.//'+qn('w:sz'))
+            guard_ok=(not gp.text.strip()) and sz is not None and sz.get(qn('w:val')) in ('2','4')
+        if not guard_ok:
+            errs.append('封面/填写说明之外出现非授权额外段落（仅允许表尾 1pt 防空白页尾段，见 fill_guidance.py）')
     # No fake meetings or signature dates should be generated.
     if any(rec.get('date') and not rec.get('date_verified') for rec in data['records']):errs.append('有未核实指导日期')
     if any(rec.get('location') and not rec.get('location_verified') for rec in data['records']):errs.append('有未核实地点')

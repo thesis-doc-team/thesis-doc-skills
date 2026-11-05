@@ -15,9 +15,27 @@ from docx import Document
 from docx.oxml.ns import qn
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
 
 HERE=Path(__file__).resolve().parents[1]
 LOCK=HERE/'assets'/'template-lock.json'
+
+# 指导内容格：官方固定行高 5312twip=265.6pt（hRule=exact），正文超出不会被撑高，
+# 而是被裁切并压盖下一行（真实事故截图）。10.5pt/1.1 行距实测约合 18~19 行，硬预算取 17 行。
+# 估算偏保守：全角 2 单元/半角 1 单元，首行 54 单元（21pt 缩进）、续行 60 单元。
+CONTENT_LINES_BUDGET = 17
+CONTENT_FIRST_UNITS = 54
+CONTENT_LINE_UNITS = 60
+ITEM_CHARS_SOFT = 90
+
+
+def estimate_cell_lines(texts):
+    """估算指导内容格渲染行数（固定行高下的防裁切硬预算）。"""
+    lines = 0
+    for text in texts:
+        units = sum(2 if ord(ch) >= 128 else 1 for ch in str(text))
+        lines += 1 if units <= CONTENT_FIRST_UNITS else 1 + -(-(units - CONTENT_FIRST_UNITS) // CONTENT_LINE_UNITS)
+    return lines
 
 
 def verify_source(src):
@@ -61,6 +79,13 @@ def fill_issue_cell(cell, pairs):
     content.extend(f'{i}. {pair["problem"].strip()}' for i,pair in enumerate(pairs,1))
     content.append('指导教师提出修改意见：')
     content.extend(f'{i}. {pair["action"].strip()}' for i,pair in enumerate(pairs,1))
+    estimated=estimate_cell_lines(content)
+    if estimated>CONTENT_LINES_BUDGET:
+        raise ValueError(
+            f'指导内容超出单元格行预算（估算 {estimated} 行 > 上限 {CONTENT_LINES_BUDGET} 行）：'
+            '官方该行行高固定，超出会被裁切并压盖下一行。指导记录是概括性文书——每条问题/意见 '
+            '1~2 句（约 30~80 字），写对象与修改/验证方向即可，不写寄存器、引脚、时钟分频、'
+            '波特率数值、逐条指令序列等实现细节（细节属于技术文档）；必要时减少条目或压缩措辞')
     original=cell.paragraphs
     # The editable cell in official template contains 5 placeholder paragraphs (first group)
     # or 2 blank paragraphs (second group); add only within the original editable cell.
@@ -136,6 +161,19 @@ def main():
     if len(tbl.rows)!=len(records)*13:raise ValueError('记录表复制失败')
     for i,record in enumerate(records):
         fill_one(tbl,13*i,data,record)
+    # 表尾 1pt 防空白页尾段：官方文档以表格收尾，末行恰达版心底线时 Word 必在表后挂一个段落
+    # 标记并溢到新页——空白原件实测 5 页第 5 页、真实成品 11 页第 11 页整页空白。追加不可见
+    # （行高 exact 1pt + 段落标记 1pt）空段让必居行落回末页：11 页→10 页，官方可见内容零改动。
+    # 这是版面修复而非内容增写；validate_guidance 只放行这一种额外段落。
+    guard=doc.add_paragraph()
+    guard.paragraph_format.space_before=Pt(0)
+    guard.paragraph_format.space_after=Pt(0)
+    guard.paragraph_format.line_spacing=Pt(1)
+    _pPr=guard._p.get_or_add_pPr()
+    _rPr=OxmlElement('w:rPr')
+    for _tag in ('w:sz','w:szCs'):
+        _e=OxmlElement(_tag);_e.set(qn('w:val'),'2');_rPr.append(_e)
+    _pPr.append(_rPr)
     doc.core_properties.title='毕业论文（设计）指导记录（待教师核实稿）'
     doc.core_properties.subject='依据技术文档生成的指导记录待审核草稿；非真实指导事实证明'
     dst.parent.mkdir(parents=True,exist_ok=True)

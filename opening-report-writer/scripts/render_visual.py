@@ -17,6 +17,29 @@ import subprocess
 from pathlib import Path
 from check_render import run as review_page_markers
 
+def page_ink_ratio(page):
+    """非白像素占比（72dpi，1/7 抽样；任一通道<245 计非白）。空白页≈0。"""
+    pix=page.get_pixmap(alpha=False)
+    s,n=pix.samples,pix.n
+    total=nonwhite=0
+    for j in range(0,len(s)-n,n*7):
+        total+=1
+        if s[j]<245 or s[j+1]<245 or s[j+2]<245:nonwhite+=1
+    return nonwhite/max(total,1)
+
+def blank_page_kind(page):
+    """任意页空白页判定（用户硬性要求：Word 成品任何位置不得出现空白页）。返回 None/'blank'/'near_blank'。
+    正文文字只计页眉/页脚带（上下 72pt）以外的文本块；纯页码行不计。'blank'=无正文且几乎无着墨
+    （无表格/图形）；'near_blank'=正文<10 字且着墨<1%，须目视确认。表格框线着墨使空白填写页不被误判。"""
+    ph=page.rect.height
+    lines=[b[4] for b in page.get_text('blocks') if b[3]>72 and b[1]<ph-72]
+    core=re.sub(r'\s','',''.join(lines))
+    if re.fullmatch(r'[\-–—－_/\.0-9]*',core):core=''
+    ink=page_ink_ratio(page)
+    if not core and ink<0.003:return 'blank'
+    if len(core)<10 and ink<0.01:return 'near_blank'
+    return None
+
 
 def _com_to_pdf(src, pdf, prog_id, label):
     import base64, shutil
@@ -94,16 +117,23 @@ def render(source: Path, outdir: Path, max_pages=None, pdf_in=None):
             image=outdir/f'page-{i+1}.png'
             page.get_pixmap(matrix=fitz.Matrix(1.5,1.5),alpha=False).save(str(image))
             txt=page.get_text(sort=True)
-            page_rows.append({'page':i+1,'image':str(image),'text_chars':len(txt), 'visual_inspection':'PENDING'})
+            page_rows.append({'page':i+1,'image':str(image),'text_chars':len(txt),
+                              'blank_check':blank_page_kind(page) or 'ok','visual_inspection':'PENDING'})
         count=len(doc)
     markers=review_page_markers(pdf)
-    warnings=list(markers['warnings'])
+    warnings=list(markers['warnings']);problems=[]
+    for row in page_rows:
+        if row['blank_check']=='blank':
+            problems.append(f"第{row['page']}页为空白页（整页无正文，仅页码/页眉/页脚亦算）：成品不得出现空白页。先与官方空白原件同渲染器对照定性：原件同位置亦空白→模板固有，如实报告用户；原件无空白→内容/占位挤出，只动可填正文收口重排后复验（不删事实、不改官方框架、不缩字号行距）")
+        elif row['blank_check']=='near_blank':
+            warnings.append(f"第{row['page']}页正文不足10字且几乎无表格/图形：疑似近空白页，必须目视确认")
     if max_pages is not None and count>max_pages:
         warnings.append(f'超过用户当次授权的页数 {max_pages}（非默认上限）；不得靠改字体/页边距硬压页数')
     if not count: warnings.append('无可渲染页面')
     if count > 1 and page_rows[-1]['text_chars'] < 30:
         warnings.append('最后一页基本没有正文，疑似仅页码/边框的空白孤页；必须返工或如实报告')
-    result={'status':'WARN' if warnings else 'PRECHECK_OK','page_count':count,
+    result={'status':'FAIL_PRECHECK' if problems else ('WARN' if warnings else 'PRECHECK_OK'),'page_count':count,
+            'problems':problems,
             'pages':page_rows,'warnings':warnings,'markers':markers['markers'],
             'visual_review':'PENDING：必须由 Agent 逐页打开 PNG 并记录结论；预检不等于视觉 PASS',
             'wps_tested':False,'converter':converter}
@@ -118,6 +148,8 @@ if __name__=='__main__':
     a.add_argument('--pdf',type=Path,default=None,help='直通外部已转换 PDF（跳过 DOCX->PDF 转换链）')
     q=a.parse_args()
     try:
-        print(json.dumps(render(q.file,q.outdir,q.max_pages,q.pdf),ensure_ascii=False,indent=2))
+        res=render(q.file,q.outdir,q.max_pages,q.pdf)
+        print(json.dumps(res,ensure_ascii=False,indent=2))
+        if res.get('problems'):raise SystemExit(2)
     except Exception as exc:
         a.exit(2,f'ERROR: {exc}\n')

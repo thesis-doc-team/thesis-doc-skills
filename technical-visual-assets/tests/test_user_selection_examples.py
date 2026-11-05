@@ -10,7 +10,7 @@ CASES={
  'negative-02-standalone-small-part.png': '反例 2',
  'negative-03-mcu-internal-block-diagram.png': '反例 3',
  'positive-01-complete-stepper-motor.png': '正例 1',
- 'positive-02-complete-breakout-boards.png': '正例 2',
+ 'positive-02-complete-sensor-breakout-boards.png': '正例 2',
 }
 class UserImageSelectionTests(unittest.TestCase):
  def test_all_five_user_images_are_packaged(self):

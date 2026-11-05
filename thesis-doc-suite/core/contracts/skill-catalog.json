@@ -198,35 +198,36 @@
     {
       "name": "technical-visual-assets",
       "command": "/thesis-doc-suite:technical-visual-assets",
-      "version": "1.1.0",
+      "version": "1.4.1",
       "category": "shared",
-      "title": "技术图示与完整模块实物图管理",
-      "positioning": "从 project-technical-doc 正式技术 MD 和 FACT-xxx 主动整理四类技术视觉资产；复用 Mermaid、本地 ASCII 可证实关系可重建系统框架与功能架构，已有环境可查官方/百度/CSDN 等图片线索，可选 DDGS/Openverse/Commons 标准库搜索，完整主体、准确型号、来源及授权审核后共享；不安装依赖、不擅自下载图片或插入 Word。",
+      "title": "正交工程绘图、原生 VSDX、表格居中、严格三线表与用户实物照片资产管理",
+      "positioning": "用户指定正式技术 MD 为唯一事实源，离线提取/绘制正交（横平竖直）技术图；生成原生 VSDX（Visio 打开状态如实标注）、中英文图题、A4/Word 版心与实际渲染门禁；Visio 式 SVG+可编辑 drawio；六类资源目录；不包含任何联网搜图功能。",
       "generates": [
-        "项目可追溯视觉需求清单（只读）",
-        "project-assets/visual-assets/index.json 与 requirements.json",
-        "系统总体框架/功能架构/核心流程图（可编辑 Mermaid 和有效 SVG）",
-        "已授权登记的完整模块实物图",
-        "四类图片覆盖/来源授权/缺口报告"
+        "MD驱动的六类resource-catalog/index.json及图表源",
+        "仅从MD提取的模块实物照片上传清单",
+        "用户照片经本地验证后的RES/VIS候选记录",
+        "可编辑Mermaid/drawio、正交SVG、原生VSDX、300dpi PNG及A4布局审计结果",
+        "中英文图题元数据(.figure.json)与RES图题/VSDX字段"
       ],
       "inputs_required": [
-        "项目根目录 <PROJECT_ROOT> 与 project_id",
-        "project-technical-doc 已生成的正式技术 Markdown",
-        "同项目 FACT-xxx"
+        "同项目根目录与稳定project_id",
+        "本项目正式技术 Markdown"
       ],
       "inputs_optional": [
-        "已获取且允许使用的网络模块图片",
-        "现有 VIS-xxx 索引"
+        "用户上传的模块照片与权利声明",
+        "官方A4 DOCX模板（Word适配阶段必需）",
+        "同项目派生FACT用于正式VIS审核"
       ],
       "prerequisites": [
-        "Python 3.10+ 标准库，无强制第三方依赖",
-        "已生成的正式技术 Markdown 与同项目 FACT-xxx",
-        "不安装 DDGS、Graphviz、Playwright；均为可选既有环境能力",
-        "模块照片下载需要本次任务单独授权"
+        "Python 3.10+标准库",
+        "无需联网搜图，不自动安装工具",
+        "文书插图前必须获取官方模板并做实际Word/WPS分页检查",
+        "300dpi PNG导出需要本机Chrome/Edge；无浏览器时保留SVG",
+        "VSDX生成不需要Visio；Visio实际打开验证需要本机Visio/WPS"
       ],
-      "deliverable_dir": "project-assets/visual-assets/",
+      "deliverable_dir": "project-assets/resource-catalog/ + project-assets/visual-assets/",
       "doc_type": "visual-asset",
-      "scenario": "需要从真实技术文档识别四类技术图，复用系统/功能/流程架构图并查找精确型号的整模块实物照，建立跨业务文档共享图片资产库。"
+      "scenario": "依据唯一正式技术MD生成可编辑工程图、原始数据表格、用户实物图需求清单；按官方模板验收A4版式后由文书Skill复用。"
     },
     {
       "name": "init-project",

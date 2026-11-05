@@ -366,30 +366,31 @@
       <!-- technical-visual-assets -->
       <article class="skill-card">
         <div class="skill-top">
-          <div class="tags"><span class="tag tag-sup">支持 Skill</span><span class="tag tag-ver">v1.1.0</span></div>
+          <div class="tags"><span class="tag tag-sup">支持 Skill</span><span class="tag tag-ver">v1.4.1</span></div>
           <h3>technical-visual-assets</h3>
-          <p class="pos">公共图片资料层：系统框架图、功能架构图、关键流程图、核心模块完整实物图，四类真实可追溯视觉资产（VIS-xxx）。</p>
+          <p class="pos">正交工程绘图与视觉资产：唯一事实源为正式技术 MD，离线产出横平竖直技术图、原生 VSDX、中英文图题与 A4/Word 版心门禁。</p>
         </div>
         <div class="skill-body">
-          <div class="field"><b>可以生成什么</b><p>project-assets/visual-assets/：VIS-xxx 资产索引、可编辑 .mmd/SVG、已授权模块实物图，以及四类覆盖与缺口报告。</p></div>
+          <div class="field"><b>可以生成什么</b><p>MD 驱动的六类资源索引与图表源、仅从 MD 提取的模块实物照片上传清单、用户照片经本地验证后的 RES/VIS 候选记录、可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG、A4 布局审计与中英文图题元数据（.figure.json）。</p></div>
           <div class="field"><b>需要哪些输入</b><ul>
-            <li>project-technical-doc 产出的正式技术 MD<span class="badge-req req-yes">必需</span></li>
-            <li>project-assets/project.json 与 facts.json（FACT-xxx）<span class="badge-req req-yes">必需</span></li>
-            <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
-            <li>用户许可后保存的网络图片、已有 Mermaid/本地图、DDGS/Mermaid CLI/Graphviz（可选，绝不自动安装）<span class="badge-req req-opt">可选</span></li>
+            <li>本项目正式技术 Markdown（唯一事实源）<span class="badge-req req-yes">必需</span></li>
+            <li>同项目根目录与稳定 project_id<span class="badge-req req-yes">必需</span></li>
+            <li>用户上传的模块照片与权利声明<span class="badge-req req-opt">可选</span></li>
+            <li>官方 A4 DOCX 模板（Word 适配阶段必需）<span class="badge-req req-opt">可选</span></li>
+            <li>同项目派生 FACT 用于正式 VIS 审核<span class="badge-req req-opt">可选</span></li>
           </ul></div>
           <div class="field"><b>最终输出什么</b><ul>
-            <li>四类视觉资产（框架/架构/流程图 + 核心模块实物图）与覆盖缺口报告</li>
-            <li>保存位置：<code>project-assets/visual-assets/</code></li>
+            <li>六类资源目录索引、正交图示源（SVG/drawio/VSDX/300dpi PNG）与 A4 布局审计结果</li>
+            <li>保存位置：<code>project-assets/resource-catalog/</code> 与 <code>project-assets/visual-assets/</code></li>
           </ul></div>
-          <div class="field"><b>使用场景</b><p>为技术文档或文书准备真实可追溯的图示素材。拒绝裸芯片/局部元件冒充模块实物图，无合格图如实报 MISSING；只做素材与登记，不在 Word/MD 里插图。</p></div>
+          <div class="field"><b>使用场景</b><p>依据唯一正式技术 MD 生成可编辑工程图、原始数据表格、用户实物图需求清单；按官方模板验收 A4 版式后由文书 Skill 复用。不包含联网搜图，只做素材与登记，不在 Word/MD 里插图。</p></div>
           <div class="field"><b>运行命令</b>
             <div class="cmd"><span class="cmd-text">/thesis-doc-suite:technical-visual-assets</span><button class="copy-btn">复制</button></div>
           </div>
           <div class="field"><b>必要前置条件</b><ul>
             <li>Python 3.10+（仅标准库，禁止自动装包）</li>
-            <li>联网检索能力（WebSearch/WebFetch/浏览器）</li>
-            <li>逐图人工确认（审核声明≠自动视觉识别）</li>
+            <li>无需联网搜图；300dpi PNG 导出需本机 Chrome/Edge</li>
+            <li>VSDX 生成不需要 Visio；Visio 实际打开验证需本机 Visio/WPS，状态如实标注</li>
           </ul></div>
         </div>
       </article>
