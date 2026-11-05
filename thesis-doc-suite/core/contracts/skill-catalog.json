@@ -3,7 +3,7 @@
   "plugin": {
     "name": "thesis-doc-suite",
     "display_name": "Thesis Doc Suite Taru",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "tagline": "一个插件，六种毕业设计文书；一个项目，一套共享资产。",
     "audience": "本科毕业论文（设计）各阶段文书的准备与生成，当前官方模板锁定塔里木大学版本。"
   },
@@ -11,13 +11,15 @@
     {
       "name": "project-technical-doc",
       "command": "/thesis-doc-suite:project-technical-doc",
-      "version": "5.2.0",
+      "version": "5.3.0",
       "category": "business",
       "title": "项目技术文档生成",
-      "positioning": "只读理解真实项目资料/源码，产出带证据的 Markdown 技术文档，并派生单文件离线 HTML 用户展示网站。",
+      "positioning": "只读理解真实项目资料/源码，产出带证据的 Markdown 技术文档与单文件离线 HTML；自动生成实物模块清单 physical-modules.json 和表/图/模块分类索引 content-index.json（供网站分组）。",
       "generates": [
         "<项目名>-技术文档.md",
         "<项目名>_用户展示.html",
+        "physical-modules.json（实物模块清单 v1）",
+        "content-index.json（内容分类索引 v1）",
         "执行汇报.md",
         "项目事实与证据台账.md（大型项目）"
       ],
