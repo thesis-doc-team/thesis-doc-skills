@@ -1,3 +1,5 @@
+> **V1.4.0：** 本契约适用于用户确认题目后在 `projects/PROJECT-xxxx/` 中建立的正式项目资产。选题阶段独立使用 `discovery/` 索引和每个项目 `data/revisions/versions/`，具体见 `discovery-assets-and-iteration.md`。
+
 # 项目级资产复用契约
 
 ## 1. 根规则

@@ -1,10 +1,34 @@
 # VERSION
 
 - Skill 名称：`project-solution-write`
-- 当前版本：`v1.3.1`
+- 当前版本：`v1.4.2`
 - 生成日期：`2026-11-06`
-- 输出：独立的《项目介绍与功能说明》Markdown 及其单文件 HTML、 《工程实施方案》UTF-8 Markdown（或用户明确仅要其中部分）
+- 输出：探索阶段每个候选独立的 `项目概览.md/.docx/.html`（每批最多10个）；正式确认后生成介绍 MD/HTML + 工程实施 MD（或用户明确仅要其中部分）
 - 结构参考：用户提供的 `thesis-midterm-check-write-v1.3` 的组织格式，不复用学校 Word 规范或毕业文书业务内容。
+
+## v1.4.2
+
+- 入口话术彻底清理：删除 SKILL/README/路由脚本/质量门禁中残留的“三入口/三种入口”措辞；默认启动只问“你想找什么方向的毕设/课程设计题目”，信息类型只作内部路由。
+- 修复 `discovery_registry.revise` 误拒 `change_summary` 的缺陷：修订前弹出该元字段，内容仍只允许 title/overview/features/signature；历史日志保留修订摘要。
+- 新增 3 项防回归测试：默认入口必须直接问题目方向、旧“三入口”措辞不得回潮、`revise` 接受 `change_summary`。
+- 回归：**87 项全绿**；双树同步、manifest 重生成（60 文件）。
+
+## v1.4.1
+
+- 毕设/课程设计选题专向边界：新增 `scripts/validate_discovery.py`（功能下限 5 条、场景锚点、无假大空、模块化单板、禁止自绘 PCB/自制电路）；移除 profile 与路由中的 `budget`/`timeframe` 字段。
+- 默认入口改为**直接问想找什么方向的毕设/课程设计题目**：不再要求用户在三入口之间选择；三入口只作内部路由，正式方案编写作为确认题目后的可选出口（`templates/discovery-intake-message.md`、§0.4、§9 同步）。
+- 更新 `references/discovery-mode-router.md`、`templates/discovery-intake-message.md`、`references/candidate-writing-boundary.md`、`SKILL.md`（入口合并、谱测限界与功能闭环）。
+- 回归：原有 76 项 + 8 项毕设选题 QA = **84 项全绿**；双树同步、manifest 重生成（60 文件）。
+
+## v1.4.0
+
+- 在**用户提供的 v1.3.1 母版**上增量升级，不移除现有 HTML 可视化、分批写作、设计冻结、资产锁及质量门禁。
+- 三种入口：只有专业、技术关键词、已有题目想法；支持专业+技术+兴趣+预算+周期等混合信息、动态路由；正式立项前不强制填写题目和功能。
+- 新增独立候选推荐阶段：单批最多 10 项，**每项目各自**生成短版名称/概述/功能 MD、可打印 DOCX、统一蓝白科技卡通离线 HTML；不含推荐理由、评分、选型、开发计划。
+- 新增持久 `discovery/catalog.json / profile.json / rejected-projects.json / history.jsonl`；稳定 `PROJECT-xxxx` ID，candidate/interested/rejected/confirmed 状态，拒绝防重复，用户显式恢复。每项目 `data/project.json` + 不可覆盖的 `revisions/vN.json`；候选版本 v1.0 → v1.1，三个文件一致。
+- 新增 `references/discovery-mode-router.md`、`discovery-assets-and-iteration.md`、`candidate-writing-boundary.md`、`templates/discovery-intake-message.md`、`topic-candidate.html`、两个结构化样例；新增 `scripts/route_project_intent.py`、`discovery_registry.py`、`render_candidate.py`，以及 `tests/test_discovery.py`。
+- 正式方案仍执行原 V1.3.1 的“题目+功能”硬门禁与技术设计工作流。候选 Word 是**推荐阶段**的特例，正式实施方案默认不生成 Word。
+- 质量验证：原有与新增功能综合回归 74 项通过，新增两项上限/确认保护测试单独通过；新候选相关测试共 16 项通过。已将样例 DOCX 实际渲染成 A4 页面并人工检查；未对所有 10 个候选逐个执行浏览器视觉验收。
 
 ## v1.3.1
 

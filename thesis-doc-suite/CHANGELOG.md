@@ -4,6 +4,12 @@
 
 ## 未发布（0.2.0 之后）
 
+- **project-solution-write v1.4.2：入口话术清理与 revise 缺陷修复**：删除 SKILL/README/路由脚本/质量门禁中残留的“三入口/三种入口”措辞，默认启动只问“你想找什么方向的毕设/课程设计题目”，信息类型只作内部路由；修复 `discovery_registry.revise` 误拒 `change_summary` 的缺陷（修订前弹出元字段，内容仍只允许 title/overview/features/signature）；新增 3 项防回归测试（默认入口、旧措辞扫描、revise 摘要）。注册 1.4.1→1.4.2（catalog/docs/site）、manifest 60 文件；回归 87 项全绿。
+
+- **project-solution-write v1.4.1：毕设/课程设计选题专向边界**：新增 `scripts/validate_discovery.py` 检查功能下限（≥5条）、场景锚点、模块化单板规模、禁止自绘PCB/假大空；profile 与路由移除 `budget`/`timeframe`；默认启动话术改为直接问“想找什么方向的毕设/课程设计题目”，不再要求用户选三入口；更新 discovery-mode-router、discovery-intake-message、candidate-writing-boundary 与 SKILL。注册 1.4.0→1.4.1（catalog/docs/site）、manifest 60 文件；回归：84 项全绿（76+8）。
+
+- **project-solution-write v1.4.0：专业/技术探索 + 候选推荐 + 正式方案双阶段**：在 v1.3.1 母版上增量升级，保留 HTML 可视化、分批写作、设计冻结、资产锁与质量门禁。新增三种混合入口（专业 / 技术关键词 / 已有题目想法）；探索阶段每批最多 10 个独立候选，每候选独立生成 `项目概览.md/.docx/.html`（只含名称/概述/核心功能），维护 `discovery/catalog.json`、`profile.json`、`rejected-projects.json`、`history.jsonl` 与稳定 `PROJECT-xxxx` ID、candidate/interested/rejected/confirmed 状态、不可覆盖版本与拒绝去重；正式确认后才执行题目+功能硬门禁并生成介绍 MD/HTML + 实施 MD。新增 references（discovery-mode-router / discovery-assets-and-iteration / candidate-writing-boundary）、templates（discovery-intake-message、discovery-batch/revision 样例、topic-candidate.html）、scripts（route_project_intent / discovery_registry / render_candidate）、`tests/test_discovery.py`；候选 DOCX 依赖 python-docx，正式 MD/HTML 仍标准库。注册版本 1.3.1→1.4.0（catalog/docs/site）、manifest 59 文件；回归：76 项全绿（含 v1.3.1 的 60 项与 discovery 16 项）；样例 DOCX 实际渲染 A4 并人工检查，未逐候选浏览器视觉验收。根目录与插件双树逐字节一致。
+
 - **project-technical-doc v5.4.0：图表几何/视觉门禁与自动重排（并行会话，入库补记）**：新增 `scripts/diagram_qc.py`（过宽/过高、正文宽适配后最小字号 <9px、节点重叠、文字重叠 CJK 包围盒估算、连线端点未接节点、marker 失效；宽高比 >10 FAIL、6–10 WARN）；`diagram_svg.py` 渲染后自动 QC 并重排（LR/RL 过宽改 TD + 加大间距 → TD 加大间距 → Graphviz 重排 → 仍失败 BLOCK）；明确节点数量不是错误（50–80 节点架构图可正常，禁止为“过密”删节点，拆图仅作最后手段）；`validate_html.py`/`publish.py` 接入 QC，坏图不得 PASS，报告输出 `geometry_qc`；新增 `references/diagram-visual-qc.md` 与 `tests/test_diagram_visual_qc.py` 7 项回归。
 
 - **technical-visual-assets v1.4.3：分组框（subgraph）布局与 `<br/>` 标签规范（并行会话，入库补记）**：新增 `scripts/subgraph_layout.py`（Mermaid 风格 `<br/>` 标签归一化、未声明时按几何推断成员、分组框按成员节点+标签内边距重算并纵向排列/换行、组内节点重排；不删节点、不改语义，连线由 orthogonal_router 重路由）+ `references/subgraph-layout.md`（虚线框、浅底、必须分组标签、框间不压盖、节点归属≥95% 才可嵌套、连线不得穿无关分组框，无法绕行时回退标记 `crosses_group` 由 QC 警告）；figure_qc/orthogonal_router/visio_diagram 与测试同步；新增 `tests/test_subgraph_layout.py`、`tests/test_figure_qc_failure_paths.py`；根目录树恢复双树同步，站点卡片版本标签 1.4.1→1.4.3。

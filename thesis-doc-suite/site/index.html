@@ -366,29 +366,31 @@
       <!-- project-solution-write -->
       <article class="skill-card">
         <div class="skill-top">
-          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v1.3.1</span></div>
+          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v1.4.2</span></div>
           <h3>project-solution-write</h3>
-          <p class="pos">项目方案双文档 + 介绍页 HTML：先询问题目与功能、按成本/性能/功能/均衡优先级取舍选型，写正文前做设计冻结、写正文时分批落盘并一次终检，再产出介绍、实施方案与同源单文件介绍页，边界严格分离。</p>
+          <p class="pos">毕设选题探索、候选推荐与正式方案：专业/技术/想法信息可混合输入；毕设候选≥5功能、有具体场景、模块化单板、无PCB/假大空；确认后生成正式介绍、介绍页与实施方案；写前冻结、分批写作。</p>
         </div>
         <div class="skill-body">
-          <div class="field"><b>可以生成什么</b><p>两份相互关联的 Markdown：面向阅读的《项目介绍与功能说明》与面向实施的《工程实施方案》（功能→物理量/数据流、器件与资源核算、接口协议、状态机、分阶段实施与可复核验收）；并基于介绍 MD 生成统一视觉、离线可打开、响应式的单文件介绍 HTML。含候选技术路线比较、优先级取舍追踪与写前设计冻结。</p></div>
+          <div class="field"><b>可以生成什么</b><p>探索阶段：每个候选独立生成 `项目概览.md / .docx / .html`（只含名称、概述、核心功能），每批最多 10 个，维护稳定 PROJECT-xxxx ID、拒绝去重与不可覆盖版本。正式阶段：两份相互关联的 Markdown（介绍 + 工程实施方案）与同源单文件介绍 HTML，含设计冻结、分批写作、候选路线比较与验收。</p></div>
           <div class="field"><b>需要哪些输入</b><ul>
-            <li>项目题目与功能树/功能清单<span class="badge-req req-yes">必需</span></li>
+            <li>专业 / 技术关键词 / 项目想法（至少一项）<span class="badge-req req-yes">必需</span></li>
             <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
+            <li>功能树/功能清单（正式方案阶段必需，探索期可后补）<span class="badge-req req-yes">正式阶段</span></li>
             <li>既有技术资料或真实源码目录、已确认约束与选型<span class="badge-req req-opt">可选</span></li>
           </ul></div>
           <div class="field"><b>最终输出什么</b><ul>
-            <li>&lt;项目简称&gt;-项目介绍与功能说明-vN.md、&lt;项目简称&gt;-项目介绍与功能说明-vN.html、&lt;项目简称&gt;-工程实施方案-vN.md</li>
-            <li>保存位置：<code>deliverables/project-introduction/</code>、<code>deliverables/implementation-plan/</code></li>
+            <li>探索：每个候选 <code>项目概览.md / .docx / .html</code>（每批≤10个，独立三文件）</li>
+            <li>正式：&lt;项目简称&gt;-项目介绍与功能说明-vN.md、.html、&lt;项目简称&gt;-工程实施方案-vN.md</li>
+            <li>保存位置：<code>discovery/</code>、<code>projects/PROJECT-xxxx/</code>、<code>deliverables/project-introduction/</code>、<code>deliverables/implementation-plan/</code></li>
           </ul></div>
-          <div class="field"><b>使用场景</b><p>需要为一个项目形成可读的项目介绍、可离线展示的介绍页与可落地的工程实施方案（规划新项目或整理既有方案）时；不执行开发、不生成用户项目前端系统或第三类成品。</p></div>
+          <div class="field"><b>使用场景</b><p>只有专业/技术关键词/项目想法、尚无题目时先做候选推荐；用户确认题目与功能后生成正式介绍、介绍页与工程实施方案；不执行开发、不生成用户项目前端系统或正式方案 DOCX。</p></div>
           <div class="field"><b>运行命令</b>
             <div class="cmd"><span class="cmd-text">/thesis-doc-suite:project-solution-write</span><button class="copy-btn">复制</button></div>
           </div>
           <div class="field"><b>必要前置条件</b><ul>
-            <li>Python 3.10+（仅标准库）</li>
+            <li>Python 3.10+（正式方案仅标准库；候选 DOCX 需 python-docx）</li>
             <li>无需官方 Word 模板</li>
-            <li>静态检查后须人工逐章审阅技术可实施性</li>
+            <li>静态检查后须人工逐章审阅技术可实施性；候选 DOCX/HTML 需实际渲染抽查</li>
           </ul></div>
         </div>
       </article>

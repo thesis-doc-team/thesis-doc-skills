@@ -14,7 +14,7 @@
 | `/thesis-doc-suite:literature-review-write` | 业务 | 3.2.1 | 文献综述 DOCX + 执行汇报 | `deliverables/literature-review/` |
 | `/thesis-doc-suite:thesis-guidance-record-write` | 业务 | 1.2.0 | 指导记录 DOCX + 执行汇报 | `deliverables/guidance/` |
 | `/thesis-doc-suite:thesis-midterm-check-write` | 业务 | 1.3.2 | 中期检查记录表 DOCX + 执行汇报 | `deliverables/midterm/` |
-| `/thesis-doc-suite:project-solution-write` | 业务 | 1.3.1 | 项目介绍与功能说明 MD + 同源单文件 HTML + 工程实施方案 MD + 执行汇报（含首次启动输入门禁、优先级取舍、写前设计冻结、分批写入与统一视觉介绍页） | `deliverables/project-introduction/`、`deliverables/implementation-plan/` |
+| `/thesis-doc-suite:project-solution-write` | 业务 | 1.4.2 | 毕设选题探索 MD/DOCX/HTML（≤10个/批，功能≥5条、有场景、模块化、无PCB）+ 正式介绍 MD/HTML + 实施 MD + 执行汇报（信息混合输入、候选资产、写前冻结、分批写入） | `discovery/`、`projects/PROJECT-xxxx/`、`deliverables/project-introduction/`、`deliverables/implementation-plan/` |
 | `/thesis-doc-suite:technical-visual-assets` | 支持 | 1.4.3 | 正交技术图（可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG）+ 中英文图题 + A4/Word 版心门禁 + 六类资源索引 | `project-assets/resource-catalog/`、`project-assets/visual-assets/` |
 | `/thesis-doc-suite:init-project` | 管理 | 0.1.0 | 项目资产包骨架 | — |
 | `/thesis-doc-suite:check-project` | 管理 | 0.1.0 | PASS/WARN/BLOCK 检查报告 | — |
@@ -89,19 +89,18 @@
 
 ## 支持 Skill 逐项说明
 
-### project-solution-write｜项目方案双文档 + 介绍页 HTML（v1.3.1）
+### project-solution-write｜毕设选题探索、候选推荐与正式方案（v1.4.2）
 
-- **定位**：用户仅说“使用本 Skill”或缺少项目题目/功能时先主动询问收集输入；题目与功能齐全后先澄清影响技术路线的重大歧义，让用户选择成本/性能/功能/均衡取舍，再比较候选技术路线、推导可实施的工程方案；生成内容边界严格分离的两份 Markdown。**只做方案编写，不执行开发**。
-- **初始门禁**：`templates/initial-intake-message.md` 聊天话术 + `scripts/check_input.py` 结构化初检；缺项状态 `NEEDS_INPUT` 立即询问并停止正式生成——即使用户要求“直接生成”，也不得凭空编造项目题目或核心功能。
-- **写前冻结**：`references/design-freeze-and-consistency.md` + `templates/design-freeze.md` 固化术语/默认值、页面/交互映射、数据结构与配置布局、协议字段与空值语义、状态枚举与优先级、资源/接口、失败分支、测试追溯；冻结后变更须先登记、一次性同步所有受影响章节并复检，避免静态 PASS 后的跨文档连锁返工。
-- **分批写入**：介绍/实施 MD 各建议至少 4 批写入 `$WORKDIR/batches/...`，每批落盘后再写下一批；全部落盘后 `scripts/compose_markdown.py` 一次组装，随后一次终检；禁止一次性整篇生成。规则见 `references/batch-writing.md`。
-- **HTML 可视化**：`templates/project-introduction.html` + `scripts/generate_intro_html.py` 以介绍 MD 为唯一内容源生成单文件、离线、响应式介绍页；`scripts/validate_intro_html.py` 检查离线、安全、内容边界、功能一致性与场景“未实测”标注；视觉规范/映射/门禁见 `references/html-visualization-rules.md`、`html-content-mapping.md`、`html-quality-check.md`。示例仓储业务数据只作视觉参考，不进入通用模板。
-- **生成**：`<项目简称>-项目介绍与功能说明-vN.md`（面向阅读展示：场景、功能、交互、使用条件）、`<项目简称>-项目介绍与功能说明-vN.html`（同源单文件可视化）、`<项目简称>-工程实施方案-vN.md`（面向实施者：资源核算、接口协议、状态机、分阶段实施与可复核验收）。
-- **必需输入**：项目题目与功能树/功能清单、项目根目录。
-- **可选输入**：既有技术资料或用户指定源码目录、用户已确认的关键约束与选型、已核验文献（REF-xxx）。
-- **前置条件**：Python 3.10+（仅标准库）；无需官方 Word 模板；静态检查后须人工逐章审阅技术可实施性。
-- **场景**：规划新项目或整理既有方案时，形成可读的项目介绍与可落地的工程实施方案。
-- **边界**：不臆造实测、不擅增功能、不写交付/收费说明与改进建议章节——与六件套同一“变相章节”红线（换名的“存在的问题/不足与优化/改进方向/风险与对策/未来展望/后续规划/升级建议”等独立章节同样越界，`validate_docs.py` 判 ERROR）；已有实现要写技术文档/用户展示 HTML 时交由 `project-technical-doc`。共享 `project-assets/`（canonical init、`requirements.json`/`decisions.json` 增量资产、activity 登记、运行区清理纪律与六件套一致）。
+- **定位**：专业/技术/题目信息可混合输入，默认直接进入毕设/课程设计选题推荐；无题目也能从专业/技术出发推荐，每轮最多 10 个独立候选；正式确认题目与功能后进入原严格方案流程。**只做选题候选与方案文档，不执行开发**。
+- **探索阶段**：每个候选独立生成 `项目概览.md`、`项目概览.docx`、`项目概览.html`（只含名称、概述、核心功能简述）；维护 `discovery/catalog.json`、`profile.json`、`rejected-projects.json`、`history.jsonl`，稳定 `PROJECT-xxxx` ID，candidate/interested/rejected/confirmed 状态与不可覆盖版本；拒绝默认不重推，用户明确恢复沿用旧 ID。
+- **正式阶段**：题目+功能硬门禁、成本/性能/功能/均衡选择、写前设计冻结、分批写入与一次终检、介绍 MD/HTML + 实施 MD 边界保持不变；候选不生成完整实施方案。
+- **HTML 可视化**：`templates/project-introduction.html` + `scripts/generate_intro_html.py` 以介绍 MD 为唯一内容源生成单文件、离线、响应式介绍页；`scripts/validate_intro_html.py` 检查离线、安全、内容边界、功能一致性与场景“未实测”标注。
+- **生成**：探索阶段 `项目概览.md/docx/html`（每批≤10个，每个候选独立三文件）；正式阶段 `<项目简称>-项目介绍与功能说明-vN.md/.html` 与 `<项目简称>-工程实施方案-vN.md`。
+- **必需输入**：专业/技术关键词/项目想法（至少一项）；项目根目录；正式阶段需题目+具体功能。
+- **可选输入**：功能树/清单（正式阶段必需，探索期可后补）、既有技术资料/源码、已确认约束与选型、已核验文献（REF-xxx）。
+- **前置条件**：Python 3.10+（正式方案仅标准库；候选 DOCX 需 `python-docx>=1.1,<2`）；无需官方 Word 模板；静态检查后须人工逐章审阅；候选 DOCX/HTML 需实际渲染抽查，未逐候选浏览器验收需如实说明。
+- **场景**：只有专业/技术/想法时先做候选；用户确认题目与功能后生成正式方案；需要候选或正式文档时使用。
+- **边界**：候选只写名称/概述/功能，不写推荐理由、评分、选型、成本比较、开发计划；正式阶段不臆造实测、不擅增功能、不写交付/收费/改进建议；已有实现的技术文档/HTML 展示交 `project-technical-doc`。
 
 ### technical-visual-assets｜正交工程绘图、原生 VSDX 与视觉资产（v1.4.3）
 
