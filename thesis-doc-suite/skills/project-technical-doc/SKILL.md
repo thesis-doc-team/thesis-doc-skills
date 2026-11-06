@@ -1,6 +1,6 @@
 ---
 name: project-technical-doc
-version: 5.2.0
+version: 5.3.0
 disable-model-invocation: true
 # Trigger when the user asks for technical documentation based on a real project.
 # Always deliver Markdown first and an offline user-facing HTML site second.
@@ -106,7 +106,8 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 <PROJECT_ROOT>/                        # 项目资产包根；--root 就指向这里
 ├── project-assets/                    # 共享数据资产（多 Skill 共写，见 1.1）
 ├── deliverables/                      # 成品集中区，按文书类型分目录
-│   └── technical-document/……技术文档-v1.md / ……用户展示-v1.html / physical-modules.json（定名实物模块清单）
+│   └── technical-document/……技术文档-v1.md / ……用户展示-v1.html /
+│       physical-modules.json（实物模块清单）/ content-index.json（内容分类索引）
 └── .skill-tmp/<skill-name>/<run-id>/  # 各 Skill 运行目录（自动清理）
 ```
 
@@ -135,6 +136,8 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 - **必须**：`<项目正式名称>-技术文档.md`（工程技术原文，也是 HTML 的唯一正文数据源）。
 - **必须**：`<项目正式名称>_用户展示.html`（完整正文 + 适度首页摘要，所有 CSS/JS/SVG 内嵌，单文件离线查看）。
 - **必须**：`执行汇报.md`（明确两种成果的生成路径、校验状态、待确认事项）。
+- **必须**：`physical-modules.json`（实物模块清单 v1；与 MD 同级，定名不加版本号）。
+- **必须**：`content-index.json`（内容分类索引 v1；与 MD 同级，供网站按 category/group_id 分组展示，不改变正文）。
 - **生成器附产物**：`<项目正式名称>_用户展示.report.json`（可追溯检查状态）；必要时生成 `展示配置.json`，后者的具体信息必须来自当前 MD。
 - **建议**：`项目事实与证据台账.md`（大型项目必须，支持事实追溯）。
 
@@ -261,7 +264,8 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 3. **跨章一致性**：功能 ↔ 模块 ↔ 流程 ↔ 测试；资源/接口 ↔ 架构；参数/单位/阈值方向 ↔ 示例；字段 ↔ API/结构体/数据表 ↔ 附录。
 4. **工程可理解性**：读者不看原资料也能理解项目的组成、主要技术与流程，未知之处可辨识。
 5. **安全与边界**：未暴露机密；原项目源码及资料未被改动；所有不确定和不适用内容如实披露；没有生成问题/改进/未来规划等越界内容。
-6. **实物模块清单（physical-modules.json）**：从正文第 6 章「模块详解」与第 4 章接口/引脚信息判定**具备实物形态的模块**，生成与 MD 同级的 `physical-modules.json`（固定定名、不加版本号，契约与判定规则见下方「实物模块清单契约」），并运行 `python <skill-root>/scripts/check_physical_modules.py <生成的技术文档.md>` 校验；FAIL 修订后复检。`publish.py` 会再次强校验，缺失或不合法即拒绝进入 HTML 阶段。
+6. **实物模块清单（physical-modules.json）**：运行 `python <skill-root>/scripts/gen_physical_modules.py <生成的技术文档.md>` 从正文「模块详解」章自动生成与 MD 同级的 `physical-modules.json`（固定定名、不加版本号；契约见下方「实物模块清单契约」）。生成器只收录传感器、执行器、显示、按键输入、通信模组等**具备实物形态**的模块，自动排除 `uart_comm` / `Warn` / `main` / 全小写下划线软件名。随后 `check_physical_modules.py` 必须 PASS；FAIL 修订后复检。`publish.py` 会再次强校验。
+7. **内容分类索引（content-index.json）**：运行 `python <skill-root>/scripts/classify_content.py <生成的技术文档.md>` 生成与 MD 同级的 `content-index.json`（固定定名、不加版本号；契约见下方「内容分类索引契约」）。它把每张表、每个 Mermaid 图、每个实物模块按类型分类并归并相似组，供网站按 `category` / `group_id` 分组；**不改变正文、不渲染网站**。`check_content_index` 必须 PASS（覆盖所有表/图/实物模块，缺失或多余即 FAIL）。`publish.py` 会再次强校验。
 
 发现问题应先按原始证据修订一次，再重新检查。**无法凭来源消除的疑点保留“待确认”，不凭猜测修复**。检查参考 `references/quality-gates.md`。
 
@@ -292,6 +296,8 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 | source_files | 可选 | 该模块相关源文件名数组（裸文件名，不写目录/绝对路径） |
 | pins | 可选 | 引脚/接口（如 I2C1、PB14） |
 | note | 可选 | 一句话说明 |
+| section | 可选（生成器附加） | 该实物模块所属「模块详解」H3 小节标题；子模块（如 6.1 内的 D1/SHT40/火焰/土壤）用它映射到章节 |
+| section_line | 可选（生成器附加） | 所属小节在 MD 中的起始行号，供网站定位 |
 
 **判定规则（本 Skill 保证；脚本机械校验可查部分）：**
 - **只列具备实物形态的模块**：传感器、执行器、显示、按键输入、通信模组等；
@@ -302,13 +308,66 @@ python scripts/project_assets.py cleanup --root <PROJECT_ROOT> --run-id <run-id>
 - 只给元数据：不输出图片、base64 或路径引用（脚本拒绝绝对路径/内嵌图片，`source_files` 只许裸文件名）；
 - 命名形似软件模块（全小写下划线 / main / warn）时脚本给非阻断警告，人工确认后保留或删除。
 
+### 内容分类索引契约（content-index.json v1）
+
+**文件位置与命名固定**：与技术文档 MD 同级（`out/content-index.json` 或 `<项目名>-技术文档.md` 同级），不加版本号、不改名。它只是**分类元数据**，不替代原文表格/流程图，也不负责网页渲染。
+
+```json
+{
+  "schema_version": 1,
+  "generated_by": "project-technical-doc",
+  "source_md": "technical-技术文档.md",
+  "source_md_sha256": "……",
+  "items": [
+    {
+      "id": "TBL-001",
+      "kind": "table",
+      "title": "8.1.1 SHT40_DataTypeDef（SHT40.h）",
+      "chapter": "8 数据结构",
+      "section": "8.1.1 SHT40_DataTypeDef（SHT40.h）",
+      "line_start": 123,
+      "line_end": 131,
+      "category": "data-structure",
+      "group_id": "GRP-XXXXXXXX",
+      "group_title": "SHT40 数据结构",
+      "module_code": "SHT40",
+      "headers": ["字段", "类型", "单位"],
+      "row_count": 3,
+      "caption": "表8-1  SHT40 数据结构",
+      "content_sha256": "……",
+      "keywords": ["SHT40", "字段", "类型", "单位"]
+    }
+  ],
+  "groups": [
+    {"id": "GRP-XXXXXXXX", "title": "SHT40 数据结构", "category": "data-structure",
+     "item_ids": ["TBL-001", "TBL-002"], "count": 2}
+  ],
+  "summary": {"items": 10, "tables": 7, "diagrams": 3, "modules": 8,
+              "groups": 5, "by_category": {"data-structure": 4}}
+}
+```
+
+**类别（category）**：`data-structure`、`protocol`、`interface-pin`、`parameter-config`、`hardware-resource`、`specification`、`function`、`schedule`、`technology`、`terminology`、`index`、`materials`、`appendix`、`test`、`flow`、`architecture`、`excluded`、`other-table`、`other`；模块另用 `sensor/actuator/display/input/communication/other`。
+
+**归并规则**：
+- 分组键不再带章节前缀；按 `category` 或 `category+模块/协议 code` 归并（如 `SHT40 数据结构`、`RS485 数据结构`、`Modbus 通信协议`、`规格与选型`、`功能与场景`）；
+- 引脚/接口表归并为「引脚与接口」；参数/阈值/配置表归并为「…参数与配置」；
+- 流程图按章归并为「…流程图」，架构图按章归并为「…架构图」；
+- 分类以**表头/题注内容**优先，章节标题只作弱信号：如「测试与结果」章下的 `模拟量/表达式/取值范围` 表归为参数配置，「附录」章下的 `器件/地址`、`返回码` 表分别归为接口/数据结构；
+- 规格/选型表归并为「规格与选型」；功能/场景/角色表归并为「功能与场景」；任务/周期表归并为「任务与调度」；技术解析表归并为「技术说明」；
+- 架构/组成/职责表归并为「架构与组成」；中断/优先级/缓冲区/DMA 表归并为「硬件资源与分配」；状态/转移/异常表归并为「状态与流程」；术语/缩写表归并为「术语与定义」；索引/目录表归并为「索引与目录」；资料/文档/标准表归并为「资料与参考」；附录/模板/速查归并为「附录与速查」；`excluded` 归入「已排除章节（不应展示）」；
+- 实物模块按类别归并为「传感器模块 / 通信模块 / 显示模块 / 交互输入模块 / 执行器模块 / 其他实物模块」；
+- **只归并展示分组，不合并/删除任何原文数据**；相同 `content_sha256` 只提示网站可去重。
+
+**覆盖门禁**：`check_content_index` 比对 MD 中实际表格数、Mermaid 数、实物模块数；索引缺一项或多一项即 FAIL。`publish.py` 发布前强制调用。
+
 待 HTML 阶段执行完毕再完成 `执行汇报.md`：除项目与 MD 检查信息外，还需列出 HTML 路径、章节/表格/流程图数量、SVG/回退数量、MD/HTML 对照状态、离线依赖情况、浏览器检查是否实际执行，和用户需要验收的事项。使用 `templates/execution-report.md`。
 
 **用户最终验收**：Agent 不自行宣称业务正确/最终验收通过；用户修改 Skill、范本或资料后，只按本次最新版本重新生成或局部修订，并报告变动。
 
 ## 7. 阶段 E：必须从最终 MD 自动生成用户可视化 HTML（本次新增）
 
-> **重要依赖**：先生成并检查 `<项目名>-技术文档.md`，才能执行 HTML 阶段。**禁止先写 HTML 再倒推 MD；禁止同一份项目资料分别驱动两套内容生成逻辑。** 这样 MD 是唯一事实正文，HTML 是派生展示层。
+> **重要依赖**：先生成并检查 `<项目名>-技术文档.md`、`physical-modules.json`、`content-index.json`，才能执行 HTML 阶段。**禁止先写 HTML 再倒推 MD；禁止同一份项目资料分别驱动两套内容生成逻辑。** 这样 MD 是唯一事实正文，HTML 是派生展示层。
 
 ### E1. 页面结构与视觉风格（参考用户提供的 HTML 页面，只提取通用范本）
 
@@ -398,7 +457,7 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 
 本 Skill 的正常运行不是问答式教学：除非项目完全不可读取，否则直接读取资料、理解项目、组织内容、完成文档、执行检查并汇报。不得反复询问模板、章数、段落语气、是否可以开始等已由 Skill 决定的事项。
 
-完成标志：**存在一份与当前项目证据一致的完整 MD、由该 MD 派生的单文件 HTML 用户展示页、与 MD 同级且契约校验通过的 physical-modules.json，以及注明双产物检查情况的执行汇报**；关键设计事实不以已验证口吻出现；用户能够审查并提出修订。交付前按第 1 章执行 **`record-use` 登记**（成品路径、REF-xxx、sha256）与 **`cleanup` 清理**本轮运行目录；**HTML 派生页登记必须已存在同名 `<html>.audit.json` 校验证据（publish/validate 默认生成），无证据不得登记**；共享资产与用户原始资料任何情况下不得删除。如果实际材料缺失造成不能执行，明确说明具体缺口，不从内置参考范本捏造新项目。
+完成标志：**存在一份与当前项目证据一致的完整 MD、由该 MD 派生的单文件 HTML 用户展示页、与 MD 同级且契约校验通过的 physical-modules.json 与 content-index.json，以及注明双产物检查情况的执行汇报**；关键设计事实不以已验证口吻出现；用户能够审查并提出修订。交付前按第 1 章执行 **`record-use` 登记**（成品路径、REF-xxx、sha256）与 **`cleanup` 清理**本轮运行目录；**HTML 派生页登记必须已存在同名 `<html>.audit.json` 校验证据（publish/validate 默认生成），无证据不得登记**；共享资产与用户原始资料任何情况下不得删除。如果实际材料缺失造成不能执行，明确说明具体缺口，不从内置参考范本捏造新项目。
 
 ## 9. 文件索引（按需读取，不必每次全部加载）
 
@@ -412,7 +471,10 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 - `templates/evidence-register.md`：信息来源与事实状态台账。
 - `templates/execution-report.md`：执行结束的汇报格式。
 - `scripts/check_markdown.py`：无第三方依赖的 MD 结构和正文边界检查（含 Mermaid 图示强制门禁：0 幅图 / 总体架构与关键流程章缺图即 ERROR）。
+- `scripts/gen_physical_modules.py`：从「模块详解」章自动生成 `physical-modules.json` v1；排除软件模块，抽取 category/source_files/pins/note，并调用契约检查器。
 - `scripts/check_physical_modules.py`：实物模块清单 `physical-modules.json` v1 契约校验（固定定名与同级位置、schema/generated_by、code 唯一且命中「模块详解」小节标题含词边界、正文顺序单调、category 软提示、软件模块名启发式警告、拒绝 base64/绝对路径、source_files 裸文件名）；publish.py 发布前强制调用。
+- `scripts/content_rules.py`：实物模块与内容分类的共享启发式（代码/类别/源文件/引脚/表格类别/图类别/分组键）。
+- `scripts/classify_content.py`：生成 `content-index.json` v1（表/图/实物模块分类、相似组、行号、内容哈希、覆盖门禁）；不渲染网站。
 - `references/browser-verification-notes.md`：浏览器截图验证的伪象判别、量测规则与探针写法红线（E5 截图验证分析实施细则）。
 - `scripts/screenshot_audit.py`：截图字节级查重（dupcheck）、真实布局量测（probe）、章节切片 harness 生成（harness）、图区渲染/像素探针（renderprobe、pixelprobe）、截图覆盖矩阵核对（coverage）。
 - `scripts/viewport_probe.js`：布局量测探针（由 screenshot_audit.py 注入，单次执行）。
@@ -420,7 +482,7 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 - `references/html-layout-and-content.md`：用户提供的可视化页面所提取的通用布局、样式和内容映射规范。
 - `assets/layout.html`：通用离线 HTML 页面视觉/交互骨架，不含示例项目业务。
 - `examples/showcase-config.example.json`：可选首页配置字段示例（必须替换真实项目内容）。
-- `scripts/publish.py`：MD 检查通过后，完整生成 HTML + JSON 检查报告的一键发布入口。
+- `scripts/publish.py`：MD、physical-modules.json、content-index.json 均检查通过后，完整生成 HTML + JSON 检查报告的一键发布入口。
 - `scripts/render_html.py`：从当前 MD 自动填充通用网站布局。
 - `scripts/diagram_svg.py`：Mermaid 流程图离线 SVG 自动生成与原文回退；`diagram_svg.py engine` 输出图形引擎预检 JSON（exit 2=无引擎）。
 - `scripts/validate_html.py`：HTML 结构、离线依赖、章节与 MD 内容对应检查 + 逐图渲染内容断言（样式闭合/标签存活/字号代理）与模板 CSS lint（未作用域元素选择器、图区压缩/滚动禁令），默认落盘 `<html>.audit.json` 证据。

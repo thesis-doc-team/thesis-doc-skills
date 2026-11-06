@@ -13,6 +13,10 @@
     ↓
 检查技术事实、章节结构、正文边界
     ↓
+生成 physical-modules.json（实物模块清单）
+    ↓
+生成 content-index.json（表/图/模块分类与相似组）
+    ↓
 依据刚生成的 MD 生成首页摘要与用户可视化 HTML
     ↓
 自动生成流程图 SVG（支持时）、检查 MD 与 HTML 一致性
@@ -68,7 +72,17 @@ python scripts/publish.py "output/technical-document/项目名称-技术文档.m
   --out-dir "output/technical-document"
 ```
 
-若未提供项目首页 JSON 配置，去掉 `--config` 即可。发布前会校验 MD 同级的 `physical-modules.json`（定名、不加版本号；无实物模块也写 `modules: []`），缺失或不合法即拒绝生成 HTML，契约见 SKILL.md「实物模块清单契约」。生成器会自动降级为不编造事实的章节速览/阅读路径，并输出报告 JSON。单独执行 MD→HTML 同样可使用该命令。
+若未提供项目首页 JSON 配置，去掉 `--config` 即可。发布前会校验 MD 同级的 `physical-modules.json` 与 `content-index.json`（均定名、不加版本号；无实物模块也写 `modules: []`），缺失或不合法即拒绝生成 HTML。契约见 SKILL.md「实物模块清单契约」与「内容分类索引契约」。
+
+### 生成两个固定伴随产物
+
+```bash
+python scripts/gen_physical_modules.py "output/technical-document/项目名称-技术文档.md"
+python scripts/classify_content.py "output/technical-document/项目名称-技术文档.md"
+```
+
+- `physical-modules.json`：只列具备实物形态的模块；`code/name/hardware` 必填，`category/source_files/pins/note` 可选；排除软件抽象层、纯逻辑、主程序。
+- `content-index.json`：`items` + `groups` + `summary`；表格/流程图/实物模块按 `category` 分类，按 `group_id/group_title` 归并相似项；含 `line_start/line_end`、`content_sha256`，网站可直接分组/筛选。它**不改变原文、不渲染网站**。生成器会自动降级为不编造事实的章节速览/阅读路径，并输出报告 JSON。单独执行 MD→HTML 同样可使用该命令。
 
 ## 目录说明
 

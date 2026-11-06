@@ -1,3 +1,12 @@
+# V5.3 — 内容分类索引 + 实物模块自动生成（2026-11-06）
+
+- 新增 `scripts/gen_physical_modules.py`：从「模块详解」章自动生成 `physical-modules.json` v1；只收录传感器/执行器/显示/按键/通信模组等实物模块，排除 `uart_comm`/`Warn`/`main`/全小写下划线软件名；抽取 category/source_files/pins/note，并调用契约检查器。
+- 新增 `scripts/content_rules.py` 与 `scripts/classify_content.py`：生成 `content-index.json` v1，对每张表、每个 Mermaid 图、每个实物模块分类并归并相似组（数据结构按模块/协议，引脚/参数/流程/架构按类型或章节，模块按物理类别）；输出 category、group_id、group_title、行号、content_sha256，供网站分组/筛选。
+- `content-index.json` 覆盖门禁：正文表格数、Mermaid 数、实物模块数与索引必须一致；缺项/多项即 FAIL。
+- `publish.py` 发布前强制校验 `physical-modules.json` 与 `content-index.json`；两者缺失或不合法均拒绝进入 HTML 阶段。
+- 新增测试 `tests/test_physical_modules_generator.py`、`tests/test_content_index.py`，并更新 `test_pipeline.py` / `test_svg_pipeline.py`；全套 53 项 unittest + pipeline 烟雾测试通过。
+- 网站展示仍由用户/下游处理；本 Skill 只提供分类 JSON，不改 HTML 分组 UI。
+
 # V5.2 — 篇幅/页数仅是参考（2026-10-30）
 
 - 补充同源**实质性分页门禁**原则：范本/模板篇幅仅是参考，实际长度由项目材料支撑程度决定；不为凑足或压缩篇幅增删事实、稀释或堆砌文字。

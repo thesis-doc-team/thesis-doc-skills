@@ -365,6 +365,10 @@ class TestPublishEvidence(unittest.TestCase):
             (tmp / 'physical-modules.json').write_text(
                 json.dumps({'schema_version': 1, 'generated_by': 'project-technical-doc', 'modules': []},
                            ensure_ascii=False), 'utf-8', newline='\n')
+            classified = subprocess.run(
+                [sys.executable, str(SKILL_ROOT / 'scripts' / 'classify_content.py'), str(md)],
+                capture_output=True, text=True, encoding='utf-8', errors='replace')
+            self.assertEqual(classified.returncode, 0, (classified.stdout, classified.stderr))
             proc = subprocess.run([sys.executable, str(SKILL_ROOT / 'scripts' / 'publish.py'),
                                    str(md), '--out-dir', str(tmp / 'out')],
                                   capture_output=True, text=True, encoding='utf-8',

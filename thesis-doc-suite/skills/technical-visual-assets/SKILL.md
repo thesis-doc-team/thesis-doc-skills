@@ -14,7 +14,7 @@ description: 根据用户指定的唯一正式技术 Markdown，提取/创建系
 3. **只做素材能力，不越界修改 Word 文书**。本 Skill 不改技术 MD、HTML、源码、官方 DOCX 模板、其他写作 Skill；输出是候选图、表格源、A4 设计约束与审核资产。最终 DOCX 插入由对应文书 Skill 完成，并执行排版校验。
 4. **正交连线是硬门槛。** 所有常规连接线只能是水平线、垂直线或由二者组成的 90° 折线；不得默认输出任意角度斜线。箭头尖端自身的几何斜边不属于连接路径。只有图形语义明确要求特殊斜线时才允许例外，且必须写明原因。**不能只在样式名里写“正交”，必须检查实际 SVG/ draw.io 路径。**
 5. **A4 页面适配是硬门槛。** 图表/表格不能仅因“能生成”就成为可插 Word 的正式素材。必须依据当前官方 DOCX 的实际纸张、页边距和所在节计算版心；过宽/过高时重新排布或拆图/拆表，绝不直接缩成看不清的小图。只有在 Word/WPS 真正渲染并检查后，才能宣称“Word 版面验收通过”。
-6. **每张正式技术图必须有中英文图题元数据。** 图号按正式 Word 章节编号（如 `4-1`），中文题名和英文题名必须描述实际内容；图题放在图下，由 Word 原生段落渲染，**不得画进 SVG/PNG 像素**。模板只允许单行时可合并中英文，但不得改变官方模板结构。
+6. **每张正式技术图必须有中英文图题元数据。** 如果目标文书要求按章节编号，使用 `figure_number`（如 `4-1`）；如果只是生成独立素材，可用项目内稳定序号，由后续排版方重排。中文题名和英文题名必须描述实际内容；图题放在图下，由 Word 原生段落渲染，**不得画进 SVG/PNG 像素**。模板只允许单行时可合并中英文，但不得改变官方模板结构。
 7. 不臆造连线、模块状态、系统测试、实验曲线和表格数据。**测试计划 ≠ 测试结果**。本项目未使用、备用、待实现的设备，不能标成已实装照片。
 8. 不自动安装任何包或字体，不调用外部下载，不运行学生上传的源码。不覆盖项目历史 `-vN` 文书版本，不写入插件安装目录。
 9. **必须生成原生 `.vsdx` 文件**：`scripts/vsdx_writer.py` 从同一正交 spec 生成 Visio 2013+ Open Packaging 格式的节点、连线、文字和图题。生成后必须做包结构/XML/关系校验；若本机没有 Visio，状态必须标 `vsdx_verification=pending-visio-open`，不得写成“Visio 已打开合格”。只有真实 Visio/WPS 打开并保存验证后，才能标 `VISIO_OPEN_VERIFIED`。不得用改后缀的假 VSDX。
@@ -23,7 +23,7 @@ description: 根据用户指定的唯一正式技术 Markdown，提取/创建系
 
 必需：`<PROJECT_ROOT>`、已正式确认的 `<TECH_MD>`、稳定 `project_id`。
 
-实际生成到 Word 前还必需：用户/学校的**原始官方 DOCX 模板**（只读）、目标 Word 文书类型、拟插入的章节/节。模板可以经写作 Skill 在同项目中按真实路径只读引用，不能猜测页边距。
+要做正式 A4 空间适配时，必需：用户/学校提供的**原始官方 DOCX 模板**（只读）或明确的纸张/页边距设置。A4 门禁只需要读取模板的纸张与页边距，**不要求绑定章节，也不由本 Skill 把图插入 Word**；章节归属、图号重排由写作 Skill 或用户自行处理。模板可以经写作 Skill 在同项目中按真实路径只读引用，不能猜测页边距。
 
 执行流程：
 
@@ -84,7 +84,7 @@ description: 根据用户指定的唯一正式技术 Markdown，提取/创建系
 完整规则见 `references/english-caption-spec.md`。
 
 1. 每张正式图必须提供：
-   - `figure_number`：按章节编号，如 `4-1`、`3-2`；不得写死“图 1”。
+   - `figure_number`：按目标文书要求提供；可用章节号（如 `4-1`、`3-2`）或项目内稳定序号，不强制绑定章节；不得写死“图 1”。
    - `caption_zh`：中文描述性题名，如“阈值判断与告警流程图”。
    - `caption_en`：英文描述性题名，如“Threshold Judgment and Alarm Processing Flowchart”。
    - `source_refs`：章节/行号/证据，至少一项。
@@ -214,6 +214,22 @@ python scripts/three_line_table.py audit --docx "<三线表修订副本.docx>" -
 └─ .skill-tmp/technical-visual-assets/<run-id>/ # 自有可清理工作区
 ```
 
+### 9.6 共享资产与信息管理（与其它 Skill 同一契约）
+
+`project-assets/` 是项目**长期共享数据资产**（跨全部文书 Skill 同读同写），不是本 Skill 的私有目录，也不是中间文件：
+
+- **唯一根目录**：`<PROJECT_ROOT>/project-assets/`；**禁止**把项目资产写进插件安装目录、`references/`、`examples/`。初始化由 `/thesis-doc-suite:init-project` 或 `project_assets.py init`（project-technical-doc 副本）完成，**本 Skill 不自建第二套资产库**；未初始化时命令直接报错并指向 init-project。
+- **项目隔离**：读取 `project.json` 校验 `schema_version` 与 `project_id`；与本轮 `--project-id` 不一致立即停止，**禁止串项目**。
+- **事实只读**：`facts.json` 只按 `FACT-xxx` 稳定 ID 引用并做 project_id/schema 校验，**本 Skill 不写事实**（事实由 project-technical-doc 维护）；`facts.json` 缺失时按空库处理，不阻断。
+- **写锁**：对共享资产的写入一律持有 `project-assets/.asset-write.lock` 排他锁，**禁止绕过、强删或忽略锁冲突**。
+- **审计流水**：所有资产变更追加到 `project-assets/activity.jsonl`（`at`/`action`/`actor`/`project_id`），与其它 Skill 同一本账，便于追溯。
+- **运行区纪律**：中间文件只写 `.skill-tmp/technical-visual-assets/<run-id>/`（`workdir` 创建，带 `.owned-by-technical-visual-assets` 所有权标记，内容为技能名）；`cleanup` 只删自己带合法标记的单个 run 目录，遇符号链接、路径越界或标记不符一律拒绝，**绝不删除**其他 Skill 的 `.skill-tmp`、共享资产、用户上传原件与历史成品。
+
+```bash
+python scripts/visual_assets.py workdir --root "$ROOT" --project-id "$PID"
+python scripts/visual_assets.py cleanup --root "$ROOT" --project-id "$PID" --run-id "$RUN_ID"
+```
+
 ## 10. 自动质量门禁
 
 `scripts/figure_qc.py` 至少检查：
@@ -267,6 +283,6 @@ python scripts/three_line_table.py audit --docx "<三线表修订副本.docx>" -
 1. 图中节点、连线、箭头方向是否与正式技术 MD 完全一致。
 2. 所有常规连线是否正交，是否存在穿节点、压文字、不可读的小字。
 3. 中英文图题是否语义一致、编号正确、位于图下，并与图片同页。
-4. 是否提供学校官方 DOCX 模板与目标章节，以便重新做 A4 与 Word 逐页验收。
+4. 是否提供学校官方 DOCX 模板或明确页边距设置，以便重新做 A4 空间验收；本 Skill 只生成素材，不负责插入。
 5. 正式 Word 成品中的新增数据表是否通过三线表审计。
 6. 实物模块照片是否由用户本人上传并完成 VIS 审核。

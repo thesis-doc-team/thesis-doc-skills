@@ -8,7 +8,7 @@
 
 | 命令 | 类型 | 版本 | 生成什么 | 交付目录 |
 |---|---|---|---|---|
-| `/thesis-doc-suite:project-technical-doc` | 业务 | 5.2.0 | 技术文档 MD + 用户展示 HTML + 执行汇报 | `deliverables/technical-document/` |
+| `/thesis-doc-suite:project-technical-doc` | 业务 | 5.3.0 | 技术文档 MD + 用户展示 HTML + 实物模块清单 + 内容分类索引 + 执行汇报 | `deliverables/technical-document/` |
 | `/thesis-doc-suite:thesis-taskbook-write` | 业务 | 1.2.2 | 任务书 DOCX + 执行汇报 | `deliverables/taskbook/` |
 | `/thesis-doc-suite:opening-report-writer` | 业务 | 4.1.0 | 开题报告 DOCX + 执行汇报 + 文献核验台账 | `deliverables/opening-report/` |
 | `/thesis-doc-suite:literature-review-write` | 业务 | 3.2.1 | 文献综述 DOCX + 执行汇报 | `deliverables/literature-review/` |
@@ -23,10 +23,10 @@
 
 ## 业务 Skill 逐项说明
 
-### project-technical-doc｜项目技术文档生成（v5.2.0）
+### project-technical-doc｜项目技术文档生成（v5.3.0）
 
 - **定位**：只读理解真实项目资料/源码，产出有证据的 Markdown 技术文档，并派生单文件离线 HTML 用户展示网站。是共享技术事实（FACT-xxx）的主要提炼者。
-- **生成**：`<项目名>-技术文档.md`、`<项目名>_用户展示.html`、`执行汇报.md`、（大型项目）`项目事实与证据台账.md`。
+- **生成**：`<项目名>-技术文档.md`、`<项目名>_用户展示.html`、`physical-modules.json`（实物模块清单）、`content-index.json`（表/图/模块分类与相似组）、`执行汇报.md`、（大型项目）`项目事实与证据台账.md`。
 - **必需输入**：项目源码或技术资料（MD/DOCX/PDF 等）、项目根目录。
 - **可选输入**：展示配置.json、已有 project-assets 事实库。
 - **前置条件**：Python 3.10+；markdown-it-py、beautifulsoup4（HTML 派生）；无需官方 Word 模板。

@@ -56,3 +56,12 @@
 - [ ] 自动检查、浏览器检查、项目功能实测、用户验收是**不同概念**，分别汇报，不互相代替。
 
 **优先级**：事实真实与内容边界 ＞ 双产物内容一致 ＞ 图表与交互完整 ＞ 视觉装饰。任何页面卡片都不能使未经验证的功能显得已经实测成功。
+
+## 固定伴随产物门禁（v5.3）
+
+- [ ] `physical-modules.json` 与 MD 同级、定名不加版本号；`gen_physical_modules.py` 生成；`check_physical_modules.py` PASS/WARN；只含实物模块，软件抽象层/纯逻辑/主程序不得列入。
+- [ ] `content-index.json` 与 MD 同级、定名不加版本号；`classify_content.py` 生成；`check_content_index` PASS。
+- [ ] 分类索引覆盖 MD 中全部表格、Mermaid 图与实物模块；缺项/多项即 FAIL。
+- [ ] 每个 item 有稳定 `id`、`kind`、`category`、`group_id`、`group_title`、`line_start`/`line_end`、`content_sha256`；items 按正文行号排序。
+- [ ] 每个 group 的 `item_ids` 与 item 的 `group_id` 一致，`count` 等于 `item_ids` 数量；相似项只做分组，不合并/删除原文数据。
+- [ ] 网站展示由用户/下游处理；本 Skill 只交分类 JSON，不改 HTML 分组 UI。

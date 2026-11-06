@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 
 from check_markdown import check
 from check_physical_modules import check as check_physical_modules
+from classify_content import check_content_index
 from diagram_svg import render_diagrams, engine_status
 from render_html import build
 from screenshot_audit import find_browser, pixel_probe_svg, render_probe_page
@@ -50,6 +51,12 @@ def publish(args):
                            +' 必须与技术文档 MD 同级、定名不加版本号）：'
                            +'；'.join(physical['errors'][:5])
                            +'。请按 SKILL「实物模块清单契约」生成/修订后再发布')
+    content_index=check_content_index(md)
+    if content_index['errors']:
+        raise RuntimeError('内容分类索引校验 FAIL（'+Path(content_index['index']).name
+                           +' 必须与技术文档 MD 同级）：'
+                           +'；'.join(content_index['errors'][:5])
+                           +'。请先运行 classify_content.py 生成/修订')
     # Pre-flight: announce missing SVG engines up front, not at delivery time.
     engines=engine_status()
     if not engines['svg_capable']:
@@ -121,6 +128,7 @@ def publish(args):
         'markdown_sha256':sha256(md), 'html_sha256':sha256(target),
         'configuration':str(Path(args.config).resolve()) if args.config else None,
         'physical_modules':physical,
+        'content_index':content_index,
         'svg_engines':engines,
         'render':render_info, 'diagrams':diagrams, 'html_validation':statistics,
         'errors':errors,'warnings':warnings,
@@ -132,6 +140,7 @@ def publish(args):
     audit=write_audit(target,result)
     print(json.dumps({'status':result['status'],'html':str(target),'report':str(report),'audit':str(audit),
                       'chapters':statistics['chapters'],'svg':statistics['svg_diagrams'],
+                      'content_items':content_index.get('items'),'content_groups':content_index.get('groups'),
                       'fallback':statistics['fallback_diagrams'],
                       'errors':errors,'warnings':warnings},ensure_ascii=False,indent=2))
     if errors:raise RuntimeError('HTML 对照检查 FAIL；保留文件供排查，不能向用户声称生成验收通过')

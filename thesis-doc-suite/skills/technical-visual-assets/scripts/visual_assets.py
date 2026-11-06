@@ -83,10 +83,14 @@ def context(root_str: str, requested_project_id: str | None = None):
     if requested_project_id and requested_project_id != pid:
         raise ValueError('project_id 不匹配：拒绝串项目')
     facts_path = base / 'facts.json'
-    facts = jread(facts_path) if facts_path.is_file() else {'items': []}
-    if facts.get('project_id') != pid or facts.get('schema_version') != SCHEMA:
-        raise ValueError('facts.json 的项目标识或版本不一致')
-    fdict = {f['id']: f for f in facts.get('items', [])}
+    if facts_path.is_file():
+        facts = jread(facts_path)
+        if facts.get('project_id') != pid or facts.get('schema_version') != SCHEMA:
+            raise ValueError('facts.json 的项目标识或版本不一致')
+        fdict = {f['id']: f for f in facts.get('items', [])}
+    else:
+        # 与六件套同一契约：facts.json 是可选读入（init 会建空库），缺失按空库处理，不阻断
+        fdict = {}
     vas = base / 'visual-assets'
     return root, base, vas, pid, fdict
 
@@ -548,7 +552,8 @@ def workdir(args):
     out = parent / run_id
     if out.exists() or out.is_symlink(): raise ValueError('运行目录已存在；不能覆盖')
     out.mkdir()
-    (out / '.owned-by-technical-visual-assets').write_text(pid, 'utf-8')
+    # 与其它 Skill 统一：所有权标记内容 = 技能名（升级前旧运行目录曾写 project_id，cleanup 兼容两者）
+    (out / '.owned-by-technical-visual-assets').write_text('technical-visual-assets\n', 'utf-8')
     print(json.dumps({'status':'PASS','run_id':run_id,'path':str(out)},ensure_ascii=False))
 
 
@@ -562,8 +567,9 @@ def cleanup(args):
     marker = path / '.owned-by-technical-visual-assets'
     if parent.is_symlink() or path.is_symlink() or not path.is_dir() or not marker.is_file():
         raise ValueError('运行目录不存在、是符号链接或缺少所有权标记')
-    if marker.read_text('utf-8') != pid:
-        raise ValueError('运行目录所有权/项目不匹配')
+    content = marker.read_text('utf-8')
+    if content not in ('technical-visual-assets\n', 'technical-visual-assets', pid):
+        raise ValueError('运行目录所有权标记不合法（期望技能名 technical-visual-assets；兼容旧版 project_id 标记）')
     for part in path.rglob('*'):
         if part.is_symlink(): raise ValueError('发现符号链接，拒绝清理')
     if path.resolve().parent != parent.resolve() or not path.resolve().is_relative_to(root):

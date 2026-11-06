@@ -2,6 +2,10 @@
 
 本文件记录 Thesis Doc Suite（`thesis-doc-suite`）插件的版本变化。插件语义化版本与各 Skill 自身版本独立（见 `core/contracts/skill-catalog.json`）。
 
+## 未发布（0.2.0 之后）
+
+- **technical-visual-assets：与六件套共享资产契约对齐（用户要求"让它和别的 skill 统一"，只补充不改功能）**：①修复 `facts.json` 缺失兜底自相矛盾——原代码 `else {'items': []}` 之后仍校验 `project_id` 必然失败，导致仅有 `project.json` 的项目整个 Skill 不可用（实测 workdir 直接 FAIL）；改为 facts.json 存在才校验、缺失按空库处理，与其它 Skill 一致；②运行区所有权标记内容统一为技能名（`technical-visual-assets`），`cleanup` 兼容升级前以 project_id 为内容的旧运行目录，非法标记仍拒绝；③SKILL 新增 §9.6「共享资产与信息管理」——唯一根目录、project_id 防串、facts 只读、`.asset-write.lock` 写锁、`activity.jsonl` 审计、workdir/cleanup 运行区纪律、初始化依赖，与其它 Skill 同一契约；④回归：新增 `tests/test_shared_assets.py` 4 项（facts 缺失可 workdir、project_id 不符拒绝、旧标记 cleanup 兼容、外来标记拒绝），run_all 扩为 30 项。仅插件树（根目录树已按用户处理删除）。
+
 ## 0.2.0 — 2026-11-06
 
 - **technical-visual-assets 升级 v1.4.1（上游发布包完整替换，根目录与插件双树同步、树内逐字节一致）**：在 v1.1.0 基础上引入——正交（横平竖直）连线路由器 `orthogonal_router.py`；质量门禁 `figure_qc.py`（几何 + 中英文图题 + A4 + SVG/drawio/VSDX/RES 关联）；300dpi PNG 导出 `export_png.py`（本机 Chrome/Edge，不联网）；中英文图题元数据 `.figure.json` 与 `attach-layout --figure-meta`；原生 `.vsdx` 生成（Visio 打开状态如实标注）；三线表单元格水平+垂直居中（apply 自动设置，audit 未居中 BLOCK）；真实 Word COM 渲染测试与 A4 示例、修改前后对照图；MD 单源契约 `md_pipeline.py`（scan/sync/module-list/report）。弃用联网搜图（search_candidates/download_selected_image/network-image-research 移除），保留用户上传照片工作流。上游自测 **43 项本机实测全绿**；目录登记 `skill-catalog.json` 条目 1.1.0→1.4.1（title/positioning/generates 等随 `catalog-entry.json` 更新），`docs/skill-catalog.md` 与 `site/index.html` 卡片同步；`run_all` 视觉测试项按新测试文件重建（visual: regression/v1-capabilities → three-line-table / v1.3-a4 / v1.4-orthogonal / v1.4-vsdx / v1.4-word-render，共 29 项）。移除旧图 `positive-02-complete-breakout-boards.png`（已被 `positive-02-complete-sensor-breakout-boards.png` 取代，全库无引用）；`tests/_render_word.ps1`（Word COM 渲染助手，`make_a4_word_sample.py` 运行时引用）双树补齐。

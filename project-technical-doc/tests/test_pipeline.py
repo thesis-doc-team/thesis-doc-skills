@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 PUBLISH=ROOT/'scripts'/'publish.py'
+CLASSIFY=ROOT/'scripts'/'classify_content.py'
 MD='''# 测试系统 — 技术文档
 
 > 仅为工具验证使用，没有任何真实产品结论。
@@ -55,6 +56,11 @@ def run():
         md.write_text(MD,'utf-8')
         sidecar=folder/'physical-modules.json'
         sidecar.write_text(json.dumps({'schema_version':1,'generated_by':'project-technical-doc','modules':[]},ensure_ascii=False),'utf-8')
+        # 固定伴随产物：内容分类索引必须与 MD 同级；先由生成器生成。
+        content_index=folder/'content-index.json'
+        classified=subprocess.run([sys.executable,str(CLASSIFY),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
+        assert classified.returncode==0,(classified.stdout,classified.stderr)
+        assert content_index.is_file()
         output=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
         assert output.returncode==0,(output.stdout,output.stderr)
         page=folder/'测试系统_用户展示.html'
@@ -74,6 +80,12 @@ def run():
         assert missing.returncode!=0,(missing.stdout,missing.stderr)
         assert 'physical-modules.json' in (missing.stdout+missing.stderr)
         sidecar.write_text(json.dumps({'schema_version':1,'generated_by':'project-technical-doc','modules':[]},ensure_ascii=False),'utf-8')
+        # 固定伴随产物：缺少 content-index.json 也必须拒绝发布。
+        content_index.unlink()
+        missing_content=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
+        assert missing_content.returncode!=0,(missing_content.stdout,missing_content.stderr)
+        assert 'content-index.json' in (missing_content.stdout+missing_content.stderr)
+        subprocess.run([sys.executable,str(CLASSIFY),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True,check=True)
         # Fail closed: forbidden chapters in the MD stop second-stage creation.
         forbidden=folder/'不合法文档.md'
         forbidden.write_text(MD+'\n## 4. 已知问题与改进建议\n内容不应进入正文。\n','utf-8')

@@ -4,7 +4,10 @@
 The manifest must sit next to the technical document with the fixed name
 physical-modules.json (no version suffix). It lists only physically embodied
 modules (sensors, actuators, displays, inputs, communication radios...) so the
-user can map hardware photos to the 「模块详解」chapter sections.
+user can map hardware photos to the 「模块详解」chapter sections.  v5.3 accepts
+an individual code in the section body (or elsewhere in the document with an
+explicit `section` mapping), because functional sections like 「环境监测模块」
+may contain D1/SHT40/火焰/土壤 sub-modules.
 
 Usage: python scripts/check_physical_modules.py <document.md> [--json <manifest>] [--report <path>]
 Exit codes: 0 PASS/WARN (warnings are non-blocking), 1 FAIL, 2 unreadable input.
@@ -50,6 +53,31 @@ def code_pattern(code):
     return re.compile(r'(?<![A-Za-z0-9_])' + re.escape(code) + r'(?![A-Za-z0-9_])', re.I)
 
 
+def section_ranges(lines):
+    """[(line_no, title, body)] for H3 sections under 模块详解."""
+    marks = [(i + 1, len(m.group(1)), m.group(2).strip())
+             for i, line in enumerate(lines) if (m := HEADING.match(line))]
+    start = next((idx for idx, (_, level, title) in enumerate(marks)
+                  if level == 2 and '模块详解' in title), None)
+    if start is None:
+        return None
+    ranges = []
+    for pos in range(start + 1, len(marks)):
+        line_no, level, title = marks[pos]
+        if level <= 2:
+            break
+        if level != 3:
+            continue
+        end = len(lines) + 1
+        for next_no, next_level, _ in marks[pos + 1:]:
+            if next_level <= 3:
+                end = next_no
+                break
+        body = "\n".join(lines[line_no:end - 1])
+        ranges.append((line_no, title, body))
+    return ranges
+
+
 def check(markdown, manifest=None):
     md = Path(markdown)
     js = Path(manifest) if manifest else md.parent / 'physical-modules.json'
@@ -79,9 +107,10 @@ def check(markdown, manifest=None):
 
     lines = md.read_text('utf-8-sig').splitlines()
     sections = module_sections(lines)
+    ranges = section_ranges(lines) or []
     if sections is None:
         if modules:
-            errors.append('未找到「模块详解」章：code 必须与正文该章的小节标识一致，否则无法把照片对应到章节')
+            errors.append('未找到「模块详解」章：code 必须与正文该章的小节标题/正文一致，否则无法把照片对应到章节')
         sections = []
     seen, matched = {}, []
     for index, mod in enumerate(modules, 1):
@@ -128,9 +157,39 @@ def check(markdown, manifest=None):
             elif ABS_PATH.match(value.strip()):
                 errors.append(f'{label}的 {key} 含绝对路径：只给元数据，不写路径引用')
         pattern = code_pattern(code)
+        declared_section = mod.get('section')
+        if 'section' in mod:
+            if not isinstance(declared_section, str) or not declared_section.strip():
+                errors.append(f'{label}的 section 必须是非空字符串')
+            elif ranges and not any(pattern.search(title) or declared_section.strip() in title
+                                    for _, title, _ in ranges):
+                errors.append(f'{label}的 section={declared_section!r} 不在「模块详解」小节中')
         hit = next(((line_no, title) for line_no, title in sections if pattern.search(title)), None)
         if hit is None:
-            errors.append(f'{label}未在「模块详解」章的任何小节标题中找到：code 必须与正文小节标识一致（如 6.1 D1 粉尘检测模块），否则下游无法把照片对应到章节')
+            # v5.3: allow an individual hardware code inside a functional
+            # section body (e.g. 6.1 环境监测模块 contains D1/SHT40/火焰/土壤).
+            body_hit = None
+            for line_no, title, body in ranges:
+                if declared_section and declared_section.strip() not in title:
+                    continue
+                if pattern.search(body):
+                    body_hit = (line_no, title)
+                    break
+            if body_hit is None and declared_section:
+                # The code may be documented elsewhere in the technical MD
+                # (e.g. 4.2 传感器选型表 says D1, while 6.1 says 粉尘子模块).
+                # Accept whole-document evidence only when the author declares
+                # the module section for photo mapping.
+                if pattern.search("\n".join(lines)):
+                    section_line = next((no for no, title, _ in ranges
+                                         if declared_section.strip() in title), None)
+                    if section_line is not None:
+                        body_hit = (section_line, declared_section)
+                        warnings.append(f'{label} 的 code 仅出现在正文其他位置，已按 section={declared_section!r} 映射；请人工确认')
+            if body_hit is None:
+                errors.append(f'{label}未在技术文档正文中找到：code 必须与「模块详解」小节标题/正文或文档其他位置一致（如 6.1 D1 粉尘检测模块），否则下游无法把照片对应到章节')
+            else:
+                matched.append(body_hit[0])
         else:
             matched.append(hit[0])
     if matched != sorted(matched):
