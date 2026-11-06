@@ -13,6 +13,7 @@ if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',e
 import argparse
 import hashlib
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -64,6 +65,27 @@ def publish(args):
               '安装命令：'+str(engines['install_hint'])+'；装好后重跑 publish 会生成新版本 HTML 补图，不覆盖旧版。',
               file=sys.stderr)
     source_text=md.read_text('utf-8-sig')
+    # 题目一致性：存在 project-assets 时，MD 一级标题必须等于 project.json 的 name
+    # （共享资产一个项目只有一个正式题目；确需变更须先更新 project.json 并留审计）。
+    _probe=md.parent
+    while not (_probe/'project-assets'/'project.json').is_file():
+        if _probe.parent==_probe:
+            _probe=None
+            break
+        _probe=_probe.parent
+    if _probe is not None:
+        _project=json.loads((_probe/'project-assets'/'project.json').read_text(encoding='utf-8'))
+        _project_title=_project.get('name') or (_project.get('metadata') or {}).get('title')
+        _h1=re.search(r'^#\s+(.+?)\s*$', source_text, re.M)
+        if _project_title and _h1:
+            import unicodedata as _ud
+            def _norm_title(value):
+                return re.sub(r'\s+','',_ud.normalize('NFKC',str(value or '')))
+            _doc_title=re.sub(r'\s*(?:—|–|-|_)\s*技术文档\s*$','',_h1.group(1)).strip()
+            if _norm_title(_doc_title)!=_norm_title(_project_title):
+                raise RuntimeError('技术文档题目与项目资产题目不一致：「'+_doc_title+'」≠「'
+                                   +str(_project_title)+'」；共享资产一个项目只有一个正式题目，'
+                                   '确需变更时先更新 project-assets/project.json 的 name 并留审计，再重新生成')
     outdir=Path(args.out_dir).expanduser().resolve() if args.out_dir else md.parent
     outdir.mkdir(parents=True,exist_ok=True)
     target=unique_target(outdir / (md.stem.replace('-技术文档','').replace('_技术文档','')+'_用户展示.html'))
@@ -78,6 +100,11 @@ def publish(args):
     errors,warnings,statistics=validate(target,md)
     if render_info.get('cross_references_to_review'):
         warnings.append('源文包含被排除章节的跨章节引用，请逐条检查：'+str(render_info['cross_references_to_review']))
+    geometry_fail=[item for item in diagrams
+                   if item.get('geometry_qc') and item['geometry_qc'].get('status')=='FAIL']
+    if geometry_fail:
+        for item in geometry_fail:
+            errors.append(f"第 {item['index']} 图几何/视觉门禁 FAIL：" + "；".join(item['geometry_qc'].get('errors', [])[:4]))
     diagram_fail=[item for item in diagrams if not item['engine']]
     if diagram_fail:
         hint='' if engines['svg_capable'] else f'；当前机器无 SVG 引擎（{engines["install_hint"]}），装好后重跑 publish 生成新版本 HTML 补图，不覆盖旧版'

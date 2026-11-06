@@ -395,8 +395,26 @@ def _route_one(spec, edge, existing, clearance):
         direct = simplify(direct)
         if is_orthogonal(direct) and not _penetrates(direct, spec["nodes"], a, b):
             return direct, fp, tp
-    obstacles = _obstacles(spec, clearance)
-    path = _astar(spec, sstub, tstub, clearance, existing, obstacles)
+    base_obstacles = _obstacles(spec, clearance)
+    scx, scy = _center(sr)
+    tcx, tcy = _center(tr)
+    group_obstacles = []
+    for g in spec.get("groups", []):
+        gr = (float(g["x"]), float(g["y"]), float(g["w"]), float(g["h"]))
+        s_inside = gr[0] <= scx <= gr[0] + gr[2] and gr[1] <= scy <= gr[1] + gr[3]
+        t_inside = gr[0] <= tcx <= gr[0] + gr[2] and gr[1] <= tcy <= gr[1] + gr[3]
+        # A group frame is an obstacle only when neither endpoint belongs to
+        # it; cross-group edges may still have to pass its boundary.
+        if not s_inside and not t_inside:
+            group_obstacles.append(gr)
+    path = _astar(spec, sstub, tstub, clearance, existing,
+                  base_obstacles + group_obstacles)
+    if path is None and group_obstacles:
+        # Never fail a usable diagram just because every group frame is an
+        # obstacle; fall back and let figure_qc flag the crossing.
+        path = _astar(spec, sstub, tstub, clearance, existing, base_obstacles)
+        if path is not None:
+            edge["crosses_group"] = True
     if path is None:
         return None, fp, tp
     pts = [(spt[0], spt[1]), (sstub[0], sstub[1])] + path + \
@@ -405,6 +423,23 @@ def _route_one(spec, edge, existing, clearance):
     if not is_orthogonal(pts):
         raise RoutingError("router produced a non-orthogonal path for %s->%s" % (a, b))
     return pts, fp, tp
+
+
+def _group_crossings(pts, spec, a, b):
+    nodes = {n["id"]: n for n in spec.get("nodes", [])}
+    if a not in nodes or b not in nodes:
+        return 0
+    scx, scy = _center(_r(nodes[a])); tcx, tcy = _center(_r(nodes[b]))
+    count = 0
+    for g in spec.get("groups", []):
+        x, y, w, h = float(g["x"]), float(g["y"]), float(g["w"]), float(g["h"])
+        s_inside = x <= scx <= x + w and y <= scy <= y + h
+        t_inside = x <= tcx <= x + w and y <= tcy <= y + h
+        if s_inside or t_inside:
+            continue
+        if any(_interior_hit(seg, (x, y, w, h), 0.0) for seg in _segments(pts)):
+            count += 1
+    return count
 
 
 def _penetrates(pts, nodes, a, b):
@@ -557,6 +592,9 @@ def audit_routing(spec, tolerance=1e-4):
                 if _interior_hit(seg, _r(n), 0.0):
                     issues.append("edge %s passes through node %s" % (eid, n["id"]))
                     break
+        crossings = _group_crossings(pts, spec, edge.get("from"), edge.get("to"))
+        if crossings:
+            edge["crosses_group"] = True
         # endpoint must touch the declared source/target boundary
         src = next((n for n in nodes if n["id"] == edge.get("from")), None)
         dst = next((n for n in nodes if n["id"] == edge.get("to")), None)

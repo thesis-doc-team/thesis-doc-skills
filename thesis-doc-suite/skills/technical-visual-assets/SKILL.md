@@ -1,6 +1,6 @@
 ---
 name: technical-visual-assets
-version: 1.4.1
+version: 1.4.3
 disable-model-invocation: true
 description: 根据用户指定的唯一正式技术 Markdown，提取/创建系统架构图、功能树、核心流程图和真实数据表；强制正交（横平竖直）连线、Visio 式黑白工程图、A4 版心与实际 Word/WPS 分页验收，并为每张正式技术图生成中英文图题元数据与原生 VSDX（Visio 打开状态如实标注）。按 MD 明确记载的实体硬件生成用户实物图上传清单、审核本地上传照片。保留 Mermaid/SVG/可编辑 draw.io 与项目 VIS/FACT/RES 资产，完全取消联网搜图及自动安装。
 ---
@@ -74,6 +74,14 @@ description: 根据用户指定的唯一正式技术 Markdown，提取/创建系
 3. 长文本优先换行或加宽节点；中文不得乱码/方框。
 4. 分支标签必须有白色底衬，且不得压在任何节点上。
 5. 复杂流程优先拆成多个逻辑完整子图；不允许简单缩小整图来适配 A4。
+
+### 3.3 分组框（subgraph）与 `<br/>` 标签
+
+1. 复杂架构/时序图的分组框必须：**虚线边框 + 浅色底 + 清晰分组标签**；不得用无标签实线大框冒充分组。
+2. 分组框之间不得互相压盖；嵌套必须有明确语义。分组标签不得压节点或其他分组标签；节点不得骑在分组边界上（跨边界需人工确认）。
+3. 新增 `scripts/subgraph_layout.py`：把 `<br/>`/`<br>`/HTML 标签归一化为真实换行；按节点 `group`/`group_id`（或几何包含）识别成员；重算分组框为“成员网格 + 内边距 + 标签高度”；分组框纵向堆叠/并排，保证不重叠；组内节点重新网格化；之后交给正交路由器重路由。节点和连线不得被删除，拆图只作为可读性最后手段。
+4. 使用 `visio_diagram.py --auto-layout` 或 spec 中 `layout: "subgraph"` 启用；`figure_qc.py` 会检查分组框重叠、分组标签重叠、节点跨边界、`<br/>` 残留、分组框是否虚线/有底色/有标签、连线是否穿过无关分组框。
+5. 分组框样式为虚线 + `#F7F8FC` 浅底（可覆盖）；标签带白色底衬，避免连线压字。draw.io 同步使用虚线/浅底。
 
 ### 3.3 路由实现约束
 
@@ -268,6 +276,7 @@ python scripts/visual_assets.py cleanup --root "$ROOT" --project-id "$PID" --run
 - `references/a4-figure-layout-spec.md`：A4 版心、图片/图题/表格尺寸与 Word 验收清单。
 - `references/vsdx-export-spec.md`：原生 VSDX 包结构、形状/连线/图题映射与 Visio 打开验证状态。
 - `references/visio-style-a4-guide.md`：7 张 Word 参考截图逆向规则 + A4 约束 + 正交/图题补充。
+- `references/subgraph-layout.md`：分组框虚线/浅底/标签、`<br/>` 归一化、自动子图布局与信息完整性边界。
 - `references/asset-contract.md`：RES/VIS/FACT 兼容与 v1.4.0 图题字段。
 - `references/image-selection-examples.md` + `assets/image-selection-examples/`：用户实物照片正反例（完整设备/完整模组/完整步进电机 vs 裸芯片/局部特写）。
 - `examples/visio-style-example.json`：带中英文图题的规范 spec。

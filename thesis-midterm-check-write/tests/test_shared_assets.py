@@ -37,11 +37,15 @@ class TestAssetCompatibility(unittest.TestCase):
                 'description':'测试记录','source':'本地离线测试文件'}]},ensure_ascii=False),encoding='utf-8')
         a.merge(Namespace(root=str(self.root),kind='progress',input=str(inp),replace=False,reason='',actor='test'))
         self.assertEqual(a.load(base/'progress.json')['items'][0]['id'],'PROG-001')
-        d=draft();d['project_id']='EXAMPLE-ONLY';d['asset_progress_ids']=['PROG-001']
+        d=draft();d['project_id']='EXAMPLE-ONLY';d['asset_progress_ids']=['PROG-001'];d['title']='离线测试项目'
         path=self.root/'draft.json';out=self.root/'composed.json'
         path.write_text(json.dumps(d,ensure_ascii=False),encoding='utf-8')
         a.compose(Namespace(root=str(self.root),draft=str(path),out=str(out)))
         self.assertEqual(a.load(out)['asset_trace']['progress'],['PROG-001'])
+        d2=dict(d);d2['title']='另一个项目的题目'
+        path.write_text(json.dumps(d2,ensure_ascii=False),encoding='utf-8')
+        with self.assertRaisesRegex(ValueError,'题目'):
+            a.compose(Namespace(root=str(self.root),draft=str(path),out=str(out)))
 
     def test_project_mismatch_is_blocked(self):
         with self.assertRaises(ValueError):

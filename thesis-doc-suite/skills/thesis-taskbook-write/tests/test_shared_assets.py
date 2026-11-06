@@ -53,7 +53,7 @@ class SharedAssets(unittest.TestCase):
         self.merge('references', self.fixture_references())
         self.merge('schedule', self.fixture_schedule())
         draft = self.write('draft.json', {
-            'project_id':'PROJECT-A', 'title':'示例占位 - NOT REAL',
+            'project_id':'PROJECT-A', 'title':'测试项目',
             'thesis_content':['TEST ONLY CONTENT'],
             'issuer_opinion':'示例意见用于测试，真实意见必须由当前项目单独起草并经指导教师审核' * 3,
             'selected_reference_ids':[f'REF-{i:03d}' for i in range(12, 2, -1)]})
@@ -125,7 +125,7 @@ class SharedAssets(unittest.TestCase):
         wd = self.work/'full-flow'
         draft = wd/'draft.json'
         draft.write_text(json.dumps({
-            'title':'测试项目题目',
+            'title':'测试项目',
             'thesis_content':['测试用系统描述，不代表任何实际项目。'*3],
             'issuer_opinion':'测试说明，仅用来测试模板写入和共享资产接口，请勿作为真实任务书意见。'*4,
             'selected_reference_ids':[f'REF-{i:03d}' for i in range(1,11)]},
@@ -194,6 +194,18 @@ class SharedAssets(unittest.TestCase):
         ledger = (self.base/'activity.jsonl').read_text(encoding='utf-8')
         self.assertIn('document-published', ledger)
         self.assertIn('REF-002', ledger)
+
+    def test_title_mismatch_blocked(self):
+        # 共享资产一个项目只有一个正式题目：compose 必须拦截与 project.json name 不一致的题目
+        self.merge('references', self.fixture_references())
+        self.merge('schedule', self.fixture_schedule())
+        draft = self.write('draft-bad-title.json', {
+            'project_id':'PROJECT-A', 'title':'另一个项目的题目',
+            'thesis_content':['TEST ONLY CONTENT'],
+            'issuer_opinion':'示例意见用于测试，真实意见必须由当前项目单独起草并经指导教师审核' * 3,
+            'selected_reference_ids':[f'REF-{i:03d}' for i in range(1, 11)]})
+        with self.assertRaisesRegex(ValueError, '题目'):
+            mod.compose(NS(root=self.root, draft=draft, out=self.root/'bad-out.json'))
 
 
 if __name__ == '__main__':

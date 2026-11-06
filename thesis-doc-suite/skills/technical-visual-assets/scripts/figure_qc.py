@@ -55,6 +55,73 @@ def _box_overlaps_rect(box, rect):
             box["y"] + box["h"] > rect[1] + 0.1)
 
 
+def _rect(node_or_group):
+    return (float(node_or_group["x"]), float(node_or_group["y"]),
+            float(node_or_group["w"]), float(node_or_group["h"]))
+
+
+def _rect_overlap(a, b):
+    x1 = max(a[0], b[0]); y1 = max(a[1], b[1])
+    x2 = min(a[0] + a[2], b[0] + b[2]); y2 = min(a[1] + a[3], b[1] + b[3])
+    return max(0.0, x2 - x1) * max(0.0, y2 - y1)
+
+
+def _tuple_overlaps_rect(box, rect):
+    return (box[0] < rect[0] + rect[2] - 0.1 and box[0] + box[2] > rect[0] + 0.1 and
+            box[1] < rect[1] + rect[3] - 0.1 and box[1] + box[3] > rect[1] + 0.1)
+
+
+def _group_checks(spec):
+    """Group frames must not overlap (unless nested) and labels must stay clear."""
+    issues, warnings = [], []
+    groups = spec.get("groups", [])
+    nodes = spec.get("nodes", [])
+    rects = [(g.get("label", "分组"), _rect(g)) for g in groups]
+    for i in range(len(rects)):
+        for j in range(i + 1, len(rects)):
+            a, b = rects[i][1], rects[j][1]
+            overlap = _rect_overlap(a, b)
+            if overlap <= 0:
+                continue
+            ar = a[2] * a[3] or 1.0
+            br = b[2] * b[3] or 1.0
+            if overlap / min(ar, br) < 0.9:
+                issues.append(f"分组框重叠：{rects[i][0]!r} 与 {rects[j][0]!r}；分组必须分开或嵌套，不能互相压盖")
+    font = float(spec.get("font_pt", 9.5))
+    fs = font * 25.4 / 72.0
+    label_boxes = []
+    for g in groups:
+        if not str(g.get("label", "")).strip():
+            warnings.append("存在未标注的分组框：复杂分区必须写清分组标签")
+    for e in spec.get("edges", []):
+        if e.get("crosses_group"):
+            warnings.append(f"连线 {e.get('from')}->{e.get('to')} 穿过无关分组框；请调整分组/拆图或改用自动子图布局")
+    for label, rect in rects:
+        if not label:
+            continue
+        tw = max(4.0, len(str(label)) * fs * 0.62)
+        th = fs * 1.8
+        box = (rect[0] + rect[2] / 2.0 - tw / 2.0, rect[1] + 1.0, tw, th)
+        label_boxes.append((label, box))
+        for n in nodes:
+            if _tuple_overlaps_rect(box, _rect(n)):
+                issues.append(f"分组标签 {label!r} 与节点 {n.get('id')} 重叠")
+    for i in range(len(label_boxes)):
+        for j in range(i + 1, len(label_boxes)):
+            if _tuple_overlaps_rect(label_boxes[i][1], label_boxes[j][1]):
+                issues.append(f"分组标签重叠：{label_boxes[i][0]!r} 与 {label_boxes[j][0]!r}")
+    for n in nodes:
+        nr = _rect(n)
+        for label, gr in rects:
+            overlap = _rect_overlap(nr, gr)
+            if overlap <= 0:
+                continue
+            inside = overlap / (nr[2] * nr[3] or 1.0)
+            if 0.08 < inside < 0.92:
+                warnings.append(f"节点 {n.get('id')} 跨越分组框 {label!r} 边界；请确认分组语义或调整布局")
+    return issues, warnings
+
+
 def check_spec(spec, profile=None, require_caption=True, formal=True,
                max_crossings=0, max_bends=8):
     issues, warnings = [], []
@@ -64,6 +131,18 @@ def check_spec(spec, profile=None, require_caption=True, formal=True,
     except (ValueError, KeyError) as exc:
         _issue(issues, "GEOMETRY_OR_CAPTION_BLOCK", str(exc))
         return None, issues, warnings
+    # 0. group frames + labels + raw HTML/<br/> labels
+    group_issues, group_warnings = _group_checks(routed)
+    for msg in group_issues:
+        _issue(issues, "GROUP_LAYOUT", msg)
+    for msg in group_warnings:
+        _issue(warnings, "GROUP_STRADDLE", msg, "warning")
+    for e in routed.get("edges", []):
+        if isinstance(e.get("label"), str) and re.search(r'<br\s*/?>|<[^>]+>', e["label"]):
+            _issue(issues, "RAW_HTML_LABEL", f"边标签仍含 HTML/<br/>：{e['label']!r}")
+    for n in routed.get("nodes", []):
+        if isinstance(n.get("label"), str) and re.search(r'<br\s*/?>|<[^>]+>', n["label"]):
+            _issue(issues, "RAW_HTML_LABEL", f"节点 {n.get('id')} 标签仍含 HTML/<br/>")
     # 1. orthogonal + node collision + endpoint boundary
     for msg in router.audit_routing(routed):
         _issue(issues, "ORTHOGONAL_OR_COLLISION", msg)
@@ -118,6 +197,8 @@ def check_spec(spec, profile=None, require_caption=True, formal=True,
         "crossings": crossings,
         "caption": cap,
         "source_refs": refs,
+        "groups": len(routed.get("groups", [])),
+        "group_issues": group_issues,
         "node_count": len(routed["nodes"]),
         "edge_count": len(routed.get("edges", [])),
     }, issues, warnings
@@ -154,6 +235,35 @@ def check_svg(svg_path, routed):
             _issue(issues, "SVG_EDGE_META", f"第 {i} 条连接线缺少来源/目标元数据")
     if len(polylines) != len(routed.get("edges", [])):
         _issue(issues, "SVG_EDGE_COUNT", "SVG 连接线数量与 spec 不一致")
+    # group frames must not overlap each other (dashed partition rectangles)
+    group_rects = []
+    group_els = root.findall(f".//{{{SVG}}}rect[@data-group='1']")
+    for g in group_els:
+        try:
+            group_rects.append((float(g.attrib.get("x", 0)), float(g.attrib.get("y", 0)),
+                                float(g.attrib.get("width", 0)), float(g.attrib.get("height", 0))))
+        except ValueError:
+            _issue(issues, "SVG_GROUP_RECT", "分组框坐标非法")
+        if not g.attrib.get("stroke-dasharray"):
+            _issue(issues, "SVG_GROUP_DASH", "分组框必须使用虚线边框")
+        if str(g.attrib.get("fill", "none")).lower() in ("none", "transparent", ""):
+            _issue(warnings, "SVG_GROUP_FILL", "分组框没有浅色底；复杂图请给分组框加底色", "warning")
+    group_label_count = len(root.findall(f".//{{{SVG}}}text[@data-group-label='1']"))
+    if group_els and group_label_count < len(group_els):
+        _issue(issues, "SVG_GROUP_LABEL", f"{len(group_els)} 个分组框只有 {group_label_count} 个标签：分组必须标注")
+    for i in range(len(group_rects)):
+        for j in range(i + 1, len(group_rects)):
+            a, b = group_rects[i], group_rects[j]
+            overlap = _rect_overlap(a, b)
+            if overlap > 0:
+                ar = a[2] * a[3] or 1.0
+                br = b[2] * b[3] or 1.0
+                if overlap / min(ar, br) < 0.9:
+                    _issue(issues, "SVG_GROUP_OVERLAP", "SVG 中分组框互相重叠")
+    for t in root.findall(f".//{{{SVG}}}text"):
+        raw = "".join(t.itertext())
+        if re.search(r'<br\s*/?>', raw, re.I):
+            _issue(issues, "SVG_BR_LABEL", "SVG 文字中残留 <br/>：应在布局前归一化为换行")
     title = root.find(f"{{{SVG}}}title")
     desc = root.find(f"{{{SVG}}}desc")
     if title is None or not (title.text or "").strip():
@@ -303,9 +413,9 @@ def main():
         if result and args.svg:
             r, i3, w3 = check_svg(args.svg, result["routed_spec"])
             result["svg"] = r; issues += i3; warnings += w3
-        if args.drawio:
+        if result and args.drawio:
             r, i4, w4 = check_drawio(args.drawio)
-            result["drawio"] = r if result else r
+            result["drawio"] = r
             issues += i4; warnings += w4
         if args.vsdx:
             r, i5v = check_vsdx(args.vsdx)

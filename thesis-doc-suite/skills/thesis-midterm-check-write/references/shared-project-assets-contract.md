@@ -14,3 +14,8 @@
 本 Skill `scripts/project_assets.py` 从 `thesis-taskbook-write v1.1` 的兼容协议移植，公共命令 `init/status/merge/workdir/cleanup/record-use` 的字段约定保持兼容；`compose` 为中期稿专有、**不得交叉调用任务书的 compose 生成中期文书**；反向亦然。不同运行目录按 Skill 名隔离，`cleanup` 标记不通用，无法误删任务书的缓存。
 
 补充：如果本项目已存在比 v1 更高版本的共同协议，**不得降级或覆盖**；应先审计迁移方案再执行。
+
+
+## 题目唯一（强制）
+
+`project.json` 的 `name` 是项目正式题目，同一项目的全部文书题目必须与之一致。`compose`（或对应校验入口）按 NFKC＋去空白归一化强校验，不一致即报错并指出两处题目。确需变更题目时，先更新 `project.json` 并留下审计记录，再重新生成全部文书——不得各文书各写一个题目，也不得靠换名、加空格绕过。

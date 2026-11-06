@@ -1,6 +1,6 @@
 {
   "status": "A4_WORD_SAMPLE_BUILT",
-  "docx": "E:\\Code\\thesis-doc-skills\\technical-visual-assets-v1.4.1\\technical-visual-assets-v1.4.1-release\\bundle\\thesis-doc-suite\\skills\\technical-visual-assets\\examples\\A4-正交流程图与英文图题示例.docx",
+  "docx": "E:\\Code\\thesis-doc-skills\\technical-visual-assets-v1.4.2\\technical-visual-assets-v1.4.2-release\\bundle\\thesis-doc-suite\\skills\\technical-visual-assets\\examples\\A4-正交流程图与英文图题示例.docx",
   "layout": {
     "status": "STATIC_CHECK_PASS_NEEDS_VISUAL_REVIEW",
     "page_sections": [
@@ -85,11 +85,11 @@
   },
   "word_render": {
     "status": "RENDERED",
-    "pdf": "E:\\Code\\thesis-doc-skills\\technical-visual-assets-v1.4.1\\technical-visual-assets-v1.4.1-release\\bundle\\thesis-doc-suite\\skills\\technical-visual-assets\\examples\\A4-正交流程图与英文图题示例.pdf",
+    "pdf": "E:\\Code\\thesis-doc-skills\\technical-visual-assets-v1.4.2\\technical-visual-assets-v1.4.2-release\\bundle\\thesis-doc-suite\\skills\\technical-visual-assets\\examples\\A4-正交流程图与英文图题示例.pdf",
     "pages": [
       {
         "page": 1,
-        "png": "E:\\Code\\thesis-doc-skills\\technical-visual-assets-v1.4.1\\technical-visual-assets-v1.4.1-release\\bundle\\thesis-doc-suite\\skills\\technical-visual-assets\\examples\\page-1.png",
+        "png": "E:\\Code\\thesis-doc-skills\\technical-visual-assets-v1.4.2\\technical-visual-assets-v1.4.2-release\\bundle\\thesis-doc-suite\\skills\\technical-visual-assets\\examples\\page-1.png",
         "width_px": 1241,
         "height_px": 1754
       }

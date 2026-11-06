@@ -22,6 +22,7 @@ from bs4 import BeautifulSoup
 from markdown_it import MarkdownIt
 
 from render_html import extract_chapters, strip_number, DEFAULT_EXCLUDES
+import diagram_qc
 
 MD = MarkdownIt('commonmark', {'html': False}).enable('table').enable('strikethrough')
 FORBIDDEN = DEFAULT_EXCLUDES + ['不足与改进','风险与对策','优化建议','技术展望','技术演进','升级建议']
@@ -322,6 +323,12 @@ def validate(path, source_path=None):
         record['estimated_min_font_px']=font
         if font is not None and font<MIN_READABLE_FONT_PX:
             warnings.append(f'第 {idx} 图估算最小字号约 {font}px < {MIN_READABLE_FONT_PX}px：疑似被 CSS 压缩或原图过宽，可读性差')
+        geometry=diagram_qc.check_svg(str(svg),page_css)
+        record['geometry_qc']=geometry
+        for msg in geometry.get('errors',[]):
+            errors.append(f'第 {idx} 图几何/视觉门禁：{msg}')
+        for msg in geometry.get('warnings',[]):
+            warnings.append(f'第 {idx} 图几何/视觉提示：{msg}')
         if record['foreignobject_count']:
             warnings.append(f'第 {idx} 图含 foreignObject：htmlLabels 配置可能未生效（mmdc 需顶层 "htmlLabels": false），核对标签渲染')
         diagram_checks.append(record)

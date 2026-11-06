@@ -88,6 +88,24 @@ def stamp_event(base, event):
         f.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + '\n')
 
 
+def norm_title(value):
+    import unicodedata
+    return re.sub(r'\s+', '', unicodedata.normalize('NFKC', str(value or '')))
+
+
+def assert_title_matches_project(project, draft):
+    """共享资产一个项目只有一个正式题目：文书题目必须与 project.json 的 name 一致。"""
+    draft_title = draft.get('title') if isinstance(draft, dict) else None
+    project_title = project.get('name') or (project.get('metadata') or {}).get('title')
+    if not draft_title or not project_title:
+        return
+    if norm_title(draft_title) != norm_title(project_title):
+        raise ValueError(
+            '文书题目与项目资产题目不一致：草稿「' + str(draft_title) + '」≠ 项目「' + str(project_title) + '」。'
+            '共享资产一个项目只有一个正式题目，各文书必须一致；确需变更题目时，先更新 '
+            'project-assets/project.json 的 name（并留审计记录），再重新生成全部文书')
+
+
 def init(args):
     root = Path(args.root).resolve()
     if not root.is_dir():
@@ -254,6 +272,7 @@ def compose(args):
     draft = load(args.draft)
     if not isinstance(draft, dict) or draft.get('project_id') not in (None, project['project_id']):
         raise ValueError('指导记录草稿不是当前 project_id 对应的 JSON')
+    assert_title_matches_project(project, draft)
     if not draft.get('title') or not isinstance(draft.get('records'), list) or len(draft['records']) < 1:
         raise ValueError('缺少课题名称或有效指导记录；记录数不能由模板页数推断')
     for i, r in enumerate(draft['records'], 1):

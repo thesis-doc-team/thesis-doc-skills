@@ -36,7 +36,7 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 
 ## 1. 各 Skill 的功能
 
-6 个业务 Skill 各管一种文书，1 个支持 Skill 管公共视觉素材，3 个管理 Skill 管项目与导航。每个 Skill 都能独立执行，只负责自己的产出，不越界生成其他文书。
+7 个业务 Skill（6 项毕业设计文书 + 1 个通用项目方案），1 个支持 Skill 管公共视觉素材，3 个管理 Skill 管项目与导航。每个 Skill 都能独立执行，只负责自己的产出，不越界生成其他文书。
 
 | 命令 | 生成什么 | 必需输入 | 关键门槛 |
 |---|---|---|---|
@@ -46,6 +46,7 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 | `/thesis-doc-suite:literature-review-write` | `<课题简称>-文献综述-vN.docx` + 执行汇报 | 课题技术资料、官方文献综述模板、项目根目录 | 正文 ≥2500 字、默认 ≥8 篇独立真实文献 |
 | `/thesis-doc-suite:thesis-guidance-record-write` | `<课题简称>-指导记录-vN.docx` + 执行汇报 | 真实项目技术资料、官方指导记录模板、项目根目录 | ≥8 次有真实依据的指导主题；时间/地点/方式/评价缺失一律留空 |
 | `/thesis-doc-suite:thesis-midterm-check-write` | `<课题简称>-中期检查记录表-vN.docx` + 执行汇报 | 真实项目技术资料、官方中期检查模板、项目根目录 | 三个栏目各 ≥200 字；问题与整改逐条编号一一对应 |
+| `/thesis-doc-suite:project-solution-write` | `<项目简称>-项目介绍与功能说明-vN.md` + `<项目简称>-项目介绍与功能说明-vN.html` + `<项目简称>-工程实施方案-vN.md` + 执行汇报 | 项目题目与功能树/功能清单、项目根目录 | 无需 Word 模板；技术路线重大歧义先澄清；两份 MD 边界严格分离；介绍 HTML 只读介绍 MD、单文件离线、统一视觉；介绍/实施均分章分批写入并 compose 后一次终检 |
 
 另有 1 个支持 Skill（公共图片资料层，不生成文书、不负责在文书里插图）：
 

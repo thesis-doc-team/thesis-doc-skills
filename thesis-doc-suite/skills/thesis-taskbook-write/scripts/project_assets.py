@@ -88,6 +88,24 @@ def stamp_event(base, event):
         f.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + '\n')
 
 
+def norm_title(value):
+    import unicodedata
+    return re.sub(r'\s+', '', unicodedata.normalize('NFKC', str(value or '')))
+
+
+def assert_title_matches_project(project, draft):
+    """共享资产一个项目只有一个正式题目：文书题目必须与 project.json 的 name 一致。"""
+    draft_title = draft.get('title') if isinstance(draft, dict) else None
+    project_title = project.get('name') or (project.get('metadata') or {}).get('title')
+    if not draft_title or not project_title:
+        return
+    if norm_title(draft_title) != norm_title(project_title):
+        raise ValueError(
+            '文书题目与项目资产题目不一致：草稿「' + str(draft_title) + '」≠ 项目「' + str(project_title) + '」。'
+            '共享资产一个项目只有一个正式题目，各文书必须一致；确需变更题目时，先更新 '
+            'project-assets/project.json 的 name（并留审计记录），再重新生成全部文书')
+
+
 def init(args):
     root = Path(args.root).resolve()
     if not root.is_dir():
@@ -255,6 +273,7 @@ def compose(args):
         raise ValueError('任务书草稿数据必须是 JSON 对象')
     if draft.get('project_id') not in (None, project['project_id']):
         raise ValueError('任务书草稿与资产 project_id 不一致')
+    assert_title_matches_project(project, draft)
     plan = load(base / 'schedule.json')['plan']
     if plan is None:
         raise ValueError('共享周计划为空；先创建或核实项目级计划，不在文书里临时编造')

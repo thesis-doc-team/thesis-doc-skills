@@ -1,3 +1,12 @@
+# V5.4 — 图表几何/视觉门禁与自动重排（2026-11-06）
+
+- 新增 `scripts/diagram_qc.py`：检查过宽/过高、适配正文宽后最小字号 <9px、节点重叠、文字重叠（CJK 包围盒估算）、连线端点未接节点、marker 失效；宽高比 >10 FAIL、6–10 WARN。
+- 新增 `scripts/diagram_svg.py` 自动重排：渲染后 QC；`LR/RL` 过宽自动改 `TD` + 加大间距；`TD` 失败加大间距；仍失败用 Graphviz 重排；最终失败发布 BLOCK。
+- 明确**节点数量不是错误**：系统架构 50–80 节点可能正常；禁止为“过密”删节点，信息完整性优先；拆图只作为可读性最后手段。
+- `validate_html.py` / `publish.py` 接入 QC：坏图不得 PASS；报告输出 `geometry_qc` 指标。
+- 新增 `references/diagram-visual-qc.md` 与 `tests/test_diagram_visual_qc.py`（7 项回归：过宽、偏宽 WARN、断线、文字重叠、节点重叠、60 节点可读、正常图）。
+- 全套 61 项 unittest + pipeline 烟雾测试通过。
+
 # V5.3 — 内容分类索引 + 实物模块自动生成（2026-11-06）
 
 - 新增 `scripts/gen_physical_modules.py`：从「模块详解」章自动生成 `physical-modules.json` v1；只收录传感器/执行器/显示/按键/通信模组等实物模块，排除 `uart_comm`/`Warn`/`main`/全小写下划线软件名；抽取 category/source_files/pins/note，并调用契约检查器。

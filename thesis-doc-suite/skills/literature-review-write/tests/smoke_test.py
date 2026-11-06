@@ -8,7 +8,7 @@ BASE=Path(__file__).resolve().parent.parent
 SCRIPTS=BASE/'scripts'
 
 def cmd(*args):
-    p=subprocess.run([sys.executable,*map(str,args)],text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    p=subprocess.run([sys.executable,*map(str,args)],text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,encoding='utf-8',errors='replace')
     if p.returncode:
         raise AssertionError('CMD FAILED: '+str(args)+'\nSTDOUT '+p.stdout+'\nSTDERR '+p.stderr)
     return p.stdout.strip()
@@ -16,7 +16,7 @@ def cmd(*args):
 def main():
     with TemporaryDirectory(prefix='literature-skill-QA-') as td:
         root=Path(td)
-        cmd(SCRIPTS/'project_assets.py','init','--root',root,'--project-id','TEST-ONLY', '--name','虚拟结构测试项目')
+        cmd(SCRIPTS/'project_assets.py','init','--root',root,'--project-id','TEST-ONLY', '--name','基于STM32与4G通信的胡杨林安全监测系统')
         got=cmd(SCRIPTS/'project_assets.py','status','--root',root)
         assert 'TEST-ONLY' in got
         work=Path(cmd(SCRIPTS/'project_assets.py','workdir','--root',root,'--run-id','qa-001').splitlines()[-1])

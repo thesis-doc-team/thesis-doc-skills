@@ -47,7 +47,7 @@ class Tests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as td:
    root=Path(td)
    tool=BASE/'scripts/project_assets.py'
-   call(tool,'init','--root',root,'--project-id','demo-guidance-001','--name','某安全监测系统')
+   call(tool,'init','--root',root,'--project-id','demo-guidance-001','--name','基于STM32与4G通信的胡杨林安全监测系统')
    call(tool,'status','--root',root)
    inp=BASE/'tests/format-smoke-input.json';out=root/'combined.json'
    call(tool,'compose','--root',root,'--draft',inp,'--out',out)
@@ -181,5 +181,17 @@ class Tests(unittest.TestCase):
    rep=json.loads((Path(td)/'qa.json').read_text(encoding='utf-8'))
    self.assertEqual(rep['result'],'PASS')
    self.assertTrue(any('超过 90 字' in w for w in rep['warnings']),rep['warnings'])
+ def test_compose_rejects_title_mismatch(self):
+  # 共享资产一个项目只有一个正式题目：compose 必须拦截与 project.json name 不一致的题目
+  with tempfile.TemporaryDirectory() as td:
+   root=Path(td)
+   tool=BASE/'scripts/project_assets.py'
+   call(tool,'init','--root',root,'--project-id','demo-guidance-001','--name','基于STM32与4G通信的胡杨林安全监测系统')
+   data=json.loads((BASE/'tests/format-smoke-input.json').read_text(encoding='utf-8'))
+   data['title']='另一个项目的题目'
+   inp=Path(td)/'draft.json';inp.write_text(json.dumps(data,ensure_ascii=False),encoding='utf-8')
+   r=call(tool,'compose','--root',root,'--draft',inp,'--out',Path(td)/'out.json',ok=False)
+   self.assertNotEqual(r.returncode,0)
+   self.assertIn('题目',r.stdout+r.stderr)
 
 if __name__=='__main__':unittest.main()

@@ -123,7 +123,7 @@ def check_skills(root):
             record('PASS', 'skills', f'{name}: 仅显式调用（disable-model-invocation）')
         elif name in ('project-technical-doc', 'thesis-taskbook-write', 'opening-report-writer',
                       'literature-review-write', 'thesis-guidance-record-write',
-                      'thesis-midterm-check-write', 'init-project'):
+                      'thesis-midterm-check-write', 'project-solution-write', 'init-project'):
             record('WARN', 'skills', f'{name}: 文书/写入类 Skill 建议声明 disable-model-invocation: true')
 
 

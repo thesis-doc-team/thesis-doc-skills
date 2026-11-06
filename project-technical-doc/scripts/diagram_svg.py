@@ -11,11 +11,14 @@ import sys as _sys
 if hasattr(_sys.stdout,'reconfigure'):_sys.stdout.reconfigure(encoding='utf-8',errors='replace')
 if hasattr(_sys.stderr,'reconfigure'):_sys.stderr.reconfigure(encoding='utf-8',errors='replace')
 
+import json
 import os
 import re
 import shutil
 import subprocess
 from pathlib import Path
+
+import diagram_qc
 
 FLOW_HEADER = re.compile(r"^\s*(?:flowchart|graph)\s+(TD|TB|BT|LR|RL)\s*$", re.I)
 NODE = re.compile(r"^\s*([A-Za-z_][\w-]*)(?:\s*(\[[^\]]*\]|\{[^}]*\}|\([^)]*\)))?\s*$")
@@ -41,7 +44,7 @@ def _parse_node(text):
     return ident, label, shape
 
 
-def _flowchart_to_dot(source):
+def _flowchart_to_dot(source, wide=False):
     """Strict parser: unsupported syntax returns ValueError, never a misleading graph."""
     lines = [x.strip() for x in source.strip().splitlines() if x.strip() and not x.lstrip().startswith('%%')]
     if not lines:raise ValueError('图代码为空')
@@ -75,7 +78,7 @@ def _flowchart_to_dot(source):
         edges.append((sid,tid,label,arrow.group(1)))
     if not edges:raise ValueError('未发现可解析的连接线')
     result=[f'digraph G {{',f'  rankdir={rankdir};',
-            '  graph [bgcolor="transparent", pad="0.22", nodesep="0.34", ranksep="0.48"];',
+            '  graph [bgcolor="transparent", pad="%s", nodesep="%s", ranksep="%s"];' % ('0.32' if wide else '0.22', '0.55' if wide else '0.34', '0.78' if wide else '0.48'),
             '  node [fontname="Noto Sans CJK SC", fontsize=12, style="filled,rounded", fillcolor="#F1F3FF", color="#8B88D8", fontcolor="#33415D", penwidth=1.3, margin="0.19,0.12"];',
             '  edge [fontname="Noto Sans CJK SC", fontsize=10, color="#8689C7", fontcolor="#5C648D", arrowsize=0.72, penwidth=1.25];']
     for ident,(label,shape) in nodes.items():
@@ -107,10 +110,13 @@ def _find_browser():
     return None
 
 
-def render_one(source: str, svgfile: Path):
+def render_one(source: str, svgfile: Path, wide=False, force_td=False, prefer_dot=False):
     svgfile.parent.mkdir(parents=True, exist_ok=True)
+    if force_td:
+        source = re.sub(r'^(flowchart|graph)\s+(LR|RL)\s*$', r'\g<1> TD', source,
+                        count=1, flags=re.M | re.I)
     cli=shutil.which('mmdc')
-    if cli:
+    if cli and not prefer_dot:
         # 系统 Chrome/Edge 渲染（无独立 Chromium 的标准配置）：未设置时补默认值，
         # 否则 mmdc 静默失败、整图降级为源码回退——"装了引擎却没 SVG"的假绿口子。
         if not os.environ.get('PUPPETEER_EXECUTABLE_PATH'):
@@ -120,7 +126,12 @@ def render_one(source: str, svgfile: Path):
         srcfile=svgfile.with_suffix('.mmd')
         srcfile.write_text(source,'utf-8',newline='\n')
         cfgfile=svgfile.with_suffix('.mermaid-config.json')
-        cfgfile.write_text('{"htmlLabels": false, "flowchart": {"htmlLabels": false}, "themeVariables": {"htmlLabels": false}}','utf-8')
+        spacing = {"nodeSpacing": 60 if wide else 32, "rankSpacing": 82 if wide else 52,
+                   "padding": 22 if wide else 12}
+        cfgfile.write_text(json.dumps({"htmlLabels": False,
+                                       "flowchart": {"htmlLabels": False, **spacing},
+                                       "themeVariables": {"htmlLabels": False}},
+                                      ensure_ascii=False), 'utf-8')
         try:
             cp=subprocess.run([cli, '-i',str(srcfile),'-o',str(svgfile),'-b','transparent','-c',str(cfgfile)],
                               capture_output=True,text=True,encoding="utf-8",errors="replace",timeout=30)
@@ -133,7 +144,7 @@ def render_one(source: str, svgfile: Path):
     dot=shutil.which('dot')
     if dot:
         try:
-            dot_src=_flowchart_to_dot(source)
+            dot_src=_flowchart_to_dot(source, wide=wide)
             cp=subprocess.run([dot,'-Tsvg','-o',str(svgfile)],input=dot_src,text=True,encoding="utf-8",errors="replace",
                               capture_output=True,timeout=12)
             if cp.returncode==0 and svgfile.is_file() and '<svg' in svgfile.read_text('utf-8'):
@@ -163,7 +174,25 @@ def render_diagrams(markdown, svg_dir):
     for idx,source in enumerate(sources,1):
         path=svg_dir/f'{idx}.svg'
         kind,error=render_one(source,path)
-        report.append({'index':idx,'engine':kind,'svg':str(path) if kind else None,'warning':error})
+        qc=diagram_qc.check_file(path) if kind and path.is_file() else None
+        # A too-wide LR/RL diagram is the most common failure; try TD + wider
+        # spacing, then Graphviz (which can give cleaner orthogonal routes).
+        if qc and qc.get('status')=='FAIL':
+            header=re.match(r'^\s*(?:flowchart|graph)\s+(LR|RL)',source,re.I)
+            # First layout repair: LR -> TD + wider spacing; TD -> wider spacing.
+            kind2,error2=render_one(source,path,wide=True,force_td=bool(header))
+            if kind2:
+                qc2=diagram_qc.check_file(path)
+                if qc2.get('status') in ('PASS','WARN'):
+                    kind,error,qc=kind2,error2,qc2
+            if qc.get('status')=='FAIL' and shutil.which('dot'):
+                kind3,error3=render_one(source,path,wide=True,prefer_dot=True)
+                if kind3:
+                    qc3=diagram_qc.check_file(path)
+                    if qc3.get('status') in ('PASS','WARN'):
+                        kind,error,qc=kind3,error3,qc3
+        report.append({'index':idx,'engine':kind,'svg':str(path) if kind else None,
+                       'warning':error,'geometry_qc':qc})
     return report
 
 

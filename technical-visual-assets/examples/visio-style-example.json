@@ -1,0 +1,30 @@
+{
+  "title": "工程流程黑白图样例（非用户项目技术事实）",
+  "figure_number": "3-1",
+  "caption_zh": "数据采集、清洗、校验与入库流程",
+  "caption_en": "Data Acquisition, Cleaning, Validation and Storage Flowchart",
+  "source_refs": [
+    {
+      "section": "示例（非用户项目事实）",
+      "lines": [1],
+      "evidence": "仅用于演示正交连线、判断分支与英文图题格式，不得作为任何项目的技术事实"
+    }
+  ],
+  "width_mm": 155,
+  "height_mm": 95,
+  "font_pt": 9.0,
+  "groups": [],
+  "nodes": [
+    {"id":"input","label":"数据采集","shape":"rect","x":3,"y":32,"w":28,"h":16},
+    {"id":"clean","label":"数据清洗","shape":"rect","x":39,"y":32,"w":27,"h":16},
+    {"id":"valid","label":"数据是否合规","shape":"diamond","x":74,"y":28,"w":34,"h":24},
+    {"id":"output","label":"数据入库","shape":"rect","x":118,"y":32,"w":33,"h":16},
+    {"id":"error","label":"异常处理","shape":"rect","x":75,"y":66,"w":32,"h":16}
+  ],
+  "edges": [
+    {"from":"input","to":"clean","points":[[31,40],[39,40]]},
+    {"from":"clean","to":"valid","points":[[66,40],[74,40]]},
+    {"from":"valid","to":"output","points":[[108,40],[118,40]],"label":"是"},
+    {"from":"valid","to":"error","points":[[91,52],[91,66]],"label":"否"}
+  ]
+}

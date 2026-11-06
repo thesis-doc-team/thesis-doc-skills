@@ -11,10 +11,10 @@
     {
       "name": "project-technical-doc",
       "command": "/thesis-doc-suite:project-technical-doc",
-      "version": "5.3.0",
+      "version": "5.4.0",
       "category": "business",
       "title": "项目技术文档生成",
-      "positioning": "只读理解真实项目资料/源码，产出带证据的 Markdown 技术文档与单文件离线 HTML；自动生成实物模块清单 physical-modules.json 和表/图/模块分类索引 content-index.json（供网站分组）。",
+      "positioning": "只读理解真实项目资料/源码，产出带证据的 Markdown 技术文档与单文件离线 HTML；自动生成实物模块清单 physical-modules.json 和表/图/模块分类索引 content-index.json；渲染后的 SVG 必须通过过宽/断线/文字重叠/节点重叠几何门禁。",
       "generates": [
         "<项目名>-技术文档.md",
         "<项目名>_用户展示.html",
@@ -34,7 +34,8 @@
       "prerequisites": [
         "Python 3.10+",
         "markdown-it-py、beautifulsoup4（HTML 派生）",
-        "无需官方 Word 模板"
+        "无需官方 Word 模板",
+        "SVG 几何门禁：diagram_qc.py（宽高比/字号/重叠/断线）"
       ],
       "deliverable_dir": "deliverables/technical-document/",
       "doc_type": "technical-doc",
@@ -198,12 +199,42 @@
       "scenario": "中期检查节点需要提交进度与问题整改记录表时。"
     },
     {
+      "name": "project-solution-write",
+      "command": "/thesis-doc-suite:project-solution-write",
+      "version": "1.3.1",
+      "category": "business",
+      "title": "项目方案双文档（项目介绍与功能说明 + 工程实施方案）",
+      "positioning": "用户仅说“使用本 Skill”或缺少项目题目/功能时先主动询问收集输入；题目与功能齐全后先澄清影响技术路线的重大歧义，让用户选择成本/性能/功能/均衡取舍，再比较候选技术路线并推导可实施的工程方案；生成内容边界严格分离的两份 Markdown，并以介绍 MD 为唯一内容源生成统一视觉、离线可打开、响应式的单文件介绍 HTML，只做方案编写与文档可视化、不执行开发。写正文前执行设计冻结（design-freeze.md），写正文时按章节分批落盘后用 compose_markdown.py 一次组装并一次终检，固定术语/页面/数据结构/协议/状态/资源/失败分支/测试追溯，避免一次性整篇生成与跨文档连锁返工。与 project-technical-doc 分工：既有实现的技术文档/HTML 用户展示由后者负责。",
+      "generates": [
+        "<项目简称>-项目介绍与功能说明-vN.md",
+        "<项目简称>-项目介绍与功能说明-vN.html",
+        "<项目简称>-工程实施方案-vN.md"
+      ],
+      "inputs_required": [
+        "项目题目与功能树/功能清单",
+        "项目根目录 <PROJECT_ROOT>"
+      ],
+      "inputs_optional": [
+        "既有技术资料或用户指定源码目录",
+        "用户已确认的关键约束与选型",
+        "已核验文献（REF-xxx）"
+      ],
+      "prerequisites": [
+        "Python 3.10+（仅标准库）",
+        "无需官方 Word 模板",
+        "静态检查后须人工逐章审阅技术可实施性"
+      ],
+      "deliverable_dir": "deliverables/project-introduction/、deliverables/implementation-plan/",
+      "doc_type": "project-solution",
+      "scenario": "规划新项目或整理既有方案时，形成可读的项目介绍与可落地的工程实施方案（不执行开发）。"
+    },
+    {
       "name": "technical-visual-assets",
       "command": "/thesis-doc-suite:technical-visual-assets",
-      "version": "1.4.1",
+      "version": "1.4.3",
       "category": "shared",
       "title": "正交工程绘图、原生 VSDX、表格居中、严格三线表与用户实物照片资产管理",
-      "positioning": "用户指定正式技术 MD 为唯一事实源，离线提取/绘制正交（横平竖直）技术图；生成原生 VSDX（Visio 打开状态如实标注）、中英文图题、A4/Word 版心与实际渲染门禁；Visio 式 SVG+可编辑 drawio；六类资源目录；不包含任何联网搜图功能。",
+      "positioning": "用户指定正式技术 MD 为唯一事实源，离线提取/绘制正交技术图；原生 VSDX、中英文图题、分组框（虚线/浅底/标签）与自动子图布局；A4/Word 版心门禁；六类资源目录；不包含任何联网搜图功能。",
       "generates": [
         "MD驱动的六类resource-catalog/index.json及图表源",
         "仅从MD提取的模块实物照片上传清单",

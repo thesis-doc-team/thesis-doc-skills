@@ -65,3 +65,13 @@
 - [ ] 每个 item 有稳定 `id`、`kind`、`category`、`group_id`、`group_title`、`line_start`/`line_end`、`content_sha256`；items 按正文行号排序。
 - [ ] 每个 group 的 `item_ids` 与 item 的 `group_id` 一致，`count` 等于 `item_ids` 数量；相似项只做分组，不合并/删除原文数据。
 - [ ] 网站展示由用户/下游处理；本 Skill 只交分类 JSON，不改 HTML 分组 UI。
+
+## 图表几何/视觉门禁（v5.4）
+
+- [ ] 每张渲染后的 SVG 通过 `diagram_qc.check_file`：宽高比 >10 / <1/10 即 FAIL；6–10 仅 WARN。
+- [ ] 适配正文宽 1080px 后最小字号 ≥9px；不得靠缩小图硬塞。
+- [ ] 节点包围盒不得重叠；文字包围盒不得重叠（CJK 宽度估算）。
+- [ ] 每条连线端点必须落在节点包围盒附近（18px 容差）；marker 引用必须存在。
+- [ ] 节点数量本身不是失败条件；系统架构 50–80 节点可能正常，禁止为“过密”删节点。
+- [ ] LR/RL 过宽先自动改 TD + 加大间距；TD 失败加大间距；仍失败用 Graphviz；最终失败 BLOCK。
+- [ ] 拆图只在可读性不达标时使用；拆图后必须保留全部节点、连线与来源，不得丢信息。

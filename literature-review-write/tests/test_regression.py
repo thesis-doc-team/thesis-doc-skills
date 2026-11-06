@@ -26,7 +26,7 @@ def test():
         # Valid synthetic input uses invented citations only inside this test sandbox.
         ids=[f'REF-{i:03}' for i in range(1,9)]
         root=td/'project';assets=root/'project-assets';assets.mkdir(parents=True)
-        (assets/'project.json').write_text(json.dumps({'schema_version':1,'project_id':'TEST','metadata':{}},ensure_ascii=False))
+        (assets/'project.json').write_text(json.dumps({'schema_version':1,'project_id':'TEST','name':'基于STM32与4G通信的胡杨林安全监测系统','metadata':{}},ensure_ascii=False),encoding='utf-8')
         refs={'schema_version':1,'project_id':'TEST','items':[
             {'id':rid,'citation':f'Test Person{i}.Fake Test Source[J].No-Real-Journal,2099,1:1.',
              'source_url':'https://example.invalid/test','source_type':'journal','verified':True,
@@ -39,6 +39,8 @@ def test():
                'title_lines':['基于STM32与4G通信的','胡杨林安全监测系统'],
                'sections':sections,'teacher_opinion':'该生能够围绕研究主题进行资料归纳和文字编排，梳理相关研究的技术特点与适用范围，形成完整的文献综述框架，后续仍需由实际指导教师核实全部论证内容。'}
         result=compose(root,draft)
+        bad_title=dict(draft);bad_title['title']='另一个项目的题目'
+        should_fail(lambda:compose(root,bad_title),'题目与项目资产不一致被接受')
         out=td/'test-v1.docx'
         fill(TEMPLATE,result,out)
         assert validate(TEMPLATE,out,result)['result']=='PASS'

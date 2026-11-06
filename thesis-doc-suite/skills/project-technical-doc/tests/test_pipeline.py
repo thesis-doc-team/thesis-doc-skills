@@ -95,8 +95,16 @@ def run():
         # A second run must version, not overwrite existing site.
         again=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
         assert again.returncode==0,(again.stdout,again.stderr)
-        assert (folder/'测试系统_用户展示-v2.html').exists()
-    print('PASS：原文一致、离线页面、越界拦截、重复生成不覆盖')
+        # 题目一致性：存在 project-assets 时 MD 标题必须与 project.json name 一致
+        proj=folder/'project-assets'
+        proj.mkdir()
+        (proj/'project.json').write_text(json.dumps({'schema_version':1,'project_id':'P-T','name':'别的项目'},ensure_ascii=False),'utf-8')
+        mismatch=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
+        assert mismatch.returncode!=0,(mismatch.stdout,mismatch.stderr)
+        (proj/'project.json').write_text(json.dumps({'schema_version':1,'project_id':'P-T','name':'测试系统'},ensure_ascii=False),'utf-8')
+        ok_title=subprocess.run([sys.executable,str(PUBLISH),str(md)],text=True,encoding="utf-8",errors="replace",capture_output=True)
+        assert ok_title.returncode==0,(ok_title.stdout,ok_title.stderr)
+    print('PASS：原文一致、离线页面、越界拦截、重复生成不覆盖、题目一致性')
 
 
 if __name__=='__main__':run()

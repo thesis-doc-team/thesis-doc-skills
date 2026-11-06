@@ -22,6 +22,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import orthogonal_router as router
+import subgraph_layout
 import vsdx_writer
 
 SVG = "http://www.w3.org/2000/svg"
@@ -89,6 +90,8 @@ def validate(spec, profile=None):
             raise ValueError("不支持的节点类型")
         if not isinstance(label, str) or not label.strip() or len(label) > 90:
             raise ValueError("标签无效或过长")
+        if re.search(r'<br\s*/?>|<[^>]+>', label):
+            raise ValueError(f'节点 {ident} 标签含 HTML/<br/>；请使用真实换行，prepare_spec 会自动归一化')
         x = number(n.get("x"), "node.x")
         y = number(n.get("y"), "node.y")
         nw = number(n.get("w"), "node.w")
@@ -185,6 +188,9 @@ def validate_caption(spec, require=False):
 
 def prepare_spec(spec, profile=None, force_route=False, require_caption=False):
     """Validate, route every edge orthogonally, then re-validate the result."""
+    spec = subgraph_layout.normalize_labels(spec)
+    if spec.get('layout') == 'subgraph' or spec.get('auto_layout'):
+        spec = subgraph_layout.layout(spec)
     w, h, font, coords = validate(spec, profile)
     routed = router.route_spec(spec, force=force_route)
     w, h, font, coords = validate(routed, profile)
@@ -240,12 +246,27 @@ def svg_diagram(spec, output, profile=None, force_route=False, require_caption=F
     ET.SubElement(marker, f"{{{SVG}}}path", {"d": "M0,0 L6,3 L0,6 z", "fill": "#222"})
     ET.SubElement(root, f"{{{SVG}}}rect", {"width": str(w), "height": str(h), "fill": "#fff"})
     for g in spec.get("groups", []):
+        # Partition frames must be dashed and (for complex diagrams) carry a
+        # very light fill so node/edge lines do not visually merge with the
+        # frame.  Labels get a white backing box so lines cannot cut the text.
         ET.SubElement(root, f"{{{SVG}}}rect", {
             "x": str(g["x"]), "y": str(g["y"]), "width": str(g["w"]), "height": str(g["h"]),
-            "fill": "none", "stroke": "#4b4b4b", "stroke-width": "0.24",
+            "fill": str(g.get("fill") or "#F7F8FC"),
+            "fill-opacity": str(g.get("fill_opacity", "0.55")),
+            "stroke": "#4b4b4b", "stroke-width": "0.24",
             "stroke-dasharray": "2.2,1.35", "data-group": "1"})
         if g.get("label"):
-            _text_svg(root, g["x"] + g["w"] / 2, g["y"] + 3, g["label"], font)
+            label = str(g["label"])
+            fs = font * MM_PT
+            tw = max(6.0, len(label) * fs * 0.62 + 2.0)
+            th = fs * 1.8
+            cx = g["x"] + g["w"] / 2.0
+            cy = g["y"] + 3.0
+            ET.SubElement(root, f"{{{SVG}}}rect", {
+                "x": str(round(cx - tw / 2, 3)), "y": str(round(cy - th / 2, 3)),
+                "width": str(round(tw, 3)), "height": str(round(th, 3)),
+                "fill": "#fff", "stroke": "none", "data-group-label-bg": "1"})
+            _text_svg(root, cx, cy, label, font, data_group_label="1")
     for e in spec.get("edges", []):
         p = e.get("points") or []
         if len(p) < 2:
@@ -312,7 +333,8 @@ def drawio_diagram(spec, output, profile=None, force_route=False, require_captio
         cell = ET.SubElement(root, "mxCell", {
             "id": f"g{i}", "value": g.get("label", ""),
             "style": ("rounded=0;whiteSpace=wrap;html=0;dashed=1;dashPattern=5 4;"
-                      "fillColor=none;strokeColor=#555555;fontFamily=SimSun;fontSize=9;"),
+                      "fillColor=#F7F8FC;opacity=55;strokeColor=#555555;"
+                      "fontFamily=SimSun;fontSize=9;"),
             "vertex": "1", "parent": "1"})
         ET.SubElement(cell, "mxGeometry", {
             "x": str(g["x"] * k), "y": str(g["y"] * k),
@@ -394,9 +416,13 @@ def main():
     ap.add_argument("--vsdx", dest="vsdx", action="store_true", default=True,
                     help="同时生成原生 VSDX（默认开启）")
     ap.add_argument("--no-vsdx", dest="vsdx", action="store_false")
+    ap.add_argument("--auto-layout", dest="auto_layout", action="store_true",
+                    help="按 groups/成员自动重排子图与节点，再正交布线")
     args = ap.parse_args()
     try:
         spec = json.loads(Path(args.spec).read_text("utf-8"))
+        if args.auto_layout:
+            spec['auto_layout'] = True
         sec = None
         if args.template:
             from a4_layout import inspect_template

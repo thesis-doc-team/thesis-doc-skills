@@ -18,6 +18,24 @@ REF_TOKEN = re.compile(r'\[\[REF:(REF-[A-Za-z0-9_-]+)\]\]')
 def read_json(path):
     return json.loads(Path(path).read_text(encoding='utf-8'))
 
+def norm_title(value):
+    import unicodedata
+    return re.sub(r'\s+', '', unicodedata.normalize('NFKC', str(value or '')))
+
+
+def assert_title_matches_project(project, draft):
+    """共享资产一个项目只有一个正式题目：文书题目必须与 project.json 的 name 一致。"""
+    draft_title = draft.get('title') if isinstance(draft, dict) else None
+    project_title = project.get('name') or (project.get('metadata') or {}).get('title')
+    if not draft_title or not project_title:
+        return
+    if norm_title(draft_title) != norm_title(project_title):
+        raise ValueError(
+            '文书题目与项目资产题目不一致：草稿「' + str(draft_title) + '」≠ 项目「' + str(project_title) + '」。'
+            '共享资产一个项目只有一个正式题目，各文书必须一致；确需变更题目时，先更新 '
+            'project-assets/project.json 的 name（并留审计记录），再重新生成全部文书')
+
+
 def compose(root, draft):
     root = Path(root).resolve()
     base = root / 'project-assets'
@@ -28,6 +46,7 @@ def compose(root, draft):
     pid = project.get('project_id')
     if registry.get('project_id') != pid or draft.get('project_id', pid) != pid:
         raise ValueError('项目 ID 不匹配，严禁串项目合并')
+    assert_title_matches_project(project, draft)
     refs = {r['id']: r for r in registry.get('items', [])}
     title = draft.get('title', '').strip()
     sections = draft.get('sections')

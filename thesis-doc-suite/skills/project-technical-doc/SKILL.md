@@ -1,6 +1,6 @@
 ---
 name: project-technical-doc
-version: 5.3.0
+version: 5.4.0
 disable-model-invocation: true
 # Trigger when the user asks for technical documentation based on a real project.
 # Always deliver Markdown first and an offline user-facing HTML site second.
@@ -426,6 +426,11 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 
 ### E5. 交付前检查（自动 + 实际浏览器）
 
+> **SVG 几何/视觉门禁（`diagram_qc.py`）**：每张渲染后的图必须检查宽高比、适配正文宽后的最小字号（≥9px）、节点重叠、文字重叠（CJK 估算）、连线端点是否接到节点、marker 是否有效。`LR/RL` 过宽自动改 `TD` + 加大间距，仍失败用 Graphviz 重排，最终失败 BLOCK。**节点数量不是错误**：系统架构 50–80 个节点可能正常，禁止为了“过密”删节点；拆图只在可读性不达标时作为最后手段，且必须保留全部信息。细则见 `references/diagram-visual-qc.md`。
+
+> **数据伴随产物不进入截图矩阵**：`physical-modules.json` 与 `content-index.json` 是结构化数据，分别走 `check_physical_modules.py` 契约门禁和 `check_content_index` 覆盖门禁；它们的网页呈现由用户/下游负责，不要求、也不伪造“截图视觉审查”。E5 的截图验证分析针对生成的 HTML 用户展示页。
+
+
 - **正文一致性**：MD 的章标题、小节标题、表格单元格、长段落、列表项、代码/协议、Mermaid 定义在 HTML 中均可找到；检查页面内的值、单位、状态和文字，没有新编造。
 - **内容边界**：目录、卡片、正文、页脚都不能出现单独的已知问题/改进/展望章节；页面展示必须保留真实的功能状态与必要适用范围。
 - **图形**：SVG 数量、流程图源码数量与 MD 一致；仅源码回退计为 WARN，并说明转换能力限制；不能以空白图替代。**HTML 中 Mermaid 图为 0 属 FAIL**（阶段 C/D 的 MD 图示硬门禁已保证 MD 必须有图）。**逐图渲染内容断言**（`validate_html.py` 自动执行）：`<style>` 与 `url(#…)` 引用必须闭合命中本图 id、Mermaid 源标签必须 100% 存活于 SVG 文本、估算最小字号 <9px 报 WARN——断言失败即 **FAIL**，不得降级为 WARN；图区出现内层滚动条/高度压缩/最小宽溢出同样 FAIL（流程图必须全局显示）。
@@ -451,7 +456,7 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 - MD 成功但 HTML 失败：保留有效 MD，报告 HTML 阶段失败及原因；不得把任务整体报为完成。
 - 生成成功但有 SVG 回退：HTML 可阅读但图形化部分有 WARN，说明真实数量及原因。
 - 同时生成两份文件后，再完成最终 `执行汇报.md`，列出 MD 与 HTML 的对应路径和检查结果，由用户最终验收。
-- **交付移动（两段式收口）**：E5 全部 PASS 且汇报完成后，才把暂存区的 MD/HTML/`.audit.json`/`.report.json`/`执行汇报.md`/`physical-modules.json` 整体移入 `deliverables/technical-document/` 并定 `-vN`（N=已有最大版本号+1；`physical-modules.json` 保持定名不加版本号，随最新交付版本同步更新）；失败稿留运行区随 `cleanup` 删除，不进交付区、不占版本号。
+- **交付移动（两段式收口）**：E5 全部 PASS 且汇报完成后，才把暂存区的 MD/HTML/`.audit.json`/`.report.json`/`执行汇报.md`/`physical-modules.json`/`content-index.json` 整体移入 `deliverables/technical-document/` 并定 `-vN`（N=已有最大版本号+1；`physical-modules.json` 保持定名不加版本号，随最新交付版本同步更新）；失败稿留运行区随 `cleanup` 删除，不进交付区、不占版本号。
 
 ## 8. 一次性交付和停止条件
 
@@ -476,7 +481,9 @@ python <skill-root>/scripts/validate_html.py "output/technical-document/<项目�
 - `scripts/content_rules.py`：实物模块与内容分类的共享启发式（代码/类别/源文件/引脚/表格类别/图类别/分组键）。
 - `scripts/classify_content.py`：生成 `content-index.json` v1（表/图/实物模块分类、相似组、行号、内容哈希、覆盖门禁）；不渲染网站。
 - `references/browser-verification-notes.md`：浏览器截图验证的伪象判别、量测规则与探针写法红线（E5 截图验证分析实施细则）。
+- `references/diagram-visual-qc.md`：过宽/断线/文字重叠/节点重叠的实际失败样本、阈值、自动重排与信息完整性边界。
 - `scripts/screenshot_audit.py`：截图字节级查重（dupcheck）、真实布局量测（probe）、章节切片 harness 生成（harness）、图区渲染/像素探针（renderprobe、pixelprobe）、截图覆盖矩阵核对（coverage）。
+- `scripts/diagram_qc.py`：渲染后 SVG 的几何/视觉门禁（宽高比、字号、节点/文字重叠、断线端点、marker），供 publish/validate 调用。
 - `scripts/viewport_probe.js`：布局量测探针（由 screenshot_audit.py 注入，单次执行）。
 - `scripts/diagram_probe.js`：图区渲染探针（高度比/容器滚动条/填充色/文字色对比，由 screenshot_audit.py renderprobe 注入，单次执行）。
 - `references/html-layout-and-content.md`：用户提供的可视化页面所提取的通用布局、样式和内容映射规范。

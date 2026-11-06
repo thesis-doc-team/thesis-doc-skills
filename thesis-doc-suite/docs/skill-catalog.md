@@ -8,13 +8,14 @@
 
 | 命令 | 类型 | 版本 | 生成什么 | 交付目录 |
 |---|---|---|---|---|
-| `/thesis-doc-suite:project-technical-doc` | 业务 | 5.3.0 | 技术文档 MD + 用户展示 HTML + 实物模块清单 + 内容分类索引 + 执行汇报 | `deliverables/technical-document/` |
+| `/thesis-doc-suite:project-technical-doc` | 业务 | 5.4.0 | 技术文档 MD + 用户展示 HTML + 实物模块清单 + 内容分类索引 + 执行汇报 | `deliverables/technical-document/` |
 | `/thesis-doc-suite:thesis-taskbook-write` | 业务 | 1.2.2 | 任务书 DOCX + 执行汇报 | `deliverables/taskbook/` |
 | `/thesis-doc-suite:opening-report-writer` | 业务 | 4.1.0 | 开题报告 DOCX + 执行汇报 + 文献核验台账 | `deliverables/opening-report/` |
 | `/thesis-doc-suite:literature-review-write` | 业务 | 3.2.1 | 文献综述 DOCX + 执行汇报 | `deliverables/literature-review/` |
 | `/thesis-doc-suite:thesis-guidance-record-write` | 业务 | 1.2.0 | 指导记录 DOCX + 执行汇报 | `deliverables/guidance/` |
 | `/thesis-doc-suite:thesis-midterm-check-write` | 业务 | 1.3.2 | 中期检查记录表 DOCX + 执行汇报 | `deliverables/midterm/` |
-| `/thesis-doc-suite:technical-visual-assets` | 支持 | 1.4.1 | 正交技术图（可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG）+ 中英文图题 + A4/Word 版心门禁 + 六类资源索引 | `project-assets/resource-catalog/`、`project-assets/visual-assets/` |
+| `/thesis-doc-suite:project-solution-write` | 业务 | 1.3.1 | 项目介绍与功能说明 MD + 同源单文件 HTML + 工程实施方案 MD + 执行汇报（含首次启动输入门禁、优先级取舍、写前设计冻结、分批写入与统一视觉介绍页） | `deliverables/project-introduction/`、`deliverables/implementation-plan/` |
+| `/thesis-doc-suite:technical-visual-assets` | 支持 | 1.4.3 | 正交技术图（可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG）+ 中英文图题 + A4/Word 版心门禁 + 六类资源索引 | `project-assets/resource-catalog/`、`project-assets/visual-assets/` |
 | `/thesis-doc-suite:init-project` | 管理 | 0.1.0 | 项目资产包骨架 | — |
 | `/thesis-doc-suite:check-project` | 管理 | 0.1.0 | PASS/WARN/BLOCK 检查报告 | — |
 | `/thesis-doc-suite:help` | 管理 | 0.1.0 | 命令导航与使用指导 | — |
@@ -23,13 +24,14 @@
 
 ## 业务 Skill 逐项说明
 
-### project-technical-doc｜项目技术文档生成（v5.3.0）
+### project-technical-doc｜项目技术文档生成（v5.4.0）
 
 - **定位**：只读理解真实项目资料/源码，产出有证据的 Markdown 技术文档，并派生单文件离线 HTML 用户展示网站。是共享技术事实（FACT-xxx）的主要提炼者。
 - **生成**：`<项目名>-技术文档.md`、`<项目名>_用户展示.html`、`physical-modules.json`（实物模块清单）、`content-index.json`（表/图/模块分类与相似组）、`执行汇报.md`、（大型项目）`项目事实与证据台账.md`。
 - **必需输入**：项目源码或技术资料（MD/DOCX/PDF 等）、项目根目录。
 - **可选输入**：展示配置.json、已有 project-assets 事实库。
 - **前置条件**：Python 3.10+；markdown-it-py、beautifulsoup4（HTML 派生）；无需官方 Word 模板。
+- **图表门禁**：`diagram_qc.py` 检查 SVG 过宽、字号 <9px、节点/文字重叠、连线端点未接节点、marker 失效；节点数量本身不判失败，信息完整性优先。
 - **场景**：把真实项目整理成可交付的技术说明文档和展示网页时。
 - **边界**：不生成"已知问题与改进建议"等评审章节；不编写任何毕业设计 Word 表格。
 
@@ -87,7 +89,21 @@
 
 ## 支持 Skill 逐项说明
 
-### technical-visual-assets｜正交工程绘图、原生 VSDX 与视觉资产（v1.4.1）
+### project-solution-write｜项目方案双文档 + 介绍页 HTML（v1.3.1）
+
+- **定位**：用户仅说“使用本 Skill”或缺少项目题目/功能时先主动询问收集输入；题目与功能齐全后先澄清影响技术路线的重大歧义，让用户选择成本/性能/功能/均衡取舍，再比较候选技术路线、推导可实施的工程方案；生成内容边界严格分离的两份 Markdown。**只做方案编写，不执行开发**。
+- **初始门禁**：`templates/initial-intake-message.md` 聊天话术 + `scripts/check_input.py` 结构化初检；缺项状态 `NEEDS_INPUT` 立即询问并停止正式生成——即使用户要求“直接生成”，也不得凭空编造项目题目或核心功能。
+- **写前冻结**：`references/design-freeze-and-consistency.md` + `templates/design-freeze.md` 固化术语/默认值、页面/交互映射、数据结构与配置布局、协议字段与空值语义、状态枚举与优先级、资源/接口、失败分支、测试追溯；冻结后变更须先登记、一次性同步所有受影响章节并复检，避免静态 PASS 后的跨文档连锁返工。
+- **分批写入**：介绍/实施 MD 各建议至少 4 批写入 `$WORKDIR/batches/...`，每批落盘后再写下一批；全部落盘后 `scripts/compose_markdown.py` 一次组装，随后一次终检；禁止一次性整篇生成。规则见 `references/batch-writing.md`。
+- **HTML 可视化**：`templates/project-introduction.html` + `scripts/generate_intro_html.py` 以介绍 MD 为唯一内容源生成单文件、离线、响应式介绍页；`scripts/validate_intro_html.py` 检查离线、安全、内容边界、功能一致性与场景“未实测”标注；视觉规范/映射/门禁见 `references/html-visualization-rules.md`、`html-content-mapping.md`、`html-quality-check.md`。示例仓储业务数据只作视觉参考，不进入通用模板。
+- **生成**：`<项目简称>-项目介绍与功能说明-vN.md`（面向阅读展示：场景、功能、交互、使用条件）、`<项目简称>-项目介绍与功能说明-vN.html`（同源单文件可视化）、`<项目简称>-工程实施方案-vN.md`（面向实施者：资源核算、接口协议、状态机、分阶段实施与可复核验收）。
+- **必需输入**：项目题目与功能树/功能清单、项目根目录。
+- **可选输入**：既有技术资料或用户指定源码目录、用户已确认的关键约束与选型、已核验文献（REF-xxx）。
+- **前置条件**：Python 3.10+（仅标准库）；无需官方 Word 模板；静态检查后须人工逐章审阅技术可实施性。
+- **场景**：规划新项目或整理既有方案时，形成可读的项目介绍与可落地的工程实施方案。
+- **边界**：不臆造实测、不擅增功能、不写交付/收费说明与改进建议章节——与六件套同一“变相章节”红线（换名的“存在的问题/不足与优化/改进方向/风险与对策/未来展望/后续规划/升级建议”等独立章节同样越界，`validate_docs.py` 判 ERROR）；已有实现要写技术文档/用户展示 HTML 时交由 `project-technical-doc`。共享 `project-assets/`（canonical init、`requirements.json`/`decisions.json` 增量资产、activity 登记、运行区清理纪律与六件套一致）。
+
+### technical-visual-assets｜正交工程绘图、原生 VSDX 与视觉资产（v1.4.3）
 
 - **定位**：用户指定正式技术 MD 为唯一事实源，离线提取/绘制正交（横平竖直）技术图；生成原生 VSDX（Visio 打开状态如实标注）、中英文图题、A4/Word 版心与实际渲染门禁；Visio 式 SVG + 可编辑 drawio；六类资源目录；**不包含任何联网搜图功能**。**只做素材与登记，不负责在文书里插图**（插图由下游 Skill 自行决定）。
 - **生成**：`project-assets/resource-catalog/` 与 `project-assets/visual-assets/`——MD 驱动的六类资源索引与图表源、仅从 MD 提取的模块实物照片上传清单、用户照片经本地验证后的 RES/VIS 候选记录、可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG、A4 布局审计结果、中英文图题元数据（`.figure.json`）。

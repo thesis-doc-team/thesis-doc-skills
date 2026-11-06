@@ -131,3 +131,8 @@ python scripts/project_assets.py record-use --root /项目根目录 \
 `merge` 的输入为 `{ "project_id":"PROJECT-001", "items":[...] }`；周计划为 `{ "project_id":"PROJECT-001", "plan":{...} }`。`project.json` 的 `metadata` 可通过 `--kind project` 更新。所有项目 ID 必须一致。脚本**只校验字段和冲突，不会连接知网自动验证文献**，`verified` 的可信度仍依赖实际检索证据。
 
 其他 Skill 的接口原则：**读取同一个 `project-assets/`、按相同 ID 读写、各自选择和排版、各自做真实性门禁、都不删除共享资产**。
+
+
+## 题目唯一（强制）
+
+`project.json` 的 `name` 是项目正式题目，同一项目的全部文书题目必须与之一致。`compose`（或对应校验入口）按 NFKC＋去空白归一化强校验，不一致即报错并指出两处题目。确需变更题目时，先更新 `project.json` 并留下审计记录，再重新生成全部文书——不得各文书各写一个题目，也不得靠换名、加空格绕过。
