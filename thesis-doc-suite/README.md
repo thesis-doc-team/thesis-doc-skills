@@ -46,7 +46,7 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 | `/thesis-doc-suite:literature-review-write` | `<课题简称>-文献综述-vN.docx` + 执行汇报 | 课题技术资料、官方文献综述模板、项目根目录 | 正文 ≥2500 字、默认 ≥8 篇独立真实文献 |
 | `/thesis-doc-suite:thesis-guidance-record-write` | `<课题简称>-指导记录-vN.docx` + 执行汇报 | 真实项目技术资料、官方指导记录模板、项目根目录 | ≥8 次有真实依据的指导主题；时间/地点/方式/评价缺失一律留空 |
 | `/thesis-doc-suite:thesis-midterm-check-write` | `<课题简称>-中期检查记录表-vN.docx` + 执行汇报 | 真实项目技术资料、官方中期检查模板、项目根目录 | 三个栏目各 ≥200 字；问题与整改逐条编号一一对应 |
-| `/thesis-doc-suite:project-solution-write` | 探索：每候选 `项目概览.md/.docx/.html`（每批≤10个）；正式：`<项目简称>-项目介绍与功能说明-vN.md/.html` + `<项目简称>-工程实施方案-vN.md` + 执行汇报 | 专业/技术关键词/项目想法（≥1）、项目根目录；正式阶段需题目+功能 | 三入口混合路由；正式阶段才要求题目+功能；候选 DOCX 需 python-docx；正式方案仅标准库；写前冻结、分批写入、compose 后一次终检；候选只写名称/概述/功能 |
+| `/thesis-doc-suite:project-solution-write` | 默认只做选题：每候选 `项目概览.md/.docx/.html`（每批≤10个）；正式方案仅在明确要求且确认题目/功能后生成 `<项目简称>-项目介绍与功能说明-vN.md/.html` + `<项目简称>-工程实施方案-vN.md` + 执行汇报 | 专业/技术关键词/项目想法（≥1）、项目根目录；正式阶段需题目+功能 | 专业/技术/题目信息可混合输入，默认直接进入选题推荐；正式阶段才要求题目+功能；候选 DOCX 采用 C 版杂志编辑版式，需 python-docx；正式方案仅标准库；写前冻结、分批写入、compose 后一次终检；候选只写名称/概述/功能 |
 
 另有 1 个支持 Skill（公共图片资料层，不生成文书、不负责在文书里插图）：
 

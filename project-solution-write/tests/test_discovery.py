@@ -107,6 +107,17 @@ class DiscoveryTest(unittest.TestCase):
         a=candidate('环境检测','仓储环境');b=candidate('环境采集','仓储环境')
         self.assertGreaterEqual(score_similarity(a,b),.82)
 
+def features7():
+    return [
+        {'name': '温度采集', 'description': '采集空气温度并每 5 秒刷新显示。'},
+        {'name': '湿度采集', 'description': '采集空气湿度并显示当前值。'},
+        {'name': '超限报警', 'description': '温度超过阈值时蜂鸣器鸣叫，低于阈值自动解除。'},
+        {'name': '页面切换', 'description': '短按按键在总览页和详情页之间切换。'},
+        {'name': '无线上传', 'description': '按周期把数据上传到远程页面。'},
+        {'name': '阈值配置', 'description': '设置报警阈值，保存后重启仍生效。'},
+        {'name': '传感器异常提示', 'description': '传感器断线时显示故障标记，不误报。'},
+    ]
+
 class TestValidateDiscovery(unittest.TestCase):
     def _validate_candidate(self, data, purpose='graduation_capstone'):
         with tempfile.TemporaryDirectory() as tmp:
@@ -118,11 +129,17 @@ class TestValidateDiscovery(unittest.TestCase):
             report = json.loads((Path(tmp)/'qa.json').read_text('utf-8')) if (Path(tmp)/'qa.json').exists() else {}
             return cp, report
 
-    def test_five_features_pass(self):
-        d = candidate(); d['features'] = [{'name': f'功能{i}', 'description': f'执行第{i}项采集并显示结果。'} for i in range(1, 6)]
+    def test_seven_features_pass(self):
+        d = candidate(); d['features'] = features7()
         cp, report = self._validate_candidate(d)
         self.assertEqual(cp.returncode, 0, cp.stdout + cp.stderr)
         self.assertEqual(report['status'], 'PASS')
+
+    def test_six_features_fail(self):
+        d = candidate(); d['features'] = features7()[:6]
+        cp, report = self._validate_candidate(d)
+        self.assertEqual(cp.returncode, 2)
+        self.assertTrue(any('功能数量不足' in e for e in (report.get('candidate', {}).get('errors') or [])), report)
 
     def test_only_two_features_fail(self):
         d = candidate(); d['features'] = d['features'][:2]
@@ -131,20 +148,20 @@ class TestValidateDiscovery(unittest.TestCase):
         self.assertTrue(any('功能数量不足' in e for e in (report.get('candidate', {}).get('errors') or [])), report)
 
     def test_overview_with_scene_passes(self):
-        d = candidate(); d['features'] = [{'name': f'功能{i}', 'description': f'执行第{i}项采集并显示结果。'} for i in range(1, 6)]
+        d = candidate(); d['features'] = features7()
         d['overview'] = '用于温室大棚环境监测，采集温湿度并显示。'
         cp, report = self._validate_candidate(d)
         self.assertEqual(cp.returncode, 0, cp.stdout + cp.stderr)
 
     def test_overview_without_scene_warns(self):
-        d = candidate(); d['features'] = [{'name': f'功能{i}', 'description': f'执行{i}项采集。'} for i in range(1, 6)]
+        d = candidate(); d['features'] = features7()
         d['overview'] = '本系统进行环境监测。'
         cp, report = self._validate_candidate(d)
         self.assertEqual(cp.returncode, 0)
         self.assertTrue(any('概述未出现具体服务场所' in w for w in (report.get('candidate', {}).get('warnings') or [])), report)
 
     def test_banned_term_self_made_pcb_fails(self):
-        d = candidate(); d['features'] = [{'name': f'功能{i}', 'description': f'执行{i}项采集。'} for i in range(1, 6)]
+        d = candidate(); d['features'] = features7()
         d['overview'] = '温室大棚环境监测。'
         d['features'][0]['description'] = '需要自绘 PCB 并手工焊接传感器电路。'
         cp, report = self._validate_candidate(d)
@@ -152,14 +169,36 @@ class TestValidateDiscovery(unittest.TestCase):
         self.assertTrue(any('禁止要求用户自绘 PCB' in e for e in (report.get('candidate', {}).get('errors') or [])), report)
 
     def test_vague_feature_only_label_fails(self):
-        d = candidate(); d['features'] = [{'name': '智能监测'}, {'name': '数据分析'}, {'name': '云平台控制'},
-            {'name': '功能4', 'description': '执行采集。'}, {'name': '功能5', 'description': '执行显示。'}]
-        for f in d['features']:
-            if 'description' not in f: f['description'] = '执行相应任务。'
+        d = candidate(); d['features'] = features7()
+        for f, name in zip(d['features'][:3], ('智能监测', '数据分析', '云平台控制')):
+            f['name'] = name
         d['overview'] = '用于温室大棚环境监测。'
         cp, report = self._validate_candidate(d)
         self.assertEqual(cp.returncode, 2)
         self.assertTrue(any('空洞功能名' in e for e in (report.get('candidate', {}).get('errors') or [])), report)
+
+    def test_too_specific_title_warns(self):
+        d = candidate(); d['features'] = features7(); d['overview'] = '用于温室大棚环境监测。'
+        d['title'] = '基于 STM32 的番茄叶片病斑识别系统'
+        cp, report = self._validate_candidate(d)
+        self.assertEqual(cp.returncode, 0)
+        self.assertTrue(any('题目可能过窄' in w for w in (report.get('candidate', {}).get('warnings') or [])), report)
+
+    def test_too_broad_title_warns(self):
+        d = candidate(); d['features'] = features7(); d['overview'] = '用于温室大棚环境监测。'
+        d['title'] = '智慧农业综合管理平台'
+        cp, report = self._validate_candidate(d)
+        self.assertEqual(cp.returncode, 0)
+        self.assertTrue(any('题目可能过宽' in w for w in (report.get('candidate', {}).get('warnings') or [])), report)
+
+    def test_category_coverage_warns(self):
+        d = candidate(); d['features'] = [
+            {'name': f'采集{i}', 'description': f'执行第{i}项采集。'} for i in range(1, 8)
+        ]
+        d['overview'] = '用于温室大棚环境监测。'
+        cp, report = self._validate_candidate(d)
+        self.assertEqual(cp.returncode, 0)
+        self.assertTrue(any('功能类别覆盖不足' in w for w in (report.get('candidate', {}).get('warnings') or [])), report)
 
     def test_profile_with_budget_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -204,5 +243,21 @@ class TestValidateDiscovery(unittest.TestCase):
         self.assertIn('你想找什么方向的毕设', text)
         self.assertNotIn('预算', text)
         self.assertNotIn('任选其一', text)
+
+    def test_no_stale_five_feature_minimum(self):
+        for rel in (
+            'SKILL.md', 'README.md',
+            'references/discovery-mode-router.md', 'references/candidate-writing-boundary.md',
+            'references/quality-gates.md', 'templates/discovery-intake-message.md',
+        ):
+            text = (ROOT / rel).read_text(encoding='utf-8')
+            self.assertNotIn('至少 5 条', text, rel)
+            self.assertNotIn('不少于 5 条', text, rel)
+
+    def test_default_scope_is_topic_selection_only(self):
+        skill = (ROOT / 'SKILL.md').read_text(encoding='utf-8')
+        readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+        self.assertIn('默认只生成候选', skill)
+        self.assertIn('默认只做选题', readme)
 
 if __name__=='__main__':unittest.main()

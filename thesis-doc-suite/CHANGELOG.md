@@ -4,6 +4,10 @@
 
 ## 未发布（0.2.0 之后）
 
+- **project-solution-write v1.4.4：候选 Word 升级 C 版杂志编辑版式**：候选《项目概览.docx》按用户确认的 `方案C_杂志编辑版.docx` 重写为 A4/Noto Serif+Sans/暖橙+奶油底/2 列概述条/3 列功能表/橙色页脚；支持 3–15 功能与长标题/长概述/长描述自然分页，功能行 cantSplit。重写 `render_candidate.make_docx`；新增 `references/candidate-docx-magazine-style.md`、`tests/test_candidate_docx_style.py`、`assets/reference-samples/candidate-overview-reference-C.docx`。C 参考与复现各 1 页，3/7/10/8 功能各 1 页，长文本 2 页；Word COM 实渲目视检查；WPS 未验证。注册 1.4.3→1.4.4（catalog/docs/site）、manifest 63 文件；回归 99 项全绿（93+6）。按用户本次明确要求输出 v1.4.4 ZIP。
+
+- **project-solution-write v1.4.3：功能下限 7 条、题目泛化与选题范围收口**：毕设/课程设计候选功能下限 5→7，具体数量由题目发散研究决定（通常 8–12，最多 15），至少覆盖 4 类功能；题目必须写成“应用场景+核心能力”，过窄（单一作物/病害/算法）、过宽（智慧农业平台）或过长（>45字）由 `validate_discovery.py` WARN；明确默认只做选题、只生成候选 MD/DOCX/HTML，正式方案仅在用户明确要求并确认题目/功能后进入。更新规范/示例（7功能）/测试；93 项全绿；按用户要求不再生成 ZIP。
+
 - **project-solution-write v1.4.2：入口话术清理与 revise 缺陷修复**：删除 SKILL/README/路由脚本/质量门禁中残留的“三入口/三种入口”措辞，默认启动只问“你想找什么方向的毕设/课程设计题目”，信息类型只作内部路由；修复 `discovery_registry.revise` 误拒 `change_summary` 的缺陷（修订前弹出元字段，内容仍只允许 title/overview/features/signature）；新增 3 项防回归测试（默认入口、旧措辞扫描、revise 摘要）。注册 1.4.1→1.4.2（catalog/docs/site）、manifest 60 文件；回归 87 项全绿。
 
 - **project-solution-write v1.4.1：毕设/课程设计选题专向边界**：新增 `scripts/validate_discovery.py` 检查功能下限（≥5条）、场景锚点、模块化单板规模、禁止自绘PCB/假大空；profile 与路由移除 `budget`/`timeframe`；默认启动话术改为直接问“想找什么方向的毕设/课程设计题目”，不再要求用户选三入口；更新 discovery-mode-router、discovery-intake-message、candidate-writing-boundary 与 SKILL。注册 1.4.0→1.4.1（catalog/docs/site）、manifest 60 文件；回归：84 项全绿（76+8）。

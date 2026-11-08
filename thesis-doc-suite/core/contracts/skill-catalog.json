@@ -201,10 +201,10 @@
     {
       "name": "project-solution-write",
       "command": "/thesis-doc-suite:project-solution-write",
-      "version": "1.4.2",
+      "version": "1.4.4",
       "category": "business",
       "title": "毕设选题探索、候选推荐与正式方案（候选 MD/DOCX/HTML + 正式介绍 MD/HTML + 实施 MD）",
-      "positioning": "专业/技术/题目信息可混合输入，默认直接进入毕设/课程设计选题推荐；无题目也能从专业/技术出发推荐，每轮最多10个独立候选，每个候选生成项目概览 MD/DOCX/HTML，维护稳定 PROJECT-xxxx ID、拒绝去重与不可覆盖版本；正式确认题目与功能后才进入原严格方案流程，生成介绍 MD/HTML + 工程实施 MD。写正文前执行设计冻结、按章节分批落盘并 compose 后一次终检；候选只写名称/概述/功能，不写推荐理由、评分、选型或开发计划。与 project-technical-doc 分工：既有实现的技术文档/HTML 用户展示由后者负责。",
+      "positioning": "专业/技术/题目信息可混合输入，默认只做毕设/课程设计选题并只生成候选概览；正式方案仅显式要求且确认题目/功能后进入；无题目也能从专业/技术出发推荐，每轮最多10个独立候选，每个候选生成项目概览 MD/DOCX/HTML，维护稳定 PROJECT-xxxx ID、拒绝去重与不可覆盖版本；正式确认题目与功能后才进入原严格方案流程，生成介绍 MD/HTML + 工程实施 MD。写正文前执行设计冻结、按章节分批落盘并 compose 后一次终检；候选只写名称/概述/功能，不写推荐理由、评分、选型或开发计划。与 project-technical-doc 分工：既有实现的技术文档/HTML 用户展示由后者负责。",
       "generates": [
         "项目概览.md / 项目概览.docx / 项目概览.html（探索阶段每个候选独立三文件，每批最多 10 个）",
         "<项目简称>-项目介绍与功能说明-vN.md",

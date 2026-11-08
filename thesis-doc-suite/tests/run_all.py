@@ -47,6 +47,7 @@ ITEMS = [
     ('solution: html', ['tests/test_html_generation.py'], ROOT / 'skills' / 'project-solution-write'),
     ('solution: compose', ['tests/test_compose_markdown.py'], ROOT / 'skills' / 'project-solution-write'),
     ('solution: discovery', ['tests/test_discovery.py'], ROOT / 'skills' / 'project-solution-write'),
+    ('solution: docx-style', ['tests/test_candidate_docx_style.py'], ROOT / 'skills' / 'project-solution-write'),
     ('visual: three-line-table', ['tests/test_three_line_table.py'], ROOT / 'skills' / 'technical-visual-assets'),
     ('visual: selection-examples', ['tests/test_user_selection_examples.py'], ROOT / 'skills' / 'technical-visual-assets'),
     ('visual: v1.3-a4', ['tests/test_v13_offline_a4.py'], ROOT / 'skills' / 'technical-visual-assets'),

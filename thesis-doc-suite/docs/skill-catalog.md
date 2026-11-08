@@ -14,7 +14,7 @@
 | `/thesis-doc-suite:literature-review-write` | 业务 | 3.2.1 | 文献综述 DOCX + 执行汇报 | `deliverables/literature-review/` |
 | `/thesis-doc-suite:thesis-guidance-record-write` | 业务 | 1.2.0 | 指导记录 DOCX + 执行汇报 | `deliverables/guidance/` |
 | `/thesis-doc-suite:thesis-midterm-check-write` | 业务 | 1.3.2 | 中期检查记录表 DOCX + 执行汇报 | `deliverables/midterm/` |
-| `/thesis-doc-suite:project-solution-write` | 业务 | 1.4.2 | 毕设选题探索 MD/DOCX/HTML（≤10个/批，功能≥5条、有场景、模块化、无PCB）+ 正式介绍 MD/HTML + 实施 MD + 执行汇报（信息混合输入、候选资产、写前冻结、分批写入） | `discovery/`、`projects/PROJECT-xxxx/`、`deliverables/project-introduction/`、`deliverables/implementation-plan/` |
+| `/thesis-doc-suite:project-solution-write` | 业务 | 1.4.4 | 毕设选题探索 MD/DOCX/HTML（≤10个/批，功能≥7条、有场景、模块化、无PCB；候选 DOCX 为 C 版杂志编辑版式；默认只做选题，正式方案仅显式请求）+ 执行汇报（信息混合输入、候选资产、写前冻结、分批写入） | `discovery/`、`projects/PROJECT-xxxx/`、`deliverables/project-introduction/`、`deliverables/implementation-plan/` |
 | `/thesis-doc-suite:technical-visual-assets` | 支持 | 1.4.3 | 正交技术图（可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG）+ 中英文图题 + A4/Word 版心门禁 + 六类资源索引 | `project-assets/resource-catalog/`、`project-assets/visual-assets/` |
 | `/thesis-doc-suite:init-project` | 管理 | 0.1.0 | 项目资产包骨架 | — |
 | `/thesis-doc-suite:check-project` | 管理 | 0.1.0 | PASS/WARN/BLOCK 检查报告 | — |
@@ -89,11 +89,11 @@
 
 ## 支持 Skill 逐项说明
 
-### project-solution-write｜毕设选题探索、候选推荐与正式方案（v1.4.2）
+### project-solution-write｜毕设选题探索与候选推荐（v1.4.4；正式方案仅显式可选）
 
-- **定位**：专业/技术/题目信息可混合输入，默认直接进入毕设/课程设计选题推荐；无题目也能从专业/技术出发推荐，每轮最多 10 个独立候选；正式确认题目与功能后进入原严格方案流程。**只做选题候选与方案文档，不执行开发**。
+- **定位**：专业/技术/题目信息可混合输入，默认直接进入毕设/课程设计选题推荐；无题目也能从专业/技术出发推荐，每轮最多 10 个独立候选；默认只做选题；正式确认题目与功能且用户明确要求后，才进入原严格方案流程。**只做选题候选与可选方案文档，不执行开发**。
 - **探索阶段**：每个候选独立生成 `项目概览.md`、`项目概览.docx`、`项目概览.html`（只含名称、概述、核心功能简述）；维护 `discovery/catalog.json`、`profile.json`、`rejected-projects.json`、`history.jsonl`，稳定 `PROJECT-xxxx` ID，candidate/interested/rejected/confirmed 状态与不可覆盖版本；拒绝默认不重推，用户明确恢复沿用旧 ID。
-- **正式阶段**：题目+功能硬门禁、成本/性能/功能/均衡选择、写前设计冻结、分批写入与一次终检、介绍 MD/HTML + 实施 MD 边界保持不变；候选不生成完整实施方案。
+- **正式阶段（仅显式可选）**：只有用户明确要求正式方案且题目+功能确认后，才执行题目+功能硬门禁、成本/性能/功能/均衡选择、写前设计冻结、分批写入与一次终检、介绍 MD/HTML + 实施 MD；默认选题流程不进入该阶段。
 - **HTML 可视化**：`templates/project-introduction.html` + `scripts/generate_intro_html.py` 以介绍 MD 为唯一内容源生成单文件、离线、响应式介绍页；`scripts/validate_intro_html.py` 检查离线、安全、内容边界、功能一致性与场景“未实测”标注。
 - **生成**：探索阶段 `项目概览.md/docx/html`（每批≤10个，每个候选独立三文件）；正式阶段 `<项目简称>-项目介绍与功能说明-vN.md/.html` 与 `<项目简称>-工程实施方案-vN.md`。
 - **必需输入**：专业/技术关键词/项目想法（至少一项）；项目根目录；正式阶段需题目+具体功能。

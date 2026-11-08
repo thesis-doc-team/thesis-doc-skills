@@ -1,10 +1,25 @@
 # VERSION
 
 - Skill 名称：`project-solution-write`
-- 当前版本：`v1.4.2`
+- 当前版本：`v1.4.4`
 - 生成日期：`2026-11-06`
 - 输出：探索阶段每个候选独立的 `项目概览.md/.docx/.html`（每批最多10个）；正式确认后生成介绍 MD/HTML + 工程实施 MD（或用户明确仅要其中部分）
 - 结构参考：用户提供的 `thesis-midterm-check-write-v1.3` 的组织格式，不复用学校 Word 规范或毕业文书业务内容。
+
+## v1.4.4
+
+- 候选《项目概览.docx》升级为 **C 版杂志编辑版式**：A4、Noto Serif/Sans、暖橙 `B15A36/BA754D/BC754D`、奶油底 `FAF6F0`、2 列概述条、3 列功能表、橙色页脚；支持 3–15 功能与长标题/长概述/长描述自然分页，功能行 `cantSplit`。
+- 重写 `scripts/render_candidate.py` 的 `make_docx()`；新增 `references/candidate-docx-magazine-style.md`、`tests/test_candidate_docx_style.py`、`assets/reference-samples/candidate-overview-reference-C.docx`。
+- 实测：C 参考与复现各 1 页；3/7/10/8 功能各 1 页；长文本 2 页；Word COM 实渲并目视检查，无截断/功能行拆散/越界。WPS 未在本机验证。
+- 回归：原 93 项 + 6 项 DOCX 版式测试 = **99 项全绿**；manifest 重生成（63 文件）。
+
+## v1.4.3
+
+- 毕设/课程设计候选功能下限从 5 条提高到 **7 条**；具体数量由题目发散研究决定（通常 8–12 条，最多 15 条），至少覆盖采集/显示/告警/通信/配置/异常/统计中的 4 类。
+- 新增题目泛化规则：题目写成“应用场景 + 核心能力”，避免单一作物/病害/算法/型号；题目过窄、过宽或超过 45 字时由 `validate_discovery.py` 给出 WARN。
+- 明确默认范围：**默认只做毕设选题，只生成候选 MD/DOCX/HTML**；正式方案仅当用户明确要求并确认题目/功能后进入。
+- 更新 `discovery-mode-router.md`、`candidate-writing-boundary.md`、`discovery-intake-message.md`、示例 JSON（均改为 7 功能）与 SKILL/README；新增 6 项选题质量/扫描回归。
+- 回归：**93 项全绿**；manifest 重生成（60 文件）。按用户要求不再生成 ZIP。
 
 ## v1.4.2
 

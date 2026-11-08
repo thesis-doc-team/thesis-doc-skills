@@ -12,11 +12,11 @@ import re
 import sys
 from pathlib import Path
 
-# 候选 level 规则（按 purpose 决定；通用模式默认 2-15，毕设/课程设计 ≥5）
+# 候选 level 规则（按 purpose 决定；毕设/课程设计 ≥7，具体数量由题目发散决定）
 FEATURE_RANGES = {
-    "graduation_capstone": (5, 15),  # 毕业设计
-    "course_project": (5, 15),       # 课程设计
-    "competition": (4, 15),          # 竞赛
+    "graduation_capstone": (7, 15),  # 毕业设计
+    "course_project": (7, 15),       # 课程设计
+    "competition": (5, 15),          # 竞赛
     "default": (3, 15),              # 个人练手/未声明用途
 }
 
@@ -40,6 +40,25 @@ ACTION_RE = re.compile(r"(采集|显示|报警|提醒|通知|发送|接收|记�
 
 VAGUE_FEATURES = re.compile(r"^\s*(智能监测|智慧管理|数据分析|云平台|物联网方案|综合管控|全面感知)\s*$")
 
+# 题目过窄/过宽：过窄到单一作物/病害/算法，过宽到“智慧城市”式口号
+TOO_SPECIFIC_TITLE = re.compile(
+    r"(番茄|黄瓜|苹果|柑橘|小麦|水稻|玉米|草莓|葡萄|茶叶|烟叶).*(病|虫|叶|果|斑)|"
+    r"基于\s*(?:YOLO|CNN|ResNet|Transformer|BERT|GPT)\S*",
+    re.I,
+)
+TOO_BROAD_TITLE = re.compile(r"智慧城市|智慧农业|万物互联|全行业|综合管理平台|智慧平台|全自动生产线", re.I)
+
+# 功能发散覆盖：至少覆盖 4 类，避免 7 条功能全是“采集 X”
+FUNCTION_CATEGORIES = {
+    "采集/监测": ("采集", "检测", "测量", "读取", "采样", "传感", "识别", "定位", "跟踪"),
+    "显示/交互": ("显示", "屏幕", "页面", "按键", "触摸", "语音", "提示", "界面"),
+    "告警/提醒": ("报警", "告警", "提醒", "通知", "蜂鸣", "静音"),
+    "通信/远程": ("无线", "通信", "上传", "远程", "网络", "发送", "接收", "蓝牙", "wifi", "4g", "同步"),
+    "配置/存储": ("配置", "设置", "保存", "存储", "记录", "参数", "阈值", "校准", "标定"),
+    "异常/自检": ("异常", "故障", "自检", "断线", "超时", "超载", "无效"),
+    "统计/数据": ("统计", "分析", "报表", "查询", "历史", "趋势", "计数", "估算"),
+}
+
 
 def check_text_has_scene(text: str) -> bool:
     return bool(SCENE_RE.search(text or ""))
@@ -62,6 +81,28 @@ def has_vague_only(features: list[dict]) -> list[str]:
     return vague
 
 
+def check_title_generality(title: str) -> list[str]:
+    """题目应泛化到“应用场景 + 核心能力”，不要窄到单一作物/病害/算法，也不要宽成口号。"""
+    warnings: list[str] = []
+    title = title or ""
+    if TOO_SPECIFIC_TITLE.search(title):
+        warnings.append("题目可能过窄：绑定了单一作物/病害/算法；建议向上泛化到“场景+核心能力”，把具体对象放到功能里")
+    if TOO_BROAD_TITLE.search(title):
+        warnings.append("题目可能过宽/假大空：建议收窄到一个具体场景与可验证能力")
+    if len(title.strip()) > 45:
+        warnings.append("题目偏长：建议压缩到“应用场景 + 核心能力”")
+    return warnings
+
+
+def covered_categories(features: list[dict]) -> list[str]:
+    covered: list[str] = []
+    for name, keys in FUNCTION_CATEGORIES.items():
+        text = " ".join(str(f.get("name", "")) + " " + str(f.get("description", "")) for f in features).lower()
+        if any(key.lower() in text for key in keys):
+            covered.append(name)
+    return covered
+
+
 def check_candidate(data: dict, purpose: str = "default") -> dict:
     """检查单个候选项目的毕设选题质量。"""
     errors: list[str] = []
@@ -79,6 +120,10 @@ def check_candidate(data: dict, purpose: str = "default") -> dict:
         warnings.append("概述未出现具体服务场所/用户类型；建议加入\"温室/宿舍/仓库/…\"等场景锚词")
     if not check_features_have_action(features):
         warnings.append("功能描述中未发现具体行为动词（如采集、显示、报警、控制…）；建议每条功能写清楚触发→操作→可观察闭环")
+    warnings.extend(check_title_generality(title))
+    categories = covered_categories(features)
+    if n >= 7 and len(categories) < 4:
+        warnings.append(f"功能类别覆盖不足：仅 {len(categories)} 类（{', '.join(categories) or '无'}）；建议从采集/显示/告警/通信/配置/异常/统计至少覆盖 4 类，按题目发散而非重复同类功能")
     vague = has_vague_only(features)
     if vague:
         errors.append(f"存在空洞功能名（只写标签、不说做什么）：{', '.join(vague[:5])}")

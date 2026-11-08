@@ -1,13 +1,13 @@
-# project-solution-write | 毕设选题探索、候选资产管理与正式方案（V1.4.2）
+# project-solution-write | 毕设选题探索、候选资产管理与正式方案（V1.4.4）
 
 ## 默认用途：帮学生找毕业设计/课程设计题目
 
 **默认入口只有一句话**：你想找什么方向的毕设/课程设计题目？专业、技术偏好、已有的开发板/传感器/实验室条件可以直接说。不需要先选“专业/技术/题目”模式——这些只是内部路由。
 
-- 每批最多 10 个候选；每个候选独立生成 `项目概览.md / 项目概览.docx / 项目概览.html`（只有名称、概述、核心功能）。
-- 毕设/课程设计候选默认至少 5 条完整闭环功能、有具体应用场景、使用现成模块、单板/小装置可完成；不要求自绘 PCB、不做大型部署。
+- 每批最多 10 个候选；每个候选独立生成 `项目概览.md / 项目概览.docx / 项目概览.html`（只有名称、概述、核心功能）。DOCX 采用 **C 版杂志编辑版式**（A4、Noto Serif/Sans、暖橙点缀、2 列概述条、3 列功能表），支持 3–15 功能与长文本自然分页。
+- 毕设/课程设计候选默认至少 7 条完整闭环功能；具体数量由题目发散研究决定（通常 8–12 条），功能需覆盖采集/显示/告警/通信/配置/异常等至少 4 类。题目向上泛化到“具体场景 + 核心能力”，不要把单一作物/病害/算法写进题目。
 - **不主动询问经费或工期**；通过“模块化、单板、功能数量、场景具体性”表达规模边界。
-- 用户确认题目与功能后，才进入正式方案：介绍 MD + HTML + 实施 MD。
+- **默认只做选题**：只生成候选项目概览 MD/DOCX/HTML；正式方案不是默认产出，只有你明确要求并确认题目/功能时才进入介绍 MD + HTML + 实施 MD。
 
 ## 适用范围
 
@@ -57,15 +57,15 @@ python scripts/discovery_registry.py set-status --root "$WORKSPACE_ROOT" --proje
 python scripts/discovery_registry.py set-status --root "$WORKSPACE_ROOT" --project-id PROJECT-0001 --status confirmed --user-confirmed
 ```
 
-候选版 DOCX 的生成依赖 `python-docx`（见 `requirements.txt`）；原正式方案的 MD+HTML 生成器仍只用标准库。`discovery/` 和 `projects/PROJECT-xxxx/` 属于用户工作区，不属于 Skill 安装目录。每个候选三个文件必须内容一致，版本更新不覆盖原件。
+候选版 DOCX 的生成依赖 `python-docx`（见 `requirements.txt`），版式规则见 `references/candidate-docx-magazine-style.md`；原正式方案的 MD+HTML 生成器仍只用标准库。`discovery/` 和 `projects/PROJECT-xxxx/` 属于用户工作区，不属于 Skill 安装目录。每个候选三个文件必须内容一致，版本更新不覆盖原件。
 
 ## 目录说明
 
 | 目录/文件 | 用途 |
 |---|---|
 | `SKILL.md` | 选题信息混合路由、候选与正式双阶段、执行顺序、质量门禁 |
-| `references/` | 需求澄清、**设计目标选择、候选路线深度探索与取舍追踪**、**写前设计冻结与跨文档一致性**、**分批写入与一次终检**、**HTML 视觉规范/内容映射/质量检查**、硬件与软件推导、事实引用、成文规则 |
-| `assets/reference-samples/` | 四类匿名化工程案例 + 用户认可的 HTML 视觉参考，**仅参考设计方法/样式**，不作为新项目事实来源 |
+| `references/` | 需求澄清、**设计目标选择、候选路线深度探索与取舍追踪**、**写前设计冻结与跨文档一致性**、**分批写入与一次终检**、**HTML 视觉规范/内容映射/质量检查**、**C 版候选 Word 版式规范**、硬件与软件推导、事实引用、成文规则 |
+| `assets/reference-samples/` | 四类匿名化工程案例 + 用户认可的 HTML 视觉参考 + C 版候选 Word 参考，**仅参考设计方法/样式**，不作为新项目事实来源 |
 | `templates/` | 两份 MD 结构、需求矩阵、**四选项聊天模板与候选决策追踪模板**、**设计冻结表**、**单文件 HTML 模板**、输入 schema、执行反馈模板 |
 | `scripts/route_project_intent.py` | 先判别专业/关键词/想法入口或正式方案 |
 | `scripts/discovery_registry.py` | 候选批量生成、拒绝去重、状态/版本/内容资产管理 |
@@ -76,7 +76,7 @@ python scripts/discovery_registry.py set-status --root "$WORKSPACE_ROOT" --proje
 | `scripts/validate_docs.py` | 两份 MD 的静态越界、结构和需求覆盖初检 |
 | `scripts/generate_intro_html.py` | 介绍 MD → 结构化数据 → 单文件 HTML；只读介绍 MD |
 | `scripts/validate_intro_html.py` | 介绍 HTML 的离线、安全、内容边界、功能一致性与场景标注检查 |
-| `tests/` | 标准库 unittest 回归测试（含 HTML 三类项目、动态数量、XSS、缺失章节、分批组装） |
+| `tests/` | 标准库 unittest 回归测试（含 HTML 三类项目、动态数量、XSS、缺失章节、分批组装、C 版 DOCX 版式） |
 | `VERSION.md` | 版本与适用范围 |
 
 ## 工程定位和边界

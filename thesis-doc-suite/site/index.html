@@ -366,12 +366,12 @@
       <!-- project-solution-write -->
       <article class="skill-card">
         <div class="skill-top">
-          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v1.4.2</span></div>
+          <div class="tags"><span class="tag tag-biz">业务 Skill</span><span class="tag tag-ver">v1.4.4</span></div>
           <h3>project-solution-write</h3>
           <p class="pos">毕设选题探索、候选推荐与正式方案：专业/技术/想法信息可混合输入；毕设候选≥5功能、有具体场景、模块化单板、无PCB/假大空；确认后生成正式介绍、介绍页与实施方案；写前冻结、分批写作。</p>
         </div>
         <div class="skill-body">
-          <div class="field"><b>可以生成什么</b><p>探索阶段：每个候选独立生成 `项目概览.md / .docx / .html`（只含名称、概述、核心功能），每批最多 10 个，维护稳定 PROJECT-xxxx ID、拒绝去重与不可覆盖版本。正式阶段：两份相互关联的 Markdown（介绍 + 工程实施方案）与同源单文件介绍 HTML，含设计冻结、分批写作、候选路线比较与验收。</p></div>
+          <div class="field"><b>可以生成什么</b><p>探索阶段：每个候选独立生成 `项目概览.md / .docx / .html`（只含名称、概述、核心功能），其中 DOCX 采用 C 版杂志编辑版式（A4、暖橙点缀、2 列概述条、3 列功能表），每批最多 10 个，维护稳定 PROJECT-xxxx ID、拒绝去重与不可覆盖版本。默认只生成选题候选；正式方案（两份 Markdown + 同源单文件 HTML）仅在用户明确要求且确认题目/功能后生成，含设计冻结、分批写作与验收。</p></div>
           <div class="field"><b>需要哪些输入</b><ul>
             <li>专业 / 技术关键词 / 项目想法（至少一项）<span class="badge-req req-yes">必需</span></li>
             <li>项目根目录 <code>&lt;PROJECT_ROOT&gt;</code><span class="badge-req req-yes">必需</span></li>
