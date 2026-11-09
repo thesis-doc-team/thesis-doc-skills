@@ -278,7 +278,7 @@ python scripts/visual_assets.py cleanup --root "$ROOT" --project-id "$PID" --run
 - `references/visio-style-a4-guide.md`：7 张 Word 参考截图逆向规则 + A4 约束 + 正交/图题补充。
 - `references/subgraph-layout.md`：分组框虚线/浅底/标签、`<br/>` 归一化、自动子图布局与信息完整性边界。
 - `references/asset-contract.md`：RES/VIS/FACT 兼容与 v1.4.0 图题字段。
-- `references/image-selection-examples.md` + `assets/image-selection-examples/`：用户实物照片正反例（完整设备/完整模组/完整步进电机 vs 裸芯片/局部特写）。
+- `references/image-selection-examples.md` + `assets/image-samples/`：用户实物照片正反例（完整设备/完整模组/完整步进电机 vs 裸芯片/局部特写）。
 - `examples/visio-style-example.json`：带中英文图题的规范 spec。
 - `examples/orthogonal-flow-example.svg`、`examples/orthogonal-flow-example.drawio`、`examples/orthogonal-flow-example.vsdx`、`examples/orthogonal-flow-example.figure.json`、`examples/orthogonal-flow-example-300dpi.png`：正交示例（含原生 VSDX）。
 - `examples/before-diagonal-sms-flow-300dpi.png` 与 `examples/after-orthogonal-sms-flow-300dpi.png`：修改前后对照。**仅作格式判例**，图中 SIM900A/AT 指令等节点不得复制为其他项目的技术事实。
