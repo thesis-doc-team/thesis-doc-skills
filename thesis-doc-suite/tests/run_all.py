@@ -55,6 +55,8 @@ ITEMS = [
     ('visual: v1.4-vsdx', ['tests/test_v14_vsdx.py'], ROOT / 'skills' / 'technical-visual-assets'),
     ('visual: v1.4-word-render', ['tests/test_v14_word_render.py'], ROOT / 'skills' / 'technical-visual-assets'),
     ('visual: shared-assets', ['tests/test_shared_assets.py'], ROOT / 'skills' / 'technical-visual-assets'),
+    ('docx-format-audit: inspect', ['tests/test_inspect_docx.py'], ROOT / 'skills' / 'docx-format-audit'),
+    ('pptx-format-audit: inspect', ['tests/test_inspect_pptx.py'], ROOT / 'skills' / 'pptx-format-audit'),
 ]
 
 # tests that exercise rendering without LibreOffice may print WARN-style notes;

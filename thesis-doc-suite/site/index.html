@@ -52,7 +52,7 @@
           </a>
           <a class="btn btn-ghost" href="#skills">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="13" y="4" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="4" y="13" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/><rect x="13" y="13" width="7" height="7" rx="2" stroke="#4f6df5" stroke-width="2"/></svg>
-            查看 10 个 Skill
+            查看 13 个 Skill
           </a>
         </div>
       </div>
@@ -169,8 +169,8 @@
   <div class="wrap">
     <div class="section-head">
       <span class="kicker">SKILL 功能展示</span>
-      <h2>10 个 Skill，各司其职，独立可调</h2>
-      <p>7 个业务 Skill（6 项毕业设计文书 + 1 个通用项目方案）负责文书与方案生成，1 个支持 Skill 管公共视觉素材，3 个管理 Skill 负责项目初始化、检查与导航。每张卡片直接展示完整说明。</p>
+      <h2>13 个 Skill，各司其职，独立可调</h2>
+      <p>7 个业务 Skill（6 项毕业设计文书 + 1 个通用项目方案）负责文书与方案生成，3 个支持 Skill 管公共视觉素材与 DOCX/PPTX 格式审计，3 个管理 Skill 负责项目初始化、检查与导航。每张卡片直接展示完整说明。</p>
     </div>
 
     <div class="grid skill-grid">
@@ -423,6 +423,54 @@
             <li>Python 3.10+（仅标准库，禁止自动装包）</li>
             <li>无需联网搜图；300dpi PNG 导出需本机 Chrome/Edge</li>
             <li>VSDX 生成不需要 Visio；Visio 实际打开验证需本机 Visio/WPS，状态如实标注</li>
+          </ul></div>
+        </div>
+      </article>
+
+      <!-- docx-format-audit -->
+      <article class="skill-card">
+        <div class="skill-top">
+          <div class="tags"><span class="tag tag-sup">支持 Skill</span><span class="tag tag-ver">v0.1.0</span></div>
+          <h3>docx-format-audit</h3>
+          <p class="pos">DOCX 格式全景只读解析：样式继承链 + 实际生效的字体/字号/行距/缩进/对齐，一次导出 JSON。</p>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>docx 格式审计 JSON：文档默认值、样式与 <code>basedOn</code> 链、每段/每个 run 的 direct 与 effective 格式、页面设置、页眉页脚、表格、编号、图片显示尺寸与哈希。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>待解析的 <code>.docx</code> 文件<span class="badge-req req-yes">必需</span></li>
+            <li>JSON 输出路径<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>核对 Word 实际格式、对照模板排查字号行距、定位“设置与实际显示不一致”的样式继承问题。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:docx-format-audit</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+（仅标准库，无需 python-docx）</li>
+            <li>只读，不修改原文件</li>
+          </ul></div>
+        </div>
+      </article>
+
+      <!-- pptx-format-audit -->
+      <article class="skill-card">
+        <div class="skill-top">
+          <div class="tags"><span class="tag tag-sup">支持 Skill</span><span class="tag tag-ver">v0.1.0</span></div>
+          <h3>pptx-format-audit</h3>
+          <p class="pos">PPTX 格式全景只读解析：母版/版式/占位符继承 + 主题字体解析，文本有效格式一次导出。</p>
+        </div>
+        <div class="skill-body">
+          <div class="field"><b>可以生成什么</b><p>pptx 格式审计 JSON：幻灯片尺寸、主题字体与配色、母版 <code>txStyles</code>、版式与占位符、形状位置尺寸、文本有效字体/字号/颜色/行距/段距/项目符号、表格、图片与备注。</p></div>
+          <div class="field"><b>需要哪些输入</b><ul>
+            <li>待解析的 <code>.pptx</code> 文件<span class="badge-req req-yes">必需</span></li>
+            <li>JSON 输出路径<span class="badge-req req-opt">可选</span></li>
+          </ul></div>
+          <div class="field"><b>使用场景</b><p>核对 PPT 实际格式、排查模板继承未生效、对照母版检查版式与字号。</p></div>
+          <div class="field"><b>运行命令</b>
+            <div class="cmd"><span class="cmd-text">/thesis-doc-suite:pptx-format-audit</span><button class="copy-btn">复制</button></div>
+          </div>
+          <div class="field"><b>必要前置条件</b><ul>
+            <li>Python 3.10+（仅标准库，无需 python-pptx）</li>
+            <li>只读，不修改原文件</li>
           </ul></div>
         </div>
       </article>

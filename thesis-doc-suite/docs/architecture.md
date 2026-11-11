@@ -4,20 +4,23 @@
 
 ---
 
-## 1. 总体结构：一个插件 + 六个业务 Skill + 一个支持 Skill + 公共基础设施 + 管理型 Skill
+## 1. 总体结构：一个插件 + 七个业务 Skill + 三个支持 Skill + 公共基础设施 + 管理型 Skill
 
 ```
 thesis-doc-suite/
 ├── .claude-plugin/
 │   └── plugin.json                 # 插件清单（name=thesis-doc-suite，唯一必需字段是 name）
-├── skills/                         # 10 个 Skill，各自独立
+├── skills/                         # 13 个 Skill，各自独立
 │   ├── project-technical-doc/      # 业务 Skill：自包含 SKILL.md + scripts/ + references/ + templates/ + assets/
 │   ├── thesis-taskbook-write/
 │   ├── opening-report-writer/
 │   ├── literature-review-write/
 │   ├── thesis-guidance-record-write/
 │   ├── thesis-midterm-check-write/
+│   ├── project-solution-write/
 │   ├── technical-visual-assets/    # 支持 Skill：公共图片资料层（VIS 视觉资产，不生成文书）
+│   ├── docx-format-audit/          # 支持 Skill：DOCX 格式全景只读解析
+│   ├── pptx-format-audit/          # 支持 Skill：PPTX 格式全景只读解析
 │   ├── init-project/               # 管理型 Skill：初始化项目资产包
 │   ├── check-project/              # 管理型 Skill：前置条件与资产检查
 │   └── help/                       # 管理型 Skill：使用导航
@@ -113,7 +116,7 @@ core/template-protection/template_guard.py   通用哈希/锁校验（check-proj
 
 ## 8. 共享元数据与文档同步（skill-catalog.json）
 
-`core/contracts/skill-catalog.json` 是 10 个 Skill 的**结构化事实源**（名称、命令、版本、输入、输出、前置条件、交付目录）。README、`docs/skill-catalog.md` 与 `site/` 网站的内容都以它为准；`tests/test_doc_consistency.py` 校验文档/网站中的命令与 Skill 名称与目录一致，避免"三套说法不一致"。
+`core/contracts/skill-catalog.json` 是 13 个 Skill 的**结构化事实源**（名称、命令、版本、输入、输出、前置条件、交付目录）。README、`docs/skill-catalog.md` 与 `site/` 网站的内容都以它为准；`tests/test_doc_consistency.py` 校验文档/网站中的命令与 Skill 名称与目录一致，避免"三套说法不一致"。
 
 ## 9. 扩展点
 

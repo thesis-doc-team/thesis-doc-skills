@@ -54,6 +54,13 @@ Thesis Doc Suite（插件标识 `thesis-doc-suite`）是一套面向本科毕业
 |---|---|
 | `/thesis-doc-suite:technical-visual-assets` | 以正式技术 MD 为唯一事实源，离线生成正交技术图（可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG）与中英文图题，执行 A4/Word 版心门禁；用户实物照片经权利声明与本地验证后入库；不包含联网搜图 |
 
+另有 2 个格式审计 Skill（只读，不修改原文件，不生成文书）：
+
+| 命令 | 作用 |
+|---|---|
+| `/thesis-doc-suite:docx-format-audit` | 解析 DOCX 的文档默认值、样式继承链与实际生效格式（字体/字号/行距/缩进/对齐/颜色）、页面设置、页眉页脚、表格、编号、图片尺寸与哈希，输出 JSON |
+| `/thesis-doc-suite:pptx-format-audit` | 解析 PPTX 的幻灯片尺寸、主题字体与配色、母版/版式/占位符继承、形状位置尺寸、实际生效的字体/字号/颜色/行距/段距/项目符号、表格、图片与备注，输出 JSON |
+
 另有三个管理型 Skill（不生成文书、不修改业务 Skill 职责）：
 
 | 命令 | 作用 |
@@ -344,7 +351,7 @@ python scripts\verify_plugin.py
 | [docs/user-guide.md](docs/user-guide.md) | 完整使用手册：每个 Skill 的详细用法与验收要点 |
 | [docs/architecture.md](docs/architecture.md) | 系统架构与扩展机制 |
 | [docs/asset-management.md](docs/asset-management.md) | 项目资产包结构、schema、读写与冲突规则 |
-| [docs/skill-catalog.md](docs/skill-catalog.md) | 10 个 Skill 的逐一说明 |
+| [docs/skill-catalog.md](docs/skill-catalog.md) | 13 个 Skill 的逐一说明 |
 | [docs/prerequisites.md](docs/prerequisites.md) | 前置条件清单（必需 / 可选） |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | 常见问题排查 |
 | [docs/migration-report.md](docs/migration-report.md) | 迁移报告：6 个 Skill 的盘点、契约变体与逐文件差异记录 |

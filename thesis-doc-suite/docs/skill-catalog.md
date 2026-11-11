@@ -1,6 +1,6 @@
 # Skill 目录（Skill Catalog)
 
-本页与 `core/contracts/skill-catalog.json`（结构化事实源）保持一致。插件共 10 个 Skill：6 个业务 Skill（生成文书）+ 1 个支持 Skill（公共图片资料层）+ 3 个管理型 Skill（初始化/检查/导航）。所有业务与支持 Skill 仅响应显式调用（`/thesis-doc-suite:<skill名>`），普通聊天不会触发文书生成。
+本页与 `core/contracts/skill-catalog.json`（结构化事实源）保持一致。插件共 13 个 Skill：6 个业务 Skill（生成文书）+ 3 个支持 Skill（公共图片资料层、DOCX/PPTX 格式审计）+ 3 个管理型 Skill（初始化/检查/导航）。所有业务与支持 Skill 仅响应显式调用（`/thesis-doc-suite:<skill名>`），普通聊天不会触发文书生成。
 
 ---
 
@@ -16,6 +16,8 @@
 | `/thesis-doc-suite:thesis-midterm-check-write` | 业务 | 1.3.2 | 中期检查记录表 DOCX + 执行汇报 | `deliverables/midterm/` |
 | `/thesis-doc-suite:project-solution-write` | 业务 | 1.4.4 | 毕设选题探索 MD/DOCX/HTML（≤10个/批，功能≥7条、有场景、模块化、无PCB；候选 DOCX 为 C 版杂志编辑版式；默认只做选题，正式方案仅显式请求）+ 执行汇报（信息混合输入、候选资产、写前冻结、分批写入） | `discovery/`、`projects/PROJECT-xxxx/`、`deliverables/project-introduction/`、`deliverables/implementation-plan/` |
 | `/thesis-doc-suite:technical-visual-assets` | 支持 | 1.4.3 | 正交技术图（可编辑 Mermaid/drawio、正交 SVG、原生 VSDX、300dpi PNG）+ 中英文图题 + A4/Word 版心门禁 + 六类资源索引 | `project-assets/resource-catalog/`、`project-assets/visual-assets/` |
+| `/thesis-doc-suite:docx-format-audit` | 支持 | 0.1.0 | DOCX 格式审计 JSON（样式链 / 实际生效格式 / 页面 / 表格 / 图片） | — |
+| `/thesis-doc-suite:pptx-format-audit` | 支持 | 0.1.0 | PPTX 格式审计 JSON（母版版式继承 / 主题字体 / 形状 / 文本 / 表格 / 图片） | — |
 | `/thesis-doc-suite:init-project` | 管理 | 0.1.0 | 项目资产包骨架 | — |
 | `/thesis-doc-suite:check-project` | 管理 | 0.1.0 | PASS/WARN/BLOCK 检查报告 | — |
 | `/thesis-doc-suite:help` | 管理 | 0.1.0 | 命令导航与使用指导 | — |

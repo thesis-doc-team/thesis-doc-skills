@@ -1,7 +1,7 @@
 {
   "name": "thesis-doc-suite",
-  "version": "0.2.0",
-  "description": "毕业设计文书 Skill 六件套（塔里木大学官方模板版）：技术文档/任务书/开题报告/文献综述/指导记录/中期检查，另含通用项目方案生成（project-solution-write：项目介绍与工程实施方案双文档）。统一项目资产包（数据+成品+运行区），官方模板哈希锁定、参考文献真实性核验、逐页截图验证与安全清理机制。",
+  "version": "0.3.0",
+  "description": "毕业设计文书 Skill 六件套（塔里木大学官方模板版）：技术文档/任务书/开题报告/文献综述/指导记录/中期检查，另含通用项目方案生成（project-solution-write：项目介绍与工程实施方案双文档）与 DOCX/PPTX 格式全景解析（docx-format-audit / pptx-format-audit）。统一项目资产包（数据+成品+运行区），官方模板哈希锁定、参考文献真实性核验、逐页截图验证与安全清理机制。",
   "author": {
     "name": "QiDeng"
   },
@@ -9,6 +9,9 @@
     "thesis",
     "graduation-design",
     "docx",
+    "pptx",
+    "format-audit",
+    "ooxml",
     "academic-writing",
     "taskbook",
     "opening-report",

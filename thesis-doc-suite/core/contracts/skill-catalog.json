@@ -3,7 +3,7 @@
   "plugin": {
     "name": "thesis-doc-suite",
     "display_name": "Thesis Doc Suite Taru",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "tagline": "一个插件，六种毕业设计文书；一个项目，一套共享资产。",
     "audience": "本科毕业论文（设计）各阶段文书的准备与生成，当前官方模板锁定塔里木大学版本。"
   },
@@ -264,6 +264,54 @@
       "deliverable_dir": "project-assets/resource-catalog/ + project-assets/visual-assets/",
       "doc_type": "visual-asset",
       "scenario": "依据唯一正式技术MD生成可编辑工程图、原始数据表格、用户实物图需求清单；按官方模板验收A4版式后由文书Skill复用。"
+    },
+    {
+      "name": "docx-format-audit",
+      "command": "/thesis-doc-suite:docx-format-audit",
+      "version": "0.1.0",
+      "category": "shared",
+      "title": "DOCX 格式全景解析",
+      "positioning": "只读解析 Word 文档的完整格式：文档默认值、样式继承链、实际生效的字体/字号/行距/缩进/对齐/颜色、页面设置、页眉页脚、表格、编号、图片尺寸与哈希。",
+      "generates": [
+        "docx 格式审计 JSON（direct / style_chain / effective）"
+      ],
+      "inputs_required": [
+        "待解析的 .docx 文件"
+      ],
+      "inputs_optional": [
+        "JSON 输出路径"
+      ],
+      "prerequisites": [
+        "Python 3.10+（仅标准库）",
+        "只读，不修改原文件"
+      ],
+      "deliverable_dir": "—",
+      "doc_type": "—",
+      "scenario": "需要核对 Word 实际格式、对照模板排查字号行距、或把格式迁移到其他文档时。"
+    },
+    {
+      "name": "pptx-format-audit",
+      "command": "/thesis-doc-suite:pptx-format-audit",
+      "version": "0.1.0",
+      "category": "shared",
+      "title": "PPTX 格式全景解析",
+      "positioning": "只读解析演示文稿的完整格式：幻灯片尺寸、主题字体与配色、母版/版式/占位符继承链、形状位置尺寸、实际生效的字体/字号/颜色/行距/段距/项目符号、表格、图片与备注。",
+      "generates": [
+        "pptx 格式审计 JSON（direct / effective / 主题字体解析）"
+      ],
+      "inputs_required": [
+        "待解析的 .pptx 文件"
+      ],
+      "inputs_optional": [
+        "JSON 输出路径"
+      ],
+      "prerequisites": [
+        "Python 3.10+（仅标准库）",
+        "只读，不修改原文件"
+      ],
+      "deliverable_dir": "—",
+      "doc_type": "—",
+      "scenario": "需要核对 PPT 实际格式、排查模板继承未生效、或对照母版检查版式时。"
     },
     {
       "name": "init-project",
