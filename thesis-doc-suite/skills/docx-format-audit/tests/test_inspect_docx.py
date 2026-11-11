@@ -9,7 +9,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from inspect_docx import inspect_docx  # noqa: E402
+from inspect_docx import inspect_docx, parse_paragraph_scope  # noqa: E402
 
 NS = ('xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
       'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
@@ -167,6 +167,37 @@ class DocxFormatAuditTest(unittest.TestCase):
     def test_theme_parsed(self):
         self.assertEqual(self.data['theme']['fonts']['minor']['latin'], 'Times New Roman')
         self.assertEqual(self.data['theme']['fonts']['minor']['ea'], '宋体')
+
+    def test_paragraph_scope_parsing(self):
+        self.assertEqual(parse_paragraph_scope(['2-3', '5'], 10), [2, 3, 5])
+        self.assertEqual(parse_paragraph_scope(['1,4'], 10), [1, 4])
+        self.assertIsNone(parse_paragraph_scope(None, 10))
+
+    def test_paragraph_scope_out_of_range(self):
+        with self.assertRaises(ValueError):
+            parse_paragraph_scope(['0'], 4)
+        with self.assertRaises(ValueError):
+            parse_paragraph_scope(['3-9'], 4)
+        with self.assertRaises(ValueError):
+            inspect_docx(self.path, paragraph_scope=['9'])
+
+    def test_paragraph_slice_output(self):
+        data = inspect_docx(self.path, paragraph_scope=['2-3'])
+        self.assertEqual(data['scope']['paragraphs'], [2, 3])
+        self.assertEqual(data['scope']['paragraph_count'], 4)
+        self.assertEqual(data['scope']['paragraph_count_returned'], 2)
+        self.assertEqual([item['index'] for item in data['paragraphs']], [1, 2])
+        self.assertEqual([block['kind'] for block in data['body']], ['paragraph', 'paragraph'])
+        # 表格不参与段落定位，仍全量返回
+        self.assertEqual(len(data['tables']), 1)
+
+    def test_section_slice(self):
+        data = inspect_docx(self.path, section=1)
+        self.assertEqual(data['scope']['section'], 1)
+        self.assertEqual(len(data['sections']), 1)
+        self.assertEqual(len(data['headers_footers']), 1)
+        with self.assertRaises(ValueError):
+            inspect_docx(self.path, section=2)
 
     def test_missing_file_raises(self):
         with self.assertRaises(FileNotFoundError):

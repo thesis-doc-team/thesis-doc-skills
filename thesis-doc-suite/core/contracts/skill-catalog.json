@@ -3,7 +3,7 @@
   "plugin": {
     "name": "thesis-doc-suite",
     "display_name": "Thesis Doc Suite Taru",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "tagline": "一个插件，六种毕业设计文书；一个项目，一套共享资产。",
     "audience": "本科毕业论文（设计）各阶段文书的准备与生成，当前官方模板锁定塔里木大学版本。"
   },
@@ -268,7 +268,7 @@
     {
       "name": "docx-format-audit",
       "command": "/thesis-doc-suite:docx-format-audit",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "shared",
       "title": "DOCX 格式全景解析",
       "positioning": "只读解析 Word 文档的完整格式：文档默认值、样式继承链、实际生效的字体/字号/行距/缩进/对齐/颜色、页面设置、页眉页脚、表格、编号、图片尺寸与哈希。",
@@ -292,7 +292,7 @@
     {
       "name": "pptx-format-audit",
       "command": "/thesis-doc-suite:pptx-format-audit",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "shared",
       "title": "PPTX 格式全景解析",
       "positioning": "只读解析演示文稿的完整格式：幻灯片尺寸、主题字体与配色、母版/版式/占位符继承链、形状位置尺寸、实际生效的字体/字号/颜色/行距/段距/项目符号、表格、图片与备注。",

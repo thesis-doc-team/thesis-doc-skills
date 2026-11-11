@@ -845,7 +845,32 @@ def parse_theme_root(root):
     return result
 
 
-def inspect_pptx(path):
+def parse_slide_scope(values, total):
+    """把 --slide 的 "3" / "2-4" / "1,5" 解析为 1 起的页码集合；None 表示全量。"""
+    if not values:
+        return None
+    selected = set()
+    for value in values:
+        for piece in str(value).split(','):
+            piece = piece.strip()
+            if not piece:
+                continue
+            try:
+                if '-' in piece:
+                    start_text, _, end_text = piece.partition('-')
+                    start, end = int(start_text), int(end_text)
+                else:
+                    start = end = int(piece)
+            except ValueError:
+                raise ValueError(f'无法识别的页码：{piece}（示例：--slide 3 或 --slide 2-4）')
+            if start < 1 or end < start or end > total:
+                raise ValueError(f'幻灯片页码 {piece} 超出范围 1–{total}')
+            selected.update(range(start, end + 1))
+    return sorted(selected) or None
+
+
+def inspect_pptx(path, slides=None):
+    """解析 PPTX；slides 传入 1 起的页码列表时只输出对应幻灯片（表页/主题仍全量）。"""
     path = Path(path)
     if not path.is_file():
         raise FileNotFoundError(f'文件不存在：{path}')
@@ -860,8 +885,13 @@ def inspect_pptx(path):
             raise ValueError('缺少 ppt/presentation.xml，不是 PowerPoint 文档')
         deck = Deck(package)
         emitter = SlideEmitter(deck)
-        slides = [slide for index, entry in enumerate(deck.slide_parts)
-                  if (slide := emitter.slide(index, entry)) is not None]
+        total = len(deck.slide_parts)
+        scope = parse_slide_scope(slides, total)
+        entries = list(enumerate(deck.slide_parts))
+        if scope:
+            entries = [(index, entry) for index, entry in entries if index + 1 in scope]
+        slide_items = [slide for index, entry in entries
+                       if (slide := emitter.slide(index, entry)) is not None]
         masters = []
         for master in deck.masters.values():
             masters.append({
@@ -894,13 +924,15 @@ def inspect_pptx(path):
             'presentation': {
                 'slide_size_cm': deck.slide_size,
                 'notes_size_cm': deck.notes_size,
-                'slide_count': len(slides),
+                'slide_count': total,
+                'slide_count_returned': len(slide_items),
                 'default_text_style': deck.default_text_style,
             },
+            'scope': {'slides': scope},
             'theme': parse_theme_root(theme_root) if theme_root is not None else None,
             'masters': masters,
             'layouts': layouts,
-            'slides': slides,
+            'slides': slide_items,
             'warnings': deck.warnings,
         }
 
@@ -909,9 +941,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('file', help='待解析的 .pptx 文件')
     parser.add_argument('--json', dest='outfile', help='JSON 输出路径（默认打印到 stdout）')
+    parser.add_argument('--slide', action='append', metavar='N|A-B', default=None,
+                        help='只看指定幻灯片（1 起，可重复；支持 3 / 2-4 / 1,5）。输出 index 仍为原始 0 起序号。')
     args = parser.parse_args(argv)
     try:
-        result = inspect_pptx(args.file)
+        result = inspect_pptx(args.file, slides=args.slide)
         output = json.dumps(result, ensure_ascii=False, indent=2)
         if args.outfile:
             Path(args.outfile).write_text(output + '\n', encoding='utf-8')

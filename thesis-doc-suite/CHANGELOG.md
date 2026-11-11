@@ -4,6 +4,8 @@
 
 ## 未发布（0.2.0 之后）
 
+- **格式审计支持按页/按范围切片（0.3.0→0.3.1）**：`pptx-format-audit` 新增 `--slide N|A-B`（1 起，可重复或逗号），切片后 `slides[]` 只含所选页、`slides[].index` 仍是原始 0 起序号，`presentation.slide_count` 为总页数、`slide_count_returned` 为本次返回数、`scope.slides` 记录范围；母版/版式/主题仍全量返回以解释继承。`docx-format-audit` 新增 `--paragraph N|A-B` 与 `--section N`：前者按 1 起正文顶层段落定位（表格内段落不参与，范围视图下 `body` 仅保留范围内段落块、`tables` 仍全量），后者只保留指定节的页面设置与页眉页脚；`scope` 明确说明 DOCX 无固定页码、分页由排版决定。两 Skill 各补 3 项切片回归（合计 24 项全绿）。
+
 - **新增 docx-format-audit / pptx-format-audit 两个只读格式审计 Skill（插件 0.2.0→0.3.0）**：`docx-format-audit` 直接读 OOXML 的 document/styles/numbering/theme/header/footer，输出文档默认值、样式 `basedOn` 继承链、每段与每个 run 的 direct / style_chain / effective（字体、字号、行距、缩进、对齐、颜色）、页面设置、页眉页脚、表格、编号、图片显示尺寸与哈希；`pptx-format-audit` 按 `defaultTextStyle → 母版 txStyles → 母版/版式占位符 lstStyle → 形状 lstStyle → 段落 defRPr → run 直接格式` 合并有效值，解析 `+mj-lt/+mn-ea` 主题字体，输出幻灯片尺寸、母版/版式、形状位置、文本框边距、表格、图片与备注。两者仅用标准库、只读不写资产；注册 catalog/README/docs/site/help 与 run_all（各 8 项回归）。根目录树无对应 legacy 目录，不涉及双树同步。
 
 - **project-solution-write v1.4.4：候选 Word 升级 C 版杂志编辑版式**：候选《项目概览.docx》按用户确认的 `方案C_杂志编辑版.docx` 重写为 A4/Noto Serif+Sans/暖橙+奶油底/2 列概述条/3 列功能表/橙色页脚；支持 3–15 功能与长标题/长概述/长描述自然分页，功能行 cantSplit。重写 `render_candidate.make_docx`；新增 `references/candidate-docx-magazine-style.md`、`tests/test_candidate_docx_style.py`、`assets/reference-samples/candidate-overview-reference-C.docx`。C 参考与复现各 1 页，3/7/10/8 功能各 1 页，长文本 2 页；Word COM 实渲目视检查；WPS 未验证。注册 1.4.3→1.4.4（catalog/docs/site）、manifest 63 文件；回归 99 项全绿（93+6）。按用户本次明确要求输出 v1.4.4 ZIP。

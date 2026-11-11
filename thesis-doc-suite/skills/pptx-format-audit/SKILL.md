@@ -1,8 +1,8 @@
 ---
 name: pptx-format-audit
-version: 0.1.0
-argument-hint: "[文件.pptx]"
-description: 只读解析 PPTX 的完整格式：幻灯片尺寸、主题字体与配色、母版/版式/占位符继承链、每个形状的位置尺寸、文本框边距与自动调整、实际生效的字体/字号/颜色/行距/段距/项目符号、表格与图片信息。当用户说"看看这个 PPT 的格式""字号字体是多少""为什么模板改了没生效""对照母版检查版式"时使用。
+version: 0.2.0
+argument-hint: "[文件.pptx] [--slide 3|2-4]"
+description: 只读解析 PPTX 的完整格式：幻灯片尺寸、主题字体与配色、母版/版式/占位符继承链、每个形状的位置尺寸、文本框边距与自动调整、实际生效的字体/字号/颜色/行距/段距/项目符号、表格与图片信息。支持 --slide 按页切片。当用户说"看看这个 PPT 的格式""字号字体是多少""为什么模板改了没生效""对照母版检查版式""逐页检查"时使用。
 ---
 
 # pptx-format-audit｜PPTX 格式全景解析
@@ -29,11 +29,27 @@ description: 只读解析 PPTX 的完整格式：幻灯片尺寸、主题字体�
 
    省略 `--json` 时直接打印到 stdout。退出码 `0` 成功，`2` 文件不存在/不是有效 PPTX。
 
+   **按页审阅**：PPTX 的页是显式对象，直接用 `--slide` 切片，不必解析全部再人工筛：
+
+   ```bash
+   python scripts/inspect_pptx.py "<文件.pptx>" --slide 3 --json "<第3页.json>"
+   python scripts/inspect_pptx.py "<文件.pptx>" --slide 2-4
+   python scripts/inspect_pptx.py "<文件.pptx>" --slide 1,5
+   ```
+
+   `--slide` 是 **1 起**的页码，可重复传参或写逗号；越界会报错并给出总页数。切片后
+   `slides[]` 只含所选页，`slides[].index` 仍是原始 0 起序号；`presentation.slide_count`
+   是总页数，`slide_count_returned` 是本次返回页数，`scope.slides` 记录当前范围。
+   母版、版式、主题、默认文字样式始终全量返回，供解释继承链。大文件逐页审阅时建议每页
+   一个 `--json` 文件，避免单份 JSON 过大。
+
 3. **解读结果**（按用户问题裁剪，不要整份倾倒）：
 
    | JSON 路径 | 含义 |
    | --- | --- |
    | `presentation.slide_size_cm` | 幻灯片尺寸（判断 16:9 / 4:3） |
+   | `presentation.slide_count` / `slide_count_returned` | 总页数 / 本次切片返回页数 |
+   | `scope.slides` | 本次 `--slide` 命中的页码（全量时为 `null`） |
    | `presentation.default_text_style` | 全局默认文字样式（继承链最底层） |
    | `theme.fonts` / `theme.colors` | 主题 major/minor 字体与配色 |
    | `masters[].text_styles` | 母版 `titleStyle` / `bodyStyle` / `otherStyle` |

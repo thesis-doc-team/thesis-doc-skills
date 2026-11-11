@@ -837,7 +837,37 @@ class Inspector:
         return found
 
 
-def inspect_docx(path):
+def parse_paragraph_scope(values, total):
+    """把 --paragraph 的 "12" / "12-30" / "1,5" 解析为 1 起的段落序号集合；None 表示全量。"""
+    if not values:
+        return None
+    selected = set()
+    for value in values:
+        for piece in str(value).split(','):
+            piece = piece.strip()
+            if not piece:
+                continue
+            try:
+                if '-' in piece:
+                    start_text, _, end_text = piece.partition('-')
+                    start, end = int(start_text), int(end_text)
+                else:
+                    start = end = int(piece)
+            except ValueError:
+                raise ValueError(f'无法识别的段落范围：{piece}（示例：--paragraph 12 或 --paragraph 12-30）')
+            if start < 1 or end < start or end > total:
+                raise ValueError(f'段落范围 {piece} 超出范围 1–{total}')
+            selected.update(range(start, end + 1))
+    return sorted(selected) or None
+
+
+def inspect_docx(path, paragraph_scope=None, section=None):
+    """解析 DOCX。
+
+    paragraph_scope: 1 起的段落序号/范围（只作用于正文顶层段落，表格不参与）；
+    section: 1 起的节序号，只返回该节的页面设置与页眉页脚关联。
+    Word 没有固定页码（分页是排版结果），因此按页审阅请用段落范围定位。
+    """
     path = Path(path)
     if not path.is_file():
         raise FileNotFoundError(f'文件不存在：{path}')
@@ -858,18 +888,31 @@ def inspect_docx(path):
 
         blocks, paragraphs, tables = [], [], []
         inspector.collect_blocks(body, 'body', blocks, paragraphs, tables)
+        paragraph_total = len(paragraphs)
+        paragraph_indexes = parse_paragraph_scope(paragraph_scope, paragraph_total)
+        if paragraph_indexes:
+            wanted = set(paragraph_indexes)
+            paragraphs = [item for item in paragraphs if item['index'] + 1 in wanted]
+            # 范围视图只保留范围内的正文段落块；穿插的表格不参与段落定位，直接略去。
+            blocks = [block for block in blocks
+                      if block['kind'] == 'paragraph' and block['ref'] + 1 in wanted]
 
         sections = []
         for sect_pr in root.iter(qn('w', 'sectPr')):
-            section = parse_section(sect_pr, inspector.rels)
-            if section:
-                sections.append(section)
+            section_item = parse_section(sect_pr, inspector.rels)
+            if section_item:
+                sections.append(section_item)
+        section_total = len(sections)
+        if section is not None:
+            if not 1 <= int(section) <= section_total:
+                raise ValueError(f'节序号 {section} 超出范围 1–{section_total}')
+            sections = [sections[int(section) - 1]]
 
         header_footer = []
         seen_parts = set()
-        for section in sections:
+        for sec in sections:
             for kind in ('headers', 'footers'):
-                for ref in section.get(kind, []):
+                for ref in sec.get(kind, []):
                     part = ref.get('part')
                     if not part or part in seen_parts:
                         continue
@@ -913,6 +956,14 @@ def inspect_docx(path):
             },
             'styles': inspector.styles.get('styles'),
             'numbering': parse_numbering(archive),
+            'scope': {
+                'paragraphs': paragraph_indexes,
+                'paragraph_count': paragraph_total,
+                'paragraph_count_returned': len(paragraphs),
+                'section': section,
+                'section_count': section_total,
+                'note': 'DOCX 无固定页码，分页由排版决定；按页审阅请用 --paragraph 段落范围定位。',
+            },
             'sections': sections,
             'body': blocks,
             'paragraphs': paragraphs,
@@ -927,9 +978,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('file', help='待解析的 .docx 文件')
     parser.add_argument('--json', dest='outfile', help='JSON 输出路径（默认打印到 stdout）')
+    parser.add_argument('--paragraph', action='append', metavar='N|A-B', default=None,
+                        help='只看指定正文段落（1 起，可重复；支持 12 / 12-30 / 1,5）。输出 index 仍为原始 0 起序号。')
+    parser.add_argument('--section', type=int, default=None, metavar='N',
+                        help='只看第 N 节（1 起）的页面设置与页眉页脚。')
     args = parser.parse_args(argv)
     try:
-        result = inspect_docx(args.file)
+        result = inspect_docx(args.file, paragraph_scope=args.paragraph, section=args.section)
         output = json.dumps(result, ensure_ascii=False, indent=2)
         if args.outfile:
             Path(args.outfile).write_text(output + '\n', encoding='utf-8')

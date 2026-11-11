@@ -1,8 +1,8 @@
 ---
 name: docx-format-audit
-version: 0.1.0
-argument-hint: "[文件.docx]"
-description: 只读解析 DOCX 的完整格式：文档默认值、样式继承链、实际生效的字体/字号/行距/缩进/对齐/颜色、页面设置、页眉页脚、表格、编号、图片尺寸与哈希。当用户说"看看这个 Word 的格式""字号行距是多少""对照模板检查格式""为什么显示的和设置的不一样"时使用。
+version: 0.2.0
+argument-hint: "[文件.docx] [--paragraph 12-30|--section 2]"
+description: 只读解析 DOCX 的完整格式：文档默认值、样式继承链、实际生效的字体/字号/行距/缩进/对齐/颜色、页面设置、页眉页脚、表格、编号、图片尺寸与哈希。支持 --paragraph / --section 按范围切片。当用户说"看看这个 Word 的格式""字号行距是多少""对照模板检查格式""为什么显示的和设置的不一样""逐段检查"时使用。
 ---
 
 # docx-format-audit｜DOCX 格式全景解析
@@ -29,11 +29,26 @@ description: 只读解析 DOCX 的完整格式：文档默认值、样式继承�
 
    省略 `--json` 时直接打印到 stdout。退出码 `0` 成功，`2` 文件不存在/不是有效 DOCX。
 
+   **按范围审阅**：Word 没有固定页码——分页是排版结果，DOCX 里不存在“第 3 页”这种锚点。
+   因此按页检查时用段落范围或节来定位：
+
+   ```bash
+   python scripts/inspect_docx.py "<文件.docx>" --paragraph 12-30 --json "<12-30.json>"
+   python scripts/inspect_docx.py "<文件.docx>" --section 2
+   python scripts/inspect_docx.py "<文件.docx>" --paragraph 1,5,9
+   ```
+
+   `--paragraph` 是 **1 起**的正文顶层段落序号，可重复或写逗号；表格内段落不参与编号，
+   范围视图下 `body` 只保留范围内的段落块、`tables` 仍全量返回。`--section` 是 **1 起**的
+   节序号，只保留该节的页面设置与页眉页脚引用。`scope` 给出总段落数、返回段落数、
+   当前节号，并提示“DOCX 无固定页码”。越界会直接报错。
+
 3. **解读结果**（按用户问题裁剪，不要整份倾倒）：
 
    | JSON 路径 | 含义 |
    | --- | --- |
    | `document_defaults` | 文档级默认段落/字符格式 |
+   | `scope` | 本次切片范围：段落序号、总/返回段落数、节号，及无页码说明 |
    | `theme.fonts` | 主题的 major/minor 字体（`+mj-lt`/`+mn-ea` 的真实来源） |
    | `styles` | 所有样式定义及其 `based_on` |
    | `sections[]` | 纸张、方向、页边距、分栏、页眉页脚引用 |

@@ -8,7 +8,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from inspect_pptx import inspect_pptx  # noqa: E402
+from inspect_pptx import inspect_pptx, parse_slide_scope  # noqa: E402
 
 NS = ('xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
       'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
@@ -252,6 +252,27 @@ class PptxFormatAuditTest(unittest.TestCase):
         self.assertEqual(picture['pixel_size'], [1, 1])
         self.assertEqual(len(picture['sha256']), 64)
         self.assertIn('备注文字', self.slide()['notes_text'])
+
+    def test_slide_scope_parsing(self):
+        self.assertEqual(parse_slide_scope(['2-4', '7'], 10), [2, 3, 4, 7])
+        self.assertEqual(parse_slide_scope(['1,5'], 10), [1, 5])
+        self.assertIsNone(parse_slide_scope(None, 10))
+
+    def test_slide_scope_out_of_range(self):
+        with self.assertRaises(ValueError):
+            parse_slide_scope(['0'], 3)
+        with self.assertRaises(ValueError):
+            parse_slide_scope(['2-5'], 3)
+        with self.assertRaises(ValueError):
+            inspect_pptx(self.path, slides=['2'])
+
+    def test_slide_slice_output(self):
+        data = inspect_pptx(self.path, slides=['1'])
+        self.assertEqual(data['scope']['slides'], [1])
+        self.assertEqual(data['presentation']['slide_count'], 1)
+        self.assertEqual(data['presentation']['slide_count_returned'], 1)
+        # 切片后 index 仍是原始 0 起序号
+        self.assertEqual(data['slides'][0]['index'], 0)
 
     def test_invalid_package_raises(self):
         bad = Path(self.tmp.name) / 'bad.pptx'
