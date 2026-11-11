@@ -7,8 +7,8 @@
     {
       "name": "thesis-doc-suite",
       "source": "./thesis-doc-suite",
-      "version": "0.1.0",
-      "description": "Thesis Doc Suite Taru：一个插件，六种毕业设计文书（技术文档/任务书/开题报告/文献综述/指导记录/中期检查），统一项目资产包、官方模板哈希锁定与文献真实性核验。"
+      "version": "0.3.0",
+      "description": "Thesis Doc Suite Taru：一个插件，七个业务 + 三个支持 + 三个管理型共 13 个 Skill（技术文档/任务书/开题报告/文献综述/指导记录/中期检查/项目方案；图示资产、DOCX/PPTX 格式审计；初始化/检查/导航），统一项目资产包、官方模板哈希锁定与文献真实性核验。"
     }
   ]
 }

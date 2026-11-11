@@ -1,3 +1,0 @@
-# 正式方案的 MD / HTML / 质量检查仍仅依赖 Python 标准库。
-# 候选项目的 .docx 导出依赖 python-docx，需在运行环境安装：
-python-docx>=1.1,<2

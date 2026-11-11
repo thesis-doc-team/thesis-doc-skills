@@ -30,4 +30,9 @@
 
 ## 安装
 
-把某个 Skill 目录放到项目的 `.claude/skills/`（Claude Code）或 `.agents/skills/`（Codex）下，按各 Skill 的 README 提供输入即可。Python 3.10+，依赖见各自 `requirements.txt`。
+本仓库以插件形式分发：`thesis-doc-suite/` 是完整插件（`skills/` 下共 13 个 Skill）。使用方式二选一：
+
+- 作为插件整体安装（推荐）：通过 `.claude-plugin/marketplace.json` 指向的 `thesis-doc-suite/` 安装。
+- 单独取用某个 Skill：把 `thesis-doc-suite/skills/<skill-name>/` 放到项目的 `.claude/skills/`（Claude Code）或 `.agents/skills/`（Codex）下，按该 Skill 的 SKILL.md 提供输入。
+
+Python 3.10+，依赖见各 Skill 的 `requirements.txt`。上表只列六个核心业务 Skill，完整清单见 [thesis-doc-suite/README.md](thesis-doc-suite/README.md)。
